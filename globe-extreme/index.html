@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1" />
+  <title>The globe of extremes</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.12/esri/themes/light/main.css" />
+  <link rel="stylesheet" href="./style.css" />
+  
+  <script>
+    const locationPath = location.pathname.replace(/\/[^\/]+$/, "");
+    dojoConfig = {
+      packages: [{
+        name: "utils",
+        location: locationPath + "utils"
+      }],
+      async: true
+    };
+	</script>
+  
+  <script src="https://js.arcgis.com/4.12/"></script>
+  
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/SceneView",
+      "esri/layers/TileLayer",
+      "esri/Basemap",
+      "utils/ExaggeratedElevationLayer.js",
+	  "esri/Graphic",
+      "esri/geometry/Point",
+      "esri/geometry/Mesh",
+	  "esri/layers/GeoJSONLayer",
+	  "esri/layers/FeatureLayer"
+     ], function (Map, SceneView, TileLayer, Basemap, ExaggeratedElevationLayer, Graphic, Point, Mesh, GeoJSONLayer, FeatureLayer) {
+      const R = 6358137; // approximate radius of the Earth in m
+	  const offset = 300000; // offset from the ground used for the clouds
+      const basemap = new Basemap({
+        baseLayers: [
+          new TileLayer({
+            url: "https://tiles.arcgis.com/tiles/nGt4QxSblgDfeJn9/arcgis/rest/services/terrain_with_heavy_bathymetry/MapServer"
+          })
+        ]
+      });
+      const map = new Map({
+        basemap: basemap
+      });
+	  
+	  const layer1 = new FeatureLayer({ //couche courant marins
+	  url:"https://services.arcgis.com/6DIQcwlPy8knb6sg/arcgis/rest/services/ConveyorBelt_WFL1/FeatureServer/0",
+	  });
+	 // map.add(layer1); //ajouter courant marins
+	  	  const layer2 = new FeatureLayer({ //couche courant marins
+	  url:"https://services.arcgis.com/6DIQcwlPy8knb6sg/arcgis/rest/services/ConveyorBelt_WFL1/FeatureServer/1",
+	  });
+	  map.add(layer2); //ajouter courant marins
+	  
+	  const layer3 = new FeatureLayer({ //couche courant marins
+	  url:"https://services.arcgis.com/6DIQcwlPy8knb6sg/arcgis/rest/services/XYZV_Coordinates/FeatureServer/0",
+	  });
+	  //map.add(layer3); //ajouter courant marins
+	  
+	  const layer4 = new FeatureLayer({ //couche courant marins
+	  url:"http://services1.arcgis.com/VAI453sU9tG9rSmh/arcgis/rest/services/WorldGeo_Physical_Climate_features/FeatureServer/8",
+	  });
+	  //map.add(layer4); //ajouter courant marins
+	  
+      const view = new SceneView({
+        container: "viewDiv",
+        map: map,
+        alphaCompositingEnabled: true,
+        qualityProfile: "high",
+        camera: {
+          //position: [-55.03975781, 14.94826384, 19921223.30821],
+		  position: [-64.128288, 21.827774, 19921223.30821], //mettre sur le groenland
+          heading: 2.03,
+          tilt: 0.13
+        },
+        environment: {
+          background: {
+            type: "color",
+            color: [255, 252, 244, 0]
+          },
+          starsEnabled: false,
+          atmosphereEnabled: false,
+          lighting: {
+            directShadowsEnabled: false,
+            //date: "Sun Jun 23 2019 19:19:18 GMT+0200 (Central European Summer Time)"
+          }
+        },
+        constraints: {
+          altitude: {
+            //min: 10000000,
+            //max: 25000000
+          }
+		   },
+        popup: {
+          dockEnabled: true,
+          dockOptions: {
+            position: "top-right",
+            breakpoint: false,
+            buttonEnabled: false
+          },
+          collapseEnabled: false
+        },
+        highlightOptions: {
+          color: [255, 255, 255],
+          haloOpacity: 0.5
+		          }
+		
+      });
+	  view.ui.empty("top-left");
+			
+		map.ground.layers = [new ExaggeratedElevationLayer({
+        exaggerationBathymetry: 60,
+        exaggerationTopography: 40
+      })];
+	  
+      const origin = new Point({
+        x: 0, y: -90, z: -(2 * R)
+      });
+      const oceanSurface = new Graphic({
+        geometry: origin,
+        symbol: {
+          type: "point-3d",
+          symbolLayers: [
+            {
+              type: "object",
+              resource: {
+                //href: "./sphere/scene.gltf"
+				href: "https://raw.githubusercontent.com/RalucaNicola/the-globe-of-extremes/c120fec479029ba880088649a2d6738dfe52e4f2/sphere/scene.gltf"
+              },
+              width: 2 * R
+            }
+          ]
+        }
+      });
+      //view.graphics.add(oceanSurface);
+	  
+	       const cloudsSphere = Mesh.createSphere(new Point({
+        x: 0, y: -90, z: -(2 * R + offset)
+      }), {
+        size: 2 * (R + offset),
+        material: {
+          colorTexture: "https://raw.githubusercontent.com/RalucaNicola/the-globe-of-extremes/047b19153b5bd1c2c4ff672ff88a54d8adc91d6b/clouds-nasa.png",
+          doubleSided: false
+        },
+        densificationFactor: 4
+      });
+      cloudsSphere.components[0].shading = "flat";
+      const clouds = new Graphic({
+        geometry: cloudsSphere,
+        symbol: {
+          type: "mesh-3d",
+          symbolLayers: [{ type: "fill" }]
+        }
+      });
+      //view.graphics.add(clouds);
+	  
+	 const extremesLayer = new GeoJSONLayer({
+        //url: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
+		url:"https://raw.githubusercontent.com/RalucaNicola/the-globe-of-extremes/97773d44eb1a1ee0adfbfddbb710b144a515950b/extreme-points.geojson",
+        elevationInfo: {
+          mode: "absolute-height",
+          offset: offset
+        },	
+        renderer: {
+          type: "simple",
+          symbol: {
+            type: "point-3d",
+            symbolLayers: [{
+              type: "icon",
+              resource: { primitive: "circle" },
+              material: { color: [0, 0, 0, 0] },
+              outline: { color: [245, 99, 66, 1], size: 4 },
+              size: 10
+            }, {
+              type: "icon",
+              resource: { primitive: "circle" },
+              material: { color: [0, 0, 0, 0] },
+              outline: { color: [245, 99, 66, 1], size: 2 },
+              size: 30
+            }]
+          } //fin symbol
+        }, // fin renderer
+        popupTemplate: {
+          title: "{name}",
+          content: `
+            <div class="popupImage">
+              <img src="{imageUrl}" alt="{imageCaption}"/>
+            </div>
+            <div class="popupImageCaption">{imageCaption}</div>
+            <div class="popupDescription">
+              <p class="info">
+                <span class="esri-icon-favorites"></span> {type}
+              </p>
+              <p class="info">
+                <span class="esri-icon-map-pin"></span> {location}
+              </p>
+              <p class="info">
+                <span class="esri-icon-documentation"></span> {facts}
+              </p>
+            </div>
+            <div class="popupCredits">
+              Sources: <a href="{sourceUrl}" target="_blank">{source}</a> released under <a href="{sourceCopyrightUrl}">{sourceCopyright}</a>, <a href="{imageCopyrightUrl}" target="_blank">{imageCopyright}</a>.
+            </div>
+          `
+        }
+      }); //fin geojson
+      map.layers.add(extremesLayer);
+
+    });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>
