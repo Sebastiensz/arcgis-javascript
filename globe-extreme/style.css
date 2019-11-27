@@ -1,0 +1,67 @@
+html,
+body,
+#viewDiv,
+#container {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  color: #323232;
+  font-family: "Avenir Next W00", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: radial-gradient(#12bff2, #0269a1);
+}
+
+#viewDiv canvas {
+  filter: saturate(1.2) drop-shadow(0 0 20px white);
+}
+
+
+/* popup styling */
+
+.esri-popup__content {
+  margin: 0;
+}
+
+.esri-popup__header-title {
+  font-size: 18px;
+}
+
+.esri-popup__footer {
+  display: none;
+}
+
+.esri-feature__main-container .popupImage {
+  max-height: 250px;
+  overflow: hidden;
+}
+
+.popupImage > img {
+  width: 100%;
+}
+
+.popupImageCaption {
+  text-align: center;
+  font-size: 0.9em;
+  padding: 0.1em 1.5em 0;
+}
+
+.popupDescription {
+  padding: 2em;
+}
+
+p.info {
+  margin-bottom: 2em;
+  font-size: 1.1em;
+}
+
+.popupDescription > p:last-child {
+  margin-bottom: 0;
+}
+
+.popupCredits {
+  font-size: 0.8em;
+  padding: 0 2.5em 0.5em 2.5em;
+}
