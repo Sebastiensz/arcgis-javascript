@@ -1,0 +1,50 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+
+<title>Load a basic WebMap - 4.14</title>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.14/esri/themes/light/main.css"
+    />
+
+    <script src="https://js.arcgis.com/4.14/"></script>
+
+    <script>
+      require(["esri/views/MapView", "esri/WebMap"], function(MapView, WebMap) {
+       
+        var webmap = new WebMap({
+          portalItem: {
+            // autocasts as new PortalItem()
+            id: "0465557e75674c4fa48765667568a1f8"
+          }
+        });
+
+        var view = new MapView({
+          map: webmap,
+          container: "viewDiv"
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
