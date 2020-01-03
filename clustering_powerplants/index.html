@@ -1,0 +1,259 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+
+<title>Filter clustered points with a slider - 4.14</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.14/esri/themes/dark/main.css"
+    />
+    <script src="https://js.arcgis.com/4.14/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #infoDiv {
+        padding: 10px;
+        width: 275px;
+      }
+      #sliderValue {
+        font-weight: bolder;
+      }
+      #legendDiv {
+        width: 260px;
+      }
+      #description {
+        padding: 10px 0 10px 0;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/Legend",
+        "esri/widgets/Slider",
+        "esri/widgets/Expand"
+      ], function(Map, MapView, FeatureLayer, Legend, Slider, Expand) {
+        // Configure clustering on the layer with a
+        // popupTemplate displaying the predominant
+        // fuel type of the power plants in the cluster
+
+        const clusterConfig = {
+          type: "cluster",
+          clusterRadius: "40px",
+          popupTemplate: {
+            content: [
+              {
+                type: "text",
+                text: "Ce cluster représente <b>{cluster_count}</b> entités."
+              },
+              {
+                type: "text",
+                text:
+                  "Le type de combustible prédominant dans ce groupe de centrales est <b>{cluster_type_fuel1}</b>."
+              }
+            ]
+          }
+        };
+
+        
+        const layer = new FeatureLayer({
+          portalItem: {
+            id: "26439088e1fc43078383c75bfbd7dbe6"
+          },
+          featureReduction: clusterConfig,
+          //renderer: {type:"simple", symbol}
+        });
+        
+          var renderer = {
+  type: "unique-value",  // autocasts as new UniqueValueRenderer()
+  field: "fuel1",
+  defaultSymbol: {    
+      type: "picture-marker",  // autocasts as new SimpleFillSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyA5.png'
+},  // autocasts as new SimpleFillSymbol()
+  uniqueValueInfos: [{
+    // All features with value of "North" will be blue
+    value: "Hydro",
+    symbol: {
+      type: "picture-marker",  // autocasts as new PictureMarkerSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyC8.png'
+    }
+  }, {
+    value: "Solar",
+    symbol: {
+      type: "picture-marker",  // autocasts as new SimpleFillSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyC17.png'
+    }
+  }, {
+    value: "Wind",
+    symbol: {
+      type: "picture-marker",  // autocasts as new SimpleFillSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyC14.png'
+    }
+  }, {
+    value: "Oil",
+    symbol: {
+      type: "picture-marker",  // autocasts as new SimpleFillSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyE20.png', //E2
+	  width:"26px",
+	  height:"26px",
+	}
+  },{
+    value: "Gas",
+    symbol: {
+      type: "picture-marker",  // autocasts as new SimpleFillSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyE9.png',
+	  width:"26px",
+	  height:"26px",
+    }
+  },{
+    value: "Coal",
+    symbol: {
+      type: "picture-marker",  // autocasts as new SimpleFillSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyD20.png'
+    }
+  },{
+    value: "Biomass",
+    symbol: {
+      type: "picture-marker",  // autocasts as new SimpleFillSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyC15.png'
+    }
+  },{
+    value: "Waste",
+    symbol: {
+      type: "picture-marker",  // autocasts as new SimpleFillSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyC20.png'
+    }
+  },{
+    value: "Nuclear",
+    symbol: {
+      type: "picture-marker",  // autocasts as new SimpleFillSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyC3.png',
+	  width:"30px",
+	  height:"30px",
+    }
+  },{
+    value: "Geothermal",
+    symbol: {
+      type: "picture-marker",  // autocasts as new SimpleFillSymbol()
+      url: 'https://static.arcgis.com/images/Symbols/Firefly/FireflyE18.png'
+    }
+  }]
+};
+          
+          //layer.renderer=renderer;
+
+        const map = new Map({
+          basemap: {
+            portalItem: {
+              id: "8d91bd39e873417ea21673e0fee87604"
+            }
+          },
+          layers: [layer]
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          extent: {
+            spatialReference: {
+              latestWkid: 3857,
+              wkid: 102100
+            },
+            xmin: -42087672,
+            ymin: 4108613,
+            xmax: -36095009,
+            ymax: 8340167
+          }
+        });
+
+        const legend = new Legend({
+          view: view,
+          container: "legendDiv"
+        });
+
+        const infoDiv = document.getElementById("infoDiv");
+        view.ui.add(
+          new Expand({
+            view: view,
+            content: infoDiv,
+            expandIconClass: "esri-icon-layer-list",
+            expanded: true
+          }),
+          "top-right"
+        );
+
+        const toggleButton = document.getElementById("toggleCluster");
+        toggleButton.addEventListener("click", toggleClustering);
+
+        // To turn off clustering on a layer, set the
+        // featureReduction property to null
+        function toggleClustering() {
+          let fr = layer.featureReduction;
+          layer.featureReduction =
+            fr && fr.type === "cluster" ? null : clusterConfig;
+          toggleButton.innerText =
+            toggleButton.innerText === "Autoriser le Clustering"
+              ? "Désactiver le Clustering"
+              : "Autoriser le Clustering";
+        }
+
+        view.whenLayerView(layer).then(function(layerView) {
+          const field = "capacity_mw";
+
+          const slider = new Slider({
+            min: 0,
+            max: 2000,
+            values: [0],
+            container: document.getElementById("sliderDiv"),
+            rangeLabelsVisible: true,
+            precision: 0
+          });
+
+          const sliderValue = document.getElementById("sliderValue");
+
+          // filter features by power plant capacity when the user
+          // drags the slider thumb. If clustering is enabled,
+          // clusters will recompute and render based on the number
+          // and type of features that satisfy the filter where clause
+
+          slider.on(["thumb-change", "thumb-drag"], function(event) {
+            sliderValue.innerText = event.value;
+            layerView.filter = {
+              where: field + " >= " + event.value
+            };
+          });
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+    <div id="infoDiv" class="esri-widget">
+      <button id="toggleCluster" class="esri-button">Disable Clustering</button>
+      <div id="description">
+        Montrer les centrales avec au moins
+        <span id="sliderValue">0</span> megawatts de capacité
+      </div>
+      <div id="sliderContainer">
+        <div id="sliderDiv"></div>
+      </div>
+      <div id="legendDiv"></div>
+    </div>
+  </body>
+</html>
