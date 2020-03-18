@@ -1,0 +1,384 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <!--
+  ArcGIS API for JavaScript, https://js.arcgis.com
+  For more information about the widgets-timeslider sample, read the original sample description at developers.arcgis.com.
+  https://developers.arcgis.com/javascript/latest/sample-code/widgets-timeslider/index.html
+
+url des donnees https://ourworldindata.org/coronavirus-source-data
+
+css : https://developers.arcgis.com/javascript/latest/guide/styling/
+
+  -->
+  <title>Coronavirus spread over the time</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.14/esri/themes/dark/main.css" />
+  <script src="https://js.arcgis.com/4.14/"></script>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #timeSlider {
+      position: absolute;
+      left: 100px;
+      right: 100px;
+      bottom: 20px;
+    }
+
+    #titleDiv {
+      padding: 10px;
+      font-weight: bold;
+      text-align: center;
+      font-size: 20px;
+    }
+  </style>
+
+  <script type="text/plain" id="lethality-arcade">
+      // Returns the share of the dominant demographic as a percentage
+      var fieldValues = [ $feature.total_cases, $feature.total_deaths ];
+      var cases = fieldValues[0];
+      var deaths = fieldValues[1];
+       var result=Round((deaths/cases) * 100,2)
+      return result + ' %';
+    </script>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/widgets/TimeSlider",
+      "esri/widgets/Expand",
+      "esri/widgets/Legend",
+      "esri/widgets/Search",
+      "esri/widgets/Zoom",
+      "esri/widgets/Home",
+      "esri/widgets/Expand",
+      "esri/widgets/Legend",
+      "esri/widgets/Bookmarks",
+      "esri/webmap/Bookmark"
+    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Expand, Legend, Bookmarks, Bookmark) {
+
+      const renderer = {
+        type: "simple",
+        symbol: {
+          type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+          size: 4,
+          color: [255, 255, 214, 0.8], //"#FDEDEC"
+          outline: {  // autocasts as new SimpleLineSymbol()
+            color: [255, 255, 255, 0.5],
+            width: "0.5px"
+          }
+        },
+        visualVariables: [
+          {
+            type: "color",
+            field: "total_deaths",
+            normalizationField: "total_cases",
+            legendOptions: {
+              title: "Taux de létalité"
+            },
+            stops: [{
+              value: 0.04,
+              color: [196, 47, 30, 0.7], //"#B03A2E"
+              label: "4 % de cas décédés"
+            }, {
+              value: 0.03,
+              color: [228, 145, 67, 0.7], //"#CB4335"
+              label: "3 % de cas décédés"
+            }, {
+              value: 0.02,
+              color: [240, 205, 100, 0.7], //"#EC7063"
+              label: "2 % de cas décédés"
+            },
+            {
+              value: 0.01,
+              color: [255, 255, 183, 0.7],
+              label: "1 % de cas décédés"
+            }
+            ]
+          },
+          {
+            type: "size",
+            field: "total_cases",
+            legendOptions: {
+              title: "Total des cas dans le pays"
+            },
+            stops: [
+              {
+                value: 80000,
+                size: "128px"
+              }, {
+                value: 5000,
+                size: "64px"
+              }, {
+                value: 1000,
+                size: "24px"
+              },
+              {
+                value: 100,
+                size: "6px"
+              }
+            ]
+          }
+        ]
+      };
+
+
+      var layer = new FeatureLayer({
+        url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/data_full_covid19/FeatureServer/0",
+        renderer: renderer
+      });
+
+      const map = new Map({
+        //basemap: "satellite",
+        basemap: "dark-gray",
+        layers: [layer]
+      });
+
+      const view = new MapView({
+        map: map,
+        container: "viewDiv",
+        zoom: 3,
+        center: [25, 35]
+      });
+
+      var arcadeExpressionInfos = [
+        // Get Arcade expression returning the predominant demographic in the county:
+        // Whether the majority of people are in the labor force or not
+        {
+          name: "lethality-arcade",
+          title: "Taux de letalité",
+          expression: document.getElementById("lethality-arcade").text
+        },
+        // Get Arcade expression returning the share of the total comprised
+        // by the predominant category
+      ];
+
+
+      var template = {
+        // autocasts as new PopupTemplate()
+        title: "COVID-19 - {location}",
+        content: [
+          {
+            type: "text",
+            text:
+              "{location}: Il y a {total_cases} contaminés avérés le {date} dont" +
+              " {expression/lethality-arcade} de cas décédés"
+          },
+          {
+            type: "fields",
+            fieldInfos: [
+              {
+                fieldName: "total_cases",
+                label: "Nombre de personnes atteintes par le Covid-19",
+                format: {
+                  digitSeparator: true,
+                  places: 0
+                }
+              },
+              {
+                fieldName: "total_deaths",
+                label: "Nombre de morts par le Covid-19",
+                format: {
+                  digitSeparator: true,
+                  places: 0
+                }
+              },
+              {
+                fieldName: "expression/lethality-arcade",
+                format: {
+                  digitSeparator: true,
+                  places: 0
+                }
+              }
+            ]
+          }
+        ],
+        expressionInfos: arcadeExpressionInfos
+      };
+
+      layer.popupTemplate = template;
+
+      const timeSlider = new TimeSlider({
+        container: "timeSlider",
+        mode: "instant",
+        view: view
+      });
+      view.ui.add(timeSlider, "manual");
+      view.whenLayerView(layer).then(function (lv) {
+        const fullTimeExtent = layer.timeInfo.fullTimeExtent;
+
+        timeSlider.fullTimeExtent = fullTimeExtent;
+        timeSlider.stops = {
+          interval: {
+            value: 1,
+            unit: "days"
+          },
+          timeExtent: {
+            start: 1579564800000,
+            end: 1584403200000
+          }
+        }
+      });
+
+      view.ui.add(timeSlider, "manual");
+
+
+      timeSlider.set({
+        loop: false,
+        playRate: 300
+      });
+
+
+      timeSlider.play();
+
+      view.ui.remove("zoom");
+
+
+      view.ui.add("titleDiv", {
+        position: "top-left",
+        index: 1
+      });
+      const zoom = new Zoom({
+        view: view
+      });
+      view.ui.add(zoom, {
+        position: "top-left",
+        index: 2
+      });
+
+      const searchWidget = new Search({
+        view: view
+      });
+      // Adds the search widget below other elements in
+      // the top left corner of the view
+      view.ui.add(searchWidget, {
+        position: "top-right",
+        index: 1
+      });
+
+      const bookmarks = new Bookmarks({
+        view: view,
+        bookmarks: [
+          new Bookmark({
+            name: "Europe",
+            extent: {
+              spatialReference: {
+                wkid: 102100
+              },
+              xmin: -1569877.42,
+              ymin: 4419153.05,
+              xmax: 4378757.87,
+              ymax: 6879813.86
+            }
+          }),
+          new Bookmark({
+            name: "Asie",
+            extent: {
+              spatialReference: {
+                wkid: 102100
+              },
+              xmin: 5984627.89,
+              ymin: 1596931.21,
+              xmax: 17881898.47,
+              ymax: 6518252.84
+            }
+          }), new Bookmark({
+            name: "Afrique",
+            extent: {
+              spatialReference: {
+                wkid: 102100
+              },
+              xmin: -2814690.83,
+              ymin: -2081978.04,
+              xmax: 8182457.30,
+              ymax: 4620020
+            }
+          }), new Bookmark({
+            name: "Moyen-Orient",
+            extent: {
+              spatialReference: {
+                wkid: 102100
+              },
+              xmin: 1511963.70,
+              ymin: 1661959.86,
+              xmax: 12391704.56,
+              ymax: 5869053.90
+            }
+          }),
+          new Bookmark({
+            name: "Amérique",
+            extent: {
+              spatialReference: {
+                latestWkid: 3857,
+                wkid: 102100
+              },
+              xmin: -19424807.06,
+              ymin: -6466370.88,
+              xmax: 2843439.52,
+              ymax: 6937626.40
+            }
+          })
+        ]
+      });
+
+      const bkExpand = new Expand({
+        view: view,
+        content: bookmarks,
+        expanded: false
+      });
+
+      // Add the widget to the top-right corner of the view
+      view.ui.add(bkExpand, "top-right");
+
+
+      var homeWidget = new Home({
+        view: view
+      });
+
+      // adds the home widget to the top left corner of the MapView
+      view.ui.add(homeWidget, "top-left");
+
+      const legend = new Legend({
+        view: view,
+        layerInfos: [{
+          layer: layer,
+          title: "Légende",
+        }]
+      });
+      const legendExpand = new Expand({
+        expandIconClass: "esri-icon-drag-horizontal",
+        expandTooltip: "Legend",
+        view: view,
+        expanded: true,
+        content: legend,
+      });
+      view.ui.add(legendExpand, "top-left");
+
+
+
+    });
+
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+  <div id="timeSlider"></div>
+  <div id="titleDiv" class="esri-widget">
+    <div id="titleText">Propagation du COVID-19 dans le monde</div>
+  </div>
+</body>
+
+</html>
