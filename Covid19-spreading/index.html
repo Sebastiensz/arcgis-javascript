@@ -259,6 +259,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
 
       view.ui.remove("zoom");
 
+      view.ui.add("logoDiv", "top-right");
 
       view.ui.add("titleDiv", {
         position: "top-left",
@@ -349,11 +350,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
           })
         ]
       });
-      
-      view.ui.add("titleDiv", {
-        position: "top-left",
-        index: 2
-      });
+
 
       const bkExpand = new Expand({
         view: view,
