@@ -41,6 +41,17 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       text-align: center;
       font-size: 20px;
     }
+    
+    #source {
+      padding: 10px;
+      font-weight: normal;
+      text-align: center;
+      font-size:12px;
+      position: absolute;
+      right: 10px;
+      bottom: 120px;
+      width:160px;
+      }
   </style>
 
   <script type="text/plain" id="lethality-arcade">
@@ -250,6 +261,9 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         position: "top-left",
         index: 1
       });
+      
+      view.ui.add("source","manual");
+      
       const zoom = new Zoom({
         view: view
       });
@@ -379,6 +393,13 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
   <div id="titleDiv" class="esri-widget">
     <div id="titleText">Propagation du COVID-19 dans le monde</div>
   </div>
+  
+  <div id="source" class="esri-widget" >
+    <div id="titleText">Web app built with <nobr><a style="color:blue;" href="https://developers.arcgis.com/javascript/">ArcGIS API for JavaScript</a></nobr> Source code :<a style="color:blue;" href="https://github.com/Sebastiensz/demos_arcgisJS/tree/master/Covid19-spreading">Github</a></p>
+    <p>Data source:
+      <a style="color:blue;" href="https://ourworldindata.org/coronavirus-source-data"> Our World in Data</a>
+    </p> </div>
+    </div>
 </body>
 
 </html>
