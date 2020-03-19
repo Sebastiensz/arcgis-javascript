@@ -184,15 +184,15 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
           {
             type: "text",
             text:
-              "{location}: Il y a {total_cases} contaminés avérés le {date} dont" +
-              " {expression/lethality-arcade} de cas décédés"
+              "{location}: Il y a {total_cases} contaminés identifiés et déclarés le {date} dont" +
+              " {expression/lethality-arcade} de cas décédés."
           },
           {
             type: "fields",
             fieldInfos: [
               {
                 fieldName: "total_cases",
-                label: "Nombre de personnes atteintes par le Covid-19",
+                label: "Nombre de personnes atteintes par le Covid-19 identifiées et déclarées",
                 format: {
                   digitSeparator: true,
                   places: 0
