@@ -259,8 +259,6 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
 
       view.ui.remove("zoom");
 
-      view.ui.add("logoDiv", "top-right");
-
       view.ui.add("titleDiv", {
         position: "top-left",
         index: 1
@@ -285,6 +283,8 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         position: "top-right",
         index: 1
       });
+      
+      view.ui.add("logoDiv", "top-right");
 
       const bookmarks = new Bookmarks({
         view: view,
