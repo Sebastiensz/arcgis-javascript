@@ -236,7 +236,9 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         view: view
       });
       view.ui.add(timeSlider, "manual");
+      let timeLayerView;
       view.whenLayerView(layer).then(function (lv) {
+        timeLayerView = lv;
         const fullTimeExtent = layer.timeInfo.fullTimeExtent;
 
         timeSlider.fullTimeExtent = fullTimeExtent;
@@ -253,7 +255,13 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       });
 
       view.ui.add(timeSlider, "manual");
-
+      
+      timeSlider.watch("timeExtent", function(value){
+        // update layer view filter to reflect current timeExtent
+        timeLayerView.filter = {
+          timeExtent: value
+        };
+      });
 
       timeSlider.set({
         loop: false,
