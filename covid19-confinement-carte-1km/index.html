@@ -340,6 +340,7 @@
             const printExpand = new Expand({
             	view: view,
             	content: printWidget,
+                expandTooltip: "Exporter",
                 group: "expands"
             });
             view.ui.add(printExpand, {
@@ -376,6 +377,7 @@
             const bookmarksExpand = new Expand({
             	view: view,
             	content: bookmarksWidget,
+                expandTooltip: "Géosignets",
                 group: "expands"
             });
             view.ui.add(bookmarksExpand, {
@@ -392,6 +394,7 @@
             const basemapGalleryExpand = new Expand({
             	view: view,
             	content: basemapGalleryWidget,
+                expandTooltip: "Fonds de carte",
                 group: "expands"
             });
             view.ui.add(basemapGalleryExpand, {
@@ -701,7 +704,7 @@
   <body>
     <div id="viewDiv">
         <div id="titleDiv" class="esri-widget"><div id="title">Carte du confinement : le périmètre d'1 kilomètre</div></div>
-        <div id="about" class="esri-component esri-widget">
+        <div id="about" class="esri-component esri-widget" title="Aide">
             <div class="esri-widget--button">
                 <span class="esri-icon-question">
                 </span>
@@ -709,10 +712,10 @@
             </div>
         </div>                
         <div id="widget_search"></div>
-        <div id="logoDiv"><a href="https://www.esrifrance.fr/"><img src="./images/esri-france-logo-halo.png" alt="Esri France" width="150" /></a></div>
+        <div id="logoDiv"><a href="https://www.esrifrance.fr/" target="_blank"><img src="./images/esri-france-logo-halo.png" alt="Esri France" width="150" /></a></div>
         <div id="source" class="esri-widget">
             <span class="highlightFont">#RestezChezVous​</span>
-            Consignes sur <a href="https://www.gouvernement.fr/info-coronavirus">gouvernement.fr​</a>
+            Consignes sur <a href="https://www.gouvernement.fr/info-coronavirus" target="_blank">gouvernement.fr​</a>
         </div>
     </div>
     <div id="container">
