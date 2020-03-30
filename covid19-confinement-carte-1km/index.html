@@ -63,7 +63,7 @@
 
         /* intro and about page */
         #viewDiv {
-            filter: blur(10px);
+            filter: blur(0px);
             transition: filter 0.4s;
         }
 
@@ -162,7 +162,7 @@
             background: #007AC2;
             color: white;
         }
-        
+
         #start-appli:hover, #calculZone:hover {
             cursor: pointer;
         }
@@ -195,6 +195,7 @@
         "esri/layers/MapImageLayer",
         "esri/views/MapView",
         "esri/widgets/Zoom",
+        "esri/widgets/Home",
         "esri/widgets/Expand",
         "esri/widgets/Search",
         "esri/widgets/BasemapGallery",
@@ -207,16 +208,17 @@
         "esri/widgets/Bookmarks",
         "esri/Graphic",
         "esri/geometry/geometryEngine",
+        "esri/geometry/Circle",
         "esri/tasks/ServiceAreaTask",
         "esri/tasks/support/ServiceAreaParameters",
         "esri/tasks/support/FeatureSet",
         "esri/core/watchUtils"
-      ], function(Basemap, WebMap, Map, MapImageLayer, MapView, Zoom, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource, 
-        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils) {
+      ], function(Basemap, WebMap, Map, MapImageLayer, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
+        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils) {
 
         var webmap = new WebMap({
           portalItem: {
-            id: "4cab826d23f745af90a8363b577b80b0"
+            id: "6ce8e6df7cc3471892974a98f5f09c13"
           }
         });
 
@@ -235,6 +237,13 @@
                 id: "95ba0f7fc3fb45e0861da51677102c4e"
             }
         });
+
+        var basemapOSMPastels = new Basemap({
+            portalItem: {
+                id: "a8e0d9baa5be4d378624f18f1df3e09a"
+            }
+        });
+
         var basemapHybrid = new Basemap({
             portalItem: {
                 id: "ce52199dce1b4f978667303e982bbb1e"
@@ -249,9 +258,9 @@
                 width: 2
             }
         };
-        
-        var locator = new Locator({ 
-            url: "https://utility.arcgis.com/usrsvcs/servers/60a8871933e44a249ca71bb13c2d823d/rest/services/World/GeocodeServer" 
+
+        var locator = new Locator({
+            url: "https://utility.arcgis.com/usrsvcs/servers/60a8871933e44a249ca71bb13c2d823d/rest/services/World/GeocodeServer"
         });
 
         var locatorSearchSource = new LocatorSearchSource({
@@ -270,7 +279,8 @@
                 basemapTopographie,
                 basemapRues,
                 basemapOSM,
-                basemapHybrid
+                basemapHybrid,
+                basemapOSMPastels
             ]
         });
 
@@ -280,8 +290,8 @@
             constraints: {
                 rotationEnabled: false
             },
-            zoom: 6,
-            center: [3, 46]
+            zoom: 5,
+            center: [3, 47]
         });
 
         // Gestion de l'intro/aide
@@ -311,7 +321,7 @@
         let intro = true;
         document.getElementById("about").addEventListener("click", function () {
         document.getElementById("container").style.display = "flex";
-        view.container.style.filter = "blur(10px)";
+        //view.container.style.filter = "blur(10px)";
         if (intro) {
             document.getElementById("show-about").classList.remove("hidden");
             document.getElementById("show-intro").classList.add("hidden");
@@ -445,12 +455,23 @@
         });
         view.ui.add(zoomWidget, {
             position: "top-left",
-            index: 2
+            index: 3
+        });
+
+        var homeBtn = new Home({
+          view: view
+        });
+
+        view.ui.add(homeBtn, {
+            position: "top-left",
+            index: 6
         });
 
         view.ui.add(scaleBarWidget, {
             position: "bottom-left"
         });
+
+
 
         // Affichage du cadre consignes du gouvernement
         view.ui.add("source", {
@@ -516,7 +537,7 @@
             button.innerHTML = "Calculer la zone";
             button.id='calculZone';
             popupDiv.appendChild(button);
-            
+
             button.addEventListener ("click", function() {
                 computeZone(locationGraphic);
                 view.popup.close();
@@ -541,6 +562,9 @@
                     }
                 }
             });
+
+
+
             // Affichage du graphic créé
             view.graphics.add(graphic);
             return graphic;
@@ -593,10 +617,10 @@
             // });
             var taskParameters = new ServiceAreaParameters({
                 facilities: featureSet, // Location(s) to start from
-                defaultBreaks: [1000],
+                defaultBreaks: [10],
                 travelDirection: "from-facility",
                 //outputPolygons: "detailed",
-                travelMode: "2", // traveMode "Meters"
+                travelMode: "3", // traveMode "Meters"
                 outSpatialReference: outSpatialReference // Spatial reference to match the view
             });
 
@@ -607,11 +631,12 @@
             return serviceAreaTask.solve(serviceAreaParams)
             .then(function(result){
                 if (result.serviceAreaPolygons.length) {
+
                     // Draw each service area polygon
                     result.serviceAreaPolygons.forEach(function(graphic){
                         graphic.symbol = {
                             type: "simple-fill",
-                            color: "rgba(0,122,194,.1)",
+                            color: "rgba(0,122,194,.05)",
                             outline: {  // autocasts as new SimpleLineSymbol()
                                 color: "rgba(0,122,194,100)",
                                 width: 2
@@ -627,6 +652,28 @@
         }
 
         function computeZone(graphicCenter){
+            // Draw simple circle
+            var circle = new Circle({
+            center: graphicCenter.geometry,
+            radius: 10000
+            });
+
+
+            var graphicCircle = new Graphic({
+            geometry: circle,
+            symbol: {
+                    type: "simple-fill",
+                    color: "rgba(0,122,194,0)",
+                    outline: {  // autocasts as new SimpleLineSymbol()
+                        color: "rgba(0,122,194,100)",
+                        width: 2,
+                        style: "short-dot"
+                    }
+                }
+            });
+            //view.graphics.add(graphicCircle,0);
+
+
             var serviceAreaParams = createServiceAreaParams(graphicCenter, view.spatialReference);
             executeServiceAreaTask(serviceAreaParams);
 
@@ -703,17 +750,17 @@
 
   <body>
     <div id="viewDiv">
-        <div id="titleDiv" class="esri-widget"><div id="title">Carte du confinement : le périmètre d'1 kilomètre</div></div>
+        <div id="titleDiv" class="esri-widget"><div id="title">Votre périmètre de confinement à 1 kilomètre</div></div>
         <div id="about" class="esri-component esri-widget" title="Aide">
             <div class="esri-widget--button">
                 <span class="esri-icon-question">
                 </span>
                 <span class="esri-icon-font-fallback-text">Aide</span>
             </div>
-        </div>                
+        </div>
         <div id="widget_search"></div>
-        <div id="logoDiv"><a href="https://www.esrifrance.fr/" target="_blank"><img src="./images/esri-france-logo-halo.png" alt="Esri France" width="150" /></a></div>
-        <div id="source" class="esri-widget">
+        <div id="logoDiv" style="background-color: #FFFFFF; height: 60px"><a href="https://www.esrifrance.fr/" target="_blank"><img style="margin-top: 10px" src="./images/esri-france-logo-halo.png" alt="Esri France" width="150" /></a></div>
+        <div id="source" style="background-color: #FFFFFF; height: 60px" class="esri-widget">
             <span class="highlightFont">#RestezChezVous​</span>
             Consignes sur <a href="https://www.gouvernement.fr/info-coronavirus" target="_blank">gouvernement.fr​</a>
         </div>
