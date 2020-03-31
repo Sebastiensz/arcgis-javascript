@@ -172,6 +172,9 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       const view = new MapView({
         map: map,
         container: "viewDiv",
+        constraints: {
+                rotationEnabled: false
+            },
         zoom: 3,
         center: [25, 35]
       });
