@@ -36,7 +36,7 @@
         #source {
             padding: 10px;
             font-weight: normal;
-            text-align: center;
+            text-align: center; 
             font-size:12px;
             width:160px;
         }
@@ -209,12 +209,14 @@
         "esri/Graphic",
         "esri/geometry/geometryEngine",
         "esri/geometry/Circle",
+        "esri/geometry/SpatialReference",
+        "esri/geometry/projection",
         "esri/tasks/ServiceAreaTask",
         "esri/tasks/support/ServiceAreaParameters",
         "esri/tasks/support/FeatureSet",
         "esri/core/watchUtils"
       ], function(Basemap, WebMap, Map, MapImageLayer, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
-        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils) {
+        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, projection, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils) {
 
         var webmap = new WebMap({
           portalItem: {
@@ -250,11 +252,11 @@
             }
         });
 
-        var polySym = {
+        var zoneSym = {
             type: "simple-fill",
-            color: [140, 140, 222, 0.5],
-            outline: {
-                color: [0, 0, 0, 0.5],
+            color: "rgba(0,122,194,.05)",
+            outline: {  // autocasts as new SimpleLineSymbol()
+                color: "rgba(0,122,194,100)",
                 width: 2
             }
         };
@@ -563,7 +565,7 @@
                 }
             });
 
-
+            
 
             // Affichage du graphic créé
             view.graphics.add(graphic);
@@ -597,6 +599,10 @@
         var serviceAreaTask = new ServiceAreaTask({
             url: "https://wssecured.esrifrance.fr/arcgis/rest/services/BDTopo_routing/NetworkAnalysis/NAServer/ServiceArea"
         });
+        // Calcul de la zone
+        var serviceAreaTask2 = new ServiceAreaTask({
+            url: "https://wssecured.esrifrance.fr/arcgis/rest/services/HERE_routing/NetworkAnalysis/NAServer/ServiceArea"
+        });
 
         function createServiceAreaParams(locationGraphic, outSpatialReference) {
             // Create one or more locations (facilities) to solve for
@@ -617,62 +623,86 @@
             // });
             var taskParameters = new ServiceAreaParameters({
                 facilities: featureSet, // Location(s) to start from
-                defaultBreaks: [10],
+                defaultBreaks: [1000],
                 travelDirection: "from-facility",
                 //outputPolygons: "detailed",
-                travelMode: "3", // traveMode "Meters"
+                trimOuterPolygon: true,
+                trimPolygonDistance: 100,
+                travelMode: "2", // traveMode "Meters"
                 outSpatialReference: outSpatialReference // Spatial reference to match the view
             });
 
-            return taskParameters;
+            var taskParameters2 = new ServiceAreaParameters({
+                facilities: featureSet, // Location(s) to start from
+                defaultBreaks: [1],
+                travelDirection: "from-facility",
+                //outputPolygons: "detailed",
+                trimOuterPolygon: true,
+                trimPolygonDistance: 100,
+                travelMode: "8", // traveMode "Walking distance"
+                outSpatialReference: outSpatialReference // Spatial reference to match the view
+            });
+
+            return [taskParameters, taskParameters2];
         }
 
         function executeServiceAreaTask(serviceAreaParams) {
-            return serviceAreaTask.solve(serviceAreaParams)
-            .then(function(result){
+            serviceAreaTask2.solve(serviceAreaParams[1]).then(function(result){
                 if (result.serviceAreaPolygons.length) {
-
                     // Draw each service area polygon
                     result.serviceAreaPolygons.forEach(function(graphic){
-                        graphic.symbol = {
-                            type: "simple-fill",
-                            color: "rgba(0,122,194,.05)",
-                            outline: {  // autocasts as new SimpleLineSymbol()
-                                color: "rgba(0,122,194,100)",
-                                width: 2
-                            }
-                        }
+                        graphic.symbol = zoneSym;
                         view.graphics.add(graphic,0);
                         view.goTo(graphic);
                     });
                 }
             }, function(error){
-                console.log(error);
+                // If first service doesn't work, try second service
+                serviceAreaTask.solve(serviceAreaParams[0]).then(function(result){
+                    if (result.serviceAreaPolygons.length) {
+                        // Draw each service area polygon
+                        result.serviceAreaPolygons.forEach(function(graphic){
+                            graphic.symbol = zoneSym;
+                            view.graphics.add(graphic,0);
+                            view.goTo(graphic);
+                        });
+                    }
+                }, function(error){
+                    console.log(error);
+                });  
             });
         }
 
         function computeZone(graphicCenter){
-            // Draw simple circle
-            var circle = new Circle({
-            center: graphicCenter.geometry,
-            radius: 10000
-            });
+
+            // Draw simple circle, only if supported by browser
+            if (projection.isSupported()) {
+                projection.load().then(function() {
+                    const outSpatialReference = new SpatialReference({ wkid: 2154 });
+
+                    var geom_proj = projection.project(graphicCenter.geometry, outSpatialReference);
+
+                    var circle = new Circle({
+                        center: geom_proj,
+                        radius: 1000
+                    });
 
 
-            var graphicCircle = new Graphic({
-            geometry: circle,
-            symbol: {
-                    type: "simple-fill",
-                    color: "rgba(0,122,194,0)",
-                    outline: {  // autocasts as new SimpleLineSymbol()
-                        color: "rgba(0,122,194,100)",
-                        width: 2,
-                        style: "short-dot"
-                    }
-                }
-            });
-            //view.graphics.add(graphicCircle,0);
-
+                    var graphicCircle = new Graphic({
+                    geometry: circle,
+                    symbol: {
+                            type: "simple-fill",
+                            color: "rgba(0,122,194,0)",
+                            outline: {  // autocasts as new SimpleLineSymbol()
+                                color: "rgba(0,122,194,100)",
+                                width: 2,
+                                style: "short-dot"
+                            }
+                        }
+                    });
+                    view.graphics.add(graphicCircle,0);
+                });
+            }
 
             var serviceAreaParams = createServiceAreaParams(graphicCenter, view.spatialReference);
             executeServiceAreaTask(serviceAreaParams);
@@ -680,7 +710,7 @@
             // var buffer = GeometryEngine.buffer(graphicCenter.geometry, 1, "kilometers");
             // var bufferGraphic = new Graphic({
             //     geometry: buffer,
-            //     symbol: polySym
+            //     symbol: zoneSym
             // });
             // view.graphics.add(bufferGraphic);
         }
