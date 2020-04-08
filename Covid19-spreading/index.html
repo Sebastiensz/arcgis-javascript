@@ -195,12 +195,12 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
 
       var template = {
         // autocasts as new PopupTemplate()
-        title: "COVID-19 - {location}",
+        title: "COVID-19 - {SHORT_NAME}",
         content: [
           {
             type: "text",
             text:
-              "{location}: Il y a {total_cases} contaminés identifiés et déclarés le {date} dont" +
+              "{SHORT_NAME}: Il y a {total_cases} contaminés identifiés et déclarés le {date} dont" +
               " {expression/lethality-arcade} de cas décédés."
           },
           {
