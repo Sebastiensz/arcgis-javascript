@@ -182,10 +182,18 @@
             display: none;
         }
     </style>
-    <link
-        rel="stylesheet"
-        href="https://js.arcgis.com/4.14/esri/themes/light/main.css"
-    />
+    <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css"/>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.14/esri/themes/light/main.css"/>
+    <link rel="stylesheet" href="./widgets/ShareWidget/css/Share.css"/>
+    <script>
+        var locationPath = location.pathname.replace(/\/[^\/]+$/, "");
+        window.dojoConfig = {
+            packages: [{
+                name: "widgets",
+                location: locationPath + "/widgets"
+            }]
+        };
+    </script>
     <script src="https://js.arcgis.com/4.14/"></script>
     <script>
       require([
@@ -210,13 +218,60 @@
         "esri/geometry/geometryEngine",
         "esri/geometry/Circle",
         "esri/geometry/SpatialReference",
-        "esri/geometry/projection",
         "esri/tasks/ServiceAreaTask",
         "esri/tasks/support/ServiceAreaParameters",
         "esri/tasks/support/FeatureSet",
-        "esri/core/watchUtils"
+        "esri/core/watchUtils",
+        "widgets/ShareWidget/ShareWidget"
       ], function(Basemap, WebMap, Map, MapImageLayer, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
-        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, projection, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils) {
+        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils, ShareWidget) {
+
+        var center = null;
+        var zoomLevel = null;
+        var mode = "";
+
+        // Décodage des paramètres de l'URL, s'il y en a (centrage et niveau de zoom)
+        var positionParams = window.location.href.indexOf('?');
+        if (positionParams > 0){
+            var endUrl = window.location.href.substr(positionParams + 1);
+
+            var params = endUrl.split("&");
+            params.forEach(param => {
+                // Récupération de chaque couple key=value
+                var paramKeyValue = param.split("=");
+                var key = paramKeyValue[0];
+                var value = paramKeyValue[1];
+                switch(key){
+                    case "center":
+                        var coordinates = value.split(",");
+                        var x = coordinates[0];
+                        var y = coordinates[1];
+                        center = {
+                            type: "point", // autocasts as new Point()
+                            longitude: x,
+                            latitude: y
+                        };
+                        break;
+                    case "level":
+                        zoomLevel = value;
+                        break;
+                    default:
+                        console.error("Unknown URL param '" + key + "'");
+                }
+            })
+
+            if (center != null && zoomLevel != null){
+                mode = "param";
+            }
+            else
+            {
+                console.error("Problem with URL parameters");
+            }
+        }
+
+        if (mode != "param"){
+            document.getElementById("introDiv").classList.remove("hidden");
+        }
 
         var webmap = new WebMap({
           portalItem: {
@@ -286,14 +341,22 @@
             ]
         });
 
+        if (mode != "param"){
+            center = {
+                type: "point", // autocasts as new Point()
+                longitude: 3,
+                latitude: 47
+            };
+            zoomLevel = 5;
+        }
         var view = new MapView({
             container: "viewDiv",
             map: webmap,
             constraints: {
                 rotationEnabled: false
             },
-            zoom: 5,
-            center: [3, 47]
+            zoom: zoomLevel,
+            center: center
         });
 
         // Gestion de l'intro/aide
@@ -310,7 +373,7 @@
             if (e.target.id === "container") {
                 closeMenu();
                 view.when(function () {
-                watchUtils.whenFalseOnce(view, "updating", rotate);
+                    watchUtils.whenFalseOnce(view, "updating", rotate);
                 });
             }
         });
@@ -322,13 +385,14 @@
 
         let intro = true;
         document.getElementById("about").addEventListener("click", function () {
-        document.getElementById("container").style.display = "flex";
-        //view.container.style.filter = "blur(10px)";
-        if (intro) {
-            document.getElementById("show-about").classList.remove("hidden");
-            document.getElementById("show-intro").classList.add("hidden");
-            intro = false;
-        }
+            document.getElementById("container").style.display = "flex";
+            //view.container.style.filter = "blur(10px)";
+            if (intro) {
+                document.getElementById("introDiv").classList.remove("hidden");
+                document.getElementById("show-about").classList.remove("hidden");
+                document.getElementById("show-intro").classList.add("hidden");
+                intro = false;
+            }
         });
 
         view.ui.add("about", {
@@ -343,9 +407,6 @@
             // Widget Print
             const printWidget = new Print({
                 view: view,
-                // specify your own print service
-                //printServiceUrl: "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
-                //printServiceUrl: "https://maps.esrifrance.fr/server/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
                 printServiceUrl: "https://wssecured.esrifrance.fr/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
             });
             // Affichage du widget Print sous forme d'un objet Expand
@@ -360,9 +421,46 @@
                 index: 1
             });
 
-            printExpand.watch("expanded ", function(value){
+            printExpand.watch("expanded", function(value){
                 var select = document.querySelectorAll("[data-target-property='layout']")[0];
                 select.value = "a4-landscape";
+            });
+
+            view.watch("scale", function(value){
+                // Manually update printed scale as printed scale is only an integer
+                // So to be sure to get same result than in the application, printed scale must be current scale truncated to integer 
+                printWidget.templateOptions.scaleEnabled = true;
+                printWidget.templateOptions.scale = Math.trunc(view.scale);
+            });
+
+            // Widget Share
+            const shareWidget = new ShareWidget({
+                view,
+                container: document.createElement("div")
+            });
+            // Affichage du widget Share sous forme d'un objet Expand
+            const shareExpand = new Expand({
+            	view: view,
+            	content: shareWidget,
+                expandTooltip: "Partager",
+                group: "expands"
+            });
+            view.ui.add(shareExpand, {
+                position: "top-right",
+                index: 2
+            });
+
+            shareExpand.watch("expanded ", function(value){
+                // Déclenchement manuel de la génération d'URL
+                shareWidget.shareModalOpened = value;
+            });
+
+            view.watch("stationary", function(isStationary){
+                // Si on touche à la carte, on force la fermeture du widget share pour forcer
+                // la génération d'un nouveau lien de partage mis à jour avec les nouvelles coordonnées
+                if (!isStationary){
+                    shareExpand.collapse();
+                }
             });
 
             const locateWidget = new Locate({
@@ -433,12 +531,6 @@
             unit: "metric"
         });
 
-        // // Mobile
-        // var expandWidget = new Expand({
-        //   view: view,
-        //   content: document.getElementById("searchDiv")
-        // });
-
         // CHARGEMENT WIDGETS
         // Boutons de zoom supprimés pour pouvoir placer le titre en haut à droite
         view.ui.remove("zoom");
@@ -472,8 +564,6 @@
         view.ui.add(scaleBarWidget, {
             position: "bottom-left"
         });
-
-
 
         // Affichage du cadre consignes du gouvernement
         view.ui.add("source", {
@@ -565,8 +655,6 @@
                 }
             });
 
-            
-
             // Affichage du graphic créé
             view.graphics.add(graphic);
             return graphic;
@@ -647,13 +735,13 @@
         }
 
         function executeServiceAreaTask(serviceAreaParams) {
+            var centerPoint = serviceAreaParams[1].facilities.features[0];
             serviceAreaTask2.solve(serviceAreaParams[1]).then(function(result){
                 if (result.serviceAreaPolygons.length) {
                     // Draw each service area polygon
                     result.serviceAreaPolygons.forEach(function(graphic){
                         graphic.symbol = zoneSym;
                         view.graphics.add(graphic,0);
-                        view.goTo(graphic);
                     });
                 }
             }, function(error){
@@ -664,7 +752,6 @@
                         result.serviceAreaPolygons.forEach(function(graphic){
                             graphic.symbol = zoneSym;
                             view.graphics.add(graphic,0);
-                            view.goTo(graphic);
                         });
                     }
                 }, function(error){
@@ -675,37 +762,27 @@
 
         function computeZone(graphicCenter){
 
-            // Draw simple circle, only if supported by browser
-            if (projection.isSupported()) {
-                projection.load().then(function() {
-                    const outSpatialReference = new SpatialReference({ wkid: 2154 });
+            // Draw simple circle
+            var circle = GeometryEngine.geodesicBuffer(graphicCenter.geometry, 1, "kilometers");
 
-                    var geom_proj = projection.project(graphicCenter.geometry, outSpatialReference);
-
-                    var circle = new Circle({
-                        center: geom_proj,
-                        radius: 1000
-                    });
-
-
-                    var graphicCircle = new Graphic({
-                    geometry: circle,
-                    symbol: {
-                            type: "simple-fill",
-                            color: "rgba(0,122,194,0)",
-                            outline: {  // autocasts as new SimpleLineSymbol()
-                                color: "rgba(0,122,194,100)",
-                                width: 2,
-                                style: "short-dot"
-                            }
-                        }
-                    });
-                    view.graphics.add(graphicCircle,0);
-                });
-            }
+            var graphicCircle = new Graphic({
+            geometry: circle,
+            symbol: {
+                    type: "simple-fill",
+                    color: "rgba(0,122,194,0)",
+                    outline: {  // autocasts as new SimpleLineSymbol()
+                        color: "rgba(0,122,194,100)",
+                        width: 2,
+                        style: "short-dot"
+                    }
+                }
+            });
+            view.graphics.add(graphicCircle,0);
 
             var serviceAreaParams = createServiceAreaParams(graphicCenter, view.spatialReference);
             executeServiceAreaTask(serviceAreaParams);
+
+            view.goTo(graphicCircle);
 
             // var buffer = GeometryEngine.buffer(graphicCenter.geometry, 1, "kilometers");
             // var bufferGraphic = new Graphic({
@@ -713,6 +790,11 @@
             //     symbol: zoneSym
             // });
             // view.graphics.add(bufferGraphic);
+        }
+
+        if (mode == "param"){
+            var locationGraphic = createGraphic(center);
+            computeZone(locationGraphic);
         }
 
         // RESPONSIVE DESIGN
@@ -796,7 +878,7 @@
         </div>
     </div>
     <div id="container">
-        <div id="introDiv">
+        <div id="introDiv" class="hidden">
             <h1>Carte du confinement : le périmètre d'1 kilomètre</h1>
             <div id="show-intro">
                 <p class="intro-p-desktop">Bienvenue ! Pour calculer la zone à 1 km autour de chez vous, 2 méthodes possibles :​</p>
