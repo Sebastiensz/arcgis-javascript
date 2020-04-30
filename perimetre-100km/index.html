@@ -700,8 +700,8 @@ function queryIsoDistance() {
             return graphic;
             
           });
-          //console.log(feature)
-		  view.goTo(feature)
+          console.log(feature);
+		  view.goTo(feature.geometry.centroid);
           resultsLayer.addMany(feature);  
         };
 		
