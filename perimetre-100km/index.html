@@ -238,6 +238,12 @@
         visible:false,
 		popupEnabled:false
       });
+	  
+	  		var chflLayer = new FeatureLayer({
+        url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/chfl_France/FeatureServer",
+        visible:false,
+		popupEnabled:false
+      });
 
 	  var isodistance = new FeatureLayer({ //a changer
         //url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COMMUNE/FeatureServer/0",
@@ -472,7 +478,9 @@
                 graphic: new Graphic({
                     symbol: { type: "simple-marker" }  // overwrites the default symbol used for the
                     // graphic placed at the location of the user when found
-                })
+                }),
+				scale:2095438
+				
             });
             view.ui.add(locateWidget, {
                 position: "top-left",
@@ -487,9 +495,9 @@
 			
 			locateWidget.on("locate", function(event){
   var query = comLayer.createQuery();
-  console.log(event.target.graphic.geometry);
+  //console.log(event.target.graphic.geometry);
   query.geometry = (event.target.graphic.geometry);  // the point location of the pointer
-    console.log("widget locate");
+    //console.log("widget locate");
 	//console.log(query.geometry);
   query.spatialRelationship = "intersects";  // this is the default
   query.returnGeometry = true;
@@ -498,7 +506,7 @@
   comLayer.queryFeatures(query)
     .then(function(response){
       // returns a feature set with features containing the
-      console.log(response.features[0].attributes.CODEINSEE);
+      //console.log(response.features[0].attributes.CODEINSEE);
     code_insee=response.features[0].attributes.CODEINSEE;
 	console.log(code_insee);
     queryIsoDistance().then(displayResults);
@@ -533,7 +541,8 @@ function queryIsoDistance() {
           });
           //console.log(feature)
 		  view.goTo(feature)
-          resultsLayer.addMany(feature);       
+          resultsLayer.addMany(feature); 
+//console.log(view.scale);		  
         };
 
 			
@@ -581,16 +590,17 @@ function queryIsoDistance() {
             resultGraphicEnabled: false, // resultGraphic is customized so default resultGraphic is disabled
             //sources : [locatorSearchSource]
 			sources:[            {
-              layer: comLayer,
-              searchFields: ["POLYGON_NM"],
-              displayField: "POLYGON_NM",
-              exactMatch: true,
-              outFields: ["POLYGON_NM"],
+              layer: chflLayer,
+              searchFields: ["NAME"],
+              displayField: "NAME",
+              exactMatch: false,
+              outFields: ["NAME"],
               name: "Commune",
               placeholder: "Recherchez votre commune",
 			    maxResults: 3,
-  maxSuggestions: 16,
-            }]
+  maxSuggestions: 36,
+            }],
+			locationEnabled:false
         });
 
         // Widget ScaleBar
@@ -645,9 +655,9 @@ function queryIsoDistance() {
 		view.on("click", function(event){
 
   var query = comLayer.createQuery();
-  console.log(event)
+  //console.log(event)
   query.geometry = view.toMap(event);  // the point location of the pointer
-  console.log(query.geometry);
+  //console.log(query.geometry);
   query.spatialRelationship = "intersects";  // this is the default
   query.returnGeometry = true;
   query.outFields = [ "CODEINSEE" ];
@@ -822,10 +832,10 @@ function queryIsoDistance() {
 		
 		searchWidget.on("select-result", function(event){
   var query = comLayer.createQuery();
-  console.log("searchwidget");
-  console.log(event.result.feature.geometry);
+  //console.log("searchwidget");
+  //console.log(event.result.feature.geometry);
   query.geometry = event.result.feature.geometry;  // the point location of the pointer
-    console.log("widget locate");
+    //console.log("widget locate");
 	//console.log(query.geometry);
   query.spatialRelationship = "intersects";  // this is the default
   query.returnGeometry = true;
@@ -834,9 +844,9 @@ function queryIsoDistance() {
   comLayer.queryFeatures(query)
     .then(function(response){
       // returns a feature set with features containing the
-      console.log(response.features[0].attributes.CODEINSEE);
+     // console.log(response.features[0].attributes.CODEINSEE);
     code_insee=response.features[0].attributes.CODEINSEE;
-	console.log(code_insee);
+	//console.log(code_insee);
     queryIsoDistance().then(displayResults);
     });
 });
