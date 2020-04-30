@@ -701,7 +701,7 @@ function queryIsoDistance() {
             
           });
           console.log(feature);
-		  view.goTo(feature.geometry.centroid);
+		  view.goTo(feature);
           resultsLayer.addMany(feature);  
         };
 		
