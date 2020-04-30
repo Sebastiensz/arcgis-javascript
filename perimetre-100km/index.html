@@ -702,7 +702,7 @@ function queryIsoDistance() {
             
           });
           console.log(feature);
-		  view.goTo(feature);
+		  view.goTo(feature.geometry.centroid);
           resultsLayer.addMany(feature);  
         };
 		
