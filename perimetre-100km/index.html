@@ -186,17 +186,6 @@
         rel="stylesheet"
         href="https://js.arcgis.com/4.14/esri/themes/light/main.css"
     />
-	<link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css"/>
-	<link rel="stylesheet" href="./widgets/ShareWidget/css/Share.css"/>
-	    <script>
-        var locationPath = location.pathname.replace(/\/[^\/]+$/, "");
-        window.dojoConfig = {
-            packages: [{
-                name: "widgets",
-                location: locationPath + "/widgets"
-            }]
-        };
-    </script>
     <script src="https://js.arcgis.com/4.14/"></script>
     <script>
       require([
@@ -227,9 +216,9 @@
         "esri/tasks/support/FeatureSet",
         "esri/core/watchUtils",
 		      "esri/layers/FeatureLayer",
-      "esri/tasks/support/Query","esri/layers/GraphicsLayer", "widgets/ShareWidget/ShareWidget"
+      "esri/tasks/support/Query","esri/layers/GraphicsLayer"
       ], function(Basemap, WebMap, Map, MapImageLayer, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
-        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, projection, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils,FeatureLayer,Query,GraphicsLayer,ShareWidget) {
+        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, projection, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils,FeatureLayer,Query,GraphicsLayer) {
 
         var resultsLayer = new GraphicsLayer();
 		
@@ -396,9 +385,9 @@
             const printWidget = new Print({
                 view: view,
                 // specify your own print service
-                printServiceUrl: "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
+                //printServiceUrl: "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
                 //printServiceUrl: "https://maps.esrifrance.fr/server/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
-                //printServiceUrl: "https://wssecured.esrifrance.fr/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
+                printServiceUrl: "https://wssecured.esrifrance.fr/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
             });
             // Affichage du widget Print sous forme d'un objet Expand
             const printExpand = new Expand({
@@ -416,56 +405,6 @@
                 var select = document.querySelectorAll("[data-target-property='layout']")[0];
                 select.value = "a4-landscape";
             });
-			
-			            view.watch("scale", function(value){
-                // Manually update printed scale as printed scale is only an integer
-                // So to be sure to get same result than in the application, printed scale must be current scale truncated to integer
-                printWidget.templateOptions.scaleEnabled = true;
-                printWidget.templateOptions.scale = Math.trunc(view.scale);
-            });
-			
-			
-
-
-            view.watch("stationary", function(isStationary){
-                // Si on touche à la carte, on force la fermeture du widget share pour forcer
-                // la génération d'un nouveau lien de partage mis à jour avec les nouvelles coordonnées
-                if (!isStationary && view.widthBreakpoint != "xsmall"){
-                    shareExpand.collapse();
-                }
-            });
-			
-			           // Widget Share
-            const shareWidget = new ShareWidget({
-                view,
-                container: document.createElement("div")
-            });
-            // Affichage du widget Share sous forme d'un objet Expand
-            const shareExpand = new Expand({
-            	view: view,
-            	content: shareWidget,
-                expandTooltip: "Partager",
-                group: "expands"
-            });
-            view.ui.add(shareExpand, {
-                position: "top-right",
-                index: 2
-            });
-
-            shareExpand.watch("expanded", function(value){
-                // Déclenchement manuel de la génération d'URL
-                shareWidget.shareModalOpened = value;
-            });
-
-            view.watch("stationary", function(isStationary){
-                // Si on touche à la carte, on force la fermeture du widget share pour forcer
-                // la génération d'un nouveau lien de partage mis à jour avec les nouvelles coordonnées
-                if (!isStationary && view.widthBreakpoint != "xsmall"){
-                    shareExpand.collapse();
-                }
-            });
-			
-			
 
             const locateWidget = new Locate({
                 view: view,
@@ -521,11 +460,7 @@ function queryIsoDistance() {
           var feature = results.features.map(function(graphic) {
             graphic.symbol = {
               type: "simple-fill",
-              color: [0, 122, 194, 0.1],
-			  outline: {  // autocasts as new SimpleLineSymbol()
-                color: "rgba(0,122,194,100)",
-                width: 2
-            }
+              color: [108, 155, 182, 0.8]
             };
            // console.log(graphic.attributes.INSEE_COM);
             return graphic;
@@ -584,12 +519,10 @@ function queryIsoDistance() {
               layer: comLayer,
               searchFields: ["POLYGON_NM"],
               displayField: "POLYGON_NM",
-              exactMatch: true,
+              exactMatch: false,
               outFields: ["POLYGON_NM"],
               name: "Commune",
-              placeholder: "Recherchez votre commune",
-			    maxResults: 3,
-  maxSuggestions: 16,
+              placeholder: "Ecrivez le nom de votre commune"
             }]
         });
 
@@ -679,11 +612,7 @@ function queryIsoDistance() {
           var feature = results.features.map(function(graphic) {
             graphic.symbol = {
               type: "simple-fill",
-              color: [0, 122, 194, 0.1],
-			  outline: {  // autocasts as new SimpleLineSymbol()
-                color: "rgba(0,122,194,100)",
-                width: 2
-            }
+              color: [108, 155, 182, 0.8]
             };
            // console.log(graphic.attributes.INSEE_COM);
             return graphic;
@@ -859,11 +788,7 @@ function queryIsoDistance() {
           var feature = results.features.map(function(graphic) {
             graphic.symbol = {
               type: "simple-fill",
-              color: [0, 122, 194, 0.1],
-			  outline: {  // autocasts as new SimpleLineSymbol()
-                color: "rgba(0,122,194,100)",
-                width: 2
-            }
+              color: [108, 155, 182, 0.8]
             };
            // console.log(graphic.attributes.INSEE_COM);
             return graphic;
@@ -1091,23 +1016,21 @@ function queryIsoDistance() {
     </div>
     <div id="container">
         <div id="introDiv">
-            <h1>Carte du déconfinement : le périmètre à 100 km</h1>
+            <h1>Carte du déconfinement : le périmètre à 100 kilomètres</h1>
             <div id="show-intro">
-                <p class="intro-p-desktop">Bienvenue ! Pour calculer la zone à 100 km par la route autour de votre commune, 3 méthodes possibles :​​</p>
-                <p class="intro-p-desktop">1- <span class="highlightFont">Recherchez le nom de votre commune​</span>, ou</p>
-
-                <p class="intro-p-desktop">2- <span class="highlightFont">Utilisez votre localisation actuelle​</span>, ou</p>
-				<p class="intro-p-desktop">3- <span class="highlightFont">Zoomez​</span> et naviguez librement dans la carte, puis <span class="highlightFont">cliquez sur le lieu de votre choix</span></p>
+                <p class="intro-p-desktop">Bienvenue ! Pour calculer la zone à 100 km par la route autour de votre commune, 2 méthodes possibles :​​</p>
+                <p class="intro-p-desktop">1- Recherchez une adresse ou un lieu, ou utilisez votre emplacement actuel, puis ​cliquez sur le bouton <span class="highlightFont">Calculer la zone​</span></p>
+                <span>ou</span>
+                <p class="intro-p-desktop">2- Zoomez et naviguez librement dans la carte, puis cliquez sur le lieu de votre choix,​ puis sur le bouton <span class="highlightFont">Calculer la zone​</span></p>
                 <p class="highlightFont">#RestezChezVous</p>
                 <button id="start-appli">Commencer</button>
             </div>
             <div id="show-about" class="hidden">
                 <button id="close-about" class="esri-icon-close"></button>
-                <p class="intro-p-desktop">Bienvenue ! Pour calculer la zone à 100 km par la route autour de votre commune, 3 méthodes possibles :​​</p>
-                <p class="intro-p-desktop">1- <span class="highlightFont">Recherchez le nom de votre commune​</span>, ou</p>
-
-                <p class="intro-p-desktop">2- <span class="highlightFont">Utilisez votre localisation actuelle​</span>, ou</p>
-				<p class="intro-p-desktop">3- <span class="highlightFont">Zoomez​</span> et naviguez librement dans la carte, puis <span class="highlightFont">cliquez sur le lieu de votre choix</span></p>
+                <p class="intro-p-desktop">Pour calculer la zone à 100 km par la route autour de votre commune, 2 méthodes possibles :​</p>
+                <p class="intro-p-desktop">1- Recherchez une adresse ou un lieu, ou utilisez votre emplacement actuel, puis ​cliquez sur le bouton <span class="highlightFont">Calculer la zone​</span></p>
+                <span>ou</span>
+                <p class="intro-p-desktop">2- Zoomez et naviguez librement dans la carte, puis cliquez sur le lieu de votre choix,​ puis sur le bouton <span class="highlightFont">Calculer la zone​</span></p>
                 <p class="highlightFont">#RestezChezVous</p>
             </div>
         </div>
