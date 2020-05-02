@@ -1,3 +1,4 @@
+
 <html>
   <head>
     <meta charset="utf-8" />
@@ -187,18 +188,21 @@
         href="https://js.arcgis.com/4.14/esri/themes/light/main.css"
     />
 	<link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css"/>
+
 	<link rel="stylesheet" href="./widgets/ShareWidget/css/Share.css"/>
 	    <script>
         var locationPath = location.pathname.replace(/\/[^\/]+$/, "");
         window.dojoConfig = {
             packages: [{
                 name: "widgets",
-                location: locationPath + "/widgets"
+                location: "/widgets"
             }]
         };
     </script>
     <script src="https://js.arcgis.com/4.14/"></script>
     <script>
+	/*        "esri/tasks/ServiceAreaTask",
+        "esri/tasks/support/ServiceAreaParameters",*/
       require([
         "esri/Basemap",
         "esri/WebMap",
@@ -221,41 +225,137 @@
         "esri/geometry/geometryEngine",
         "esri/geometry/Circle",
         "esri/geometry/SpatialReference",
+
+
         "esri/geometry/projection",
-        "esri/tasks/ServiceAreaTask",
-        "esri/tasks/support/ServiceAreaParameters",
         "esri/tasks/support/FeatureSet",
         "esri/core/watchUtils",
 		      "esri/layers/FeatureLayer",
       "esri/tasks/support/Query","esri/layers/GraphicsLayer", "widgets/ShareWidget/ShareWidget"
       ], function(Basemap, WebMap, Map, MapImageLayer, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
-        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, projection, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils,FeatureLayer,Query,GraphicsLayer,ShareWidget) {
+        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, projection, FeatureSet, watchUtils,FeatureLayer,Query,GraphicsLayer,ShareWidget) {
+
+
+        var center = null;
+        var zoomLevel = null;
+        var mode = "";
+
+        // Décodage des paramètres de l'URL, s'il y en a (centrage et niveau de zoom)
+        var positionParams = window.location.href.indexOf('?');
+        if (positionParams > 0){
+            var endUrl = window.location.href.substr(positionParams + 1);
+
+            var params = endUrl.split("&");
+            params.forEach(param => {
+                // Récupération de chaque couple key=value
+                var paramKeyValue = param.split("=");
+                var key = paramKeyValue[0];
+                var value = paramKeyValue[1];
+                switch(key){
+                    case "center":
+                        var coordinates = value.split(",");
+                        var x = coordinates[0];
+                        var y = coordinates[1];
+                        center = {
+                            type: "point", // autocasts as new Point()
+                            longitude: x,
+                            latitude: y
+                        };
+                        break;
+                    case "level":
+                        zoomLevel = value;
+                        break;
+                    default:
+                        console.error("Unknown URL param '" + key + "'");
+                }
+            })
+
+            if (center != null && zoomLevel != null){
+                mode = "param";
+            }
+            else
+            {
+                console.error("Problem with URL parameters");
+            }
+        }
+
+
+
+
+
+
+
+        if (mode != "param"){
+            document.getElementById("introDiv").classList.remove("hidden");
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         var resultsLayer = new GraphicsLayer();
-		
 		var comLayer = new FeatureLayer({
-        url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Communes_France_2020/FeatureServer",
-        visible:false,
+        url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Communes_France_2020/FeatureServer/0",
+		outFields :['CODEINSEE'],
 		popupEnabled:false
       });
-	  
+
+
+
+
 	  		var chflLayer = new FeatureLayer({
        // url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/chfl_France/FeatureServer",
 				url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/ChefLieu_Final/FeatureServer",
         visible:false,
+		outFields:['*'],
 		popupEnabled:false
       });
 
 	  var isodistance = new FeatureLayer({ //a changer
         //url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COMMUNE/FeatureServer/0",
-		url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Isodistances_100km_chfl/FeatureServer",
+		//url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Isodistances_100km_chfl/FeatureServer",
 		//  url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/isodistances_100km_chfl_v2/FeatureServer",
-		outFields: ["*"],
-		visible: true,
-		popupEnabled:false
+		url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Isodistances_100km_chfl_3857/FeatureServer/0",
+		outFields: ["CODEINSEE"],
+		popupEnabled:false,
+		visible:false
       });
-		
-		
 		//var webmap = new WebMap({
         //  portalItem: {
          //   id: "6ce8e6df7cc3471892974a98f5f09c13"
@@ -264,6 +364,7 @@
    
 	   		var webmap = new WebMap({
           portalItem: {
+
             id: "44f316764f724efc850b4147fdf676a1"
           }
         });
@@ -309,7 +410,7 @@
             url: "https://utility.arcgis.com/usrsvcs/servers/60a8871933e44a249ca71bb13c2d823d/rest/services/World/GeocodeServer"
         });
 
-        var locatorSearchSource = new LocatorSearchSource({
+        var locatorSource = new LocatorSearchSource({
             locator: locator,
             singleLineFieldName: "SingleLine",
             name: "Géocodage sur la France",
@@ -330,13 +431,20 @@
             ]
         });
 
+
+
+
+
+
+
+
+
 		var map = new Map({
         basemap: "topo-vector"
       });
 	  
-	  map.add(comLayer, 0);
+	  //map.add(comLayer, 0);
       map.add(resultsLayer,0);
-      
       var code_insee
 		
 		
@@ -347,9 +455,12 @@
             constraints: {
                 rotationEnabled: false
             },
+
+
             zoom: 5,
             center: [3, 47]
         });
+		
 		
 //previous place for the query
 		
@@ -385,9 +496,11 @@
         document.getElementById("container").style.display = "flex";
         //view.container.style.filter = "blur(10px)";
         if (intro) {
+
             document.getElementById("show-about").classList.remove("hidden");
             document.getElementById("show-intro").classList.add("hidden");
             intro = false;
+
         }
         });
 
@@ -395,7 +508,7 @@
             position: "top-right",
             index: 0
         });
-        // Fin gestion de l'intro/aide
+        // Fin gestion de l'intro/aide               TEST
 
         // Desktop
         var titleDiv = document.getElementById("titleDiv");
@@ -424,6 +537,7 @@
                 var select = document.querySelectorAll("[data-target-property='layout']")[0];
                 select.value = "a4-landscape";
             });
+
 			
 			            view.watch("scale", function(value){
                 // Manually update printed scale as printed scale is only an integer
@@ -480,6 +594,7 @@
                 graphic: new Graphic({
                     symbol: { type: "simple-marker" }  // overwrites the default symbol used for the
                     // graphic placed at the location of the user when found
+
                 }),
 				scale:2095438
 				
@@ -497,6 +612,7 @@
 			
 			locateWidget.on("locate", function(event){
   var query = comLayer.createQuery();
+  query.cacheHint=true;
   //console.log(event.target.graphic.geometry);
   query.geometry = (event.target.graphic.geometry);  // the point location of the pointer
     //console.log("widget locate");
@@ -510,11 +626,11 @@
       // returns a feature set with features containing the
       //console.log(response.features[0].attributes.CODEINSEE);
     code_insee=response.features[0].attributes.CODEINSEE;
-	console.log(code_insee);
     queryIsoDistance().then(displayResults);
     });
 });
 
+/*
 function queryIsoDistance() {
           var query = isodistance.createQuery();
           //query.where = "numero = " + CodeInsee; //CA SERA CODE_INSEE a terme requété depuis la couche commune
@@ -523,9 +639,9 @@ function queryIsoDistance() {
           
           
           return isodistance.queryFeatures(query);
-        };
+        }; */
       
-      
+      /*
               function displayResults(results) {
           resultsLayer.removeAll();
           var feature = results.features.map(function(graphic) {
@@ -546,6 +662,7 @@ function queryIsoDistance() {
           resultsLayer.addMany(feature); 
 //console.log(view.scale);		  
         };
+		*/
 
 			
             const bookmarksWidget = new Bookmarks({
@@ -559,6 +676,10 @@ function queryIsoDistance() {
                 expandTooltip: "Géosignets",
                 group: "expands"
             });
+
+
+
+
            // view.ui.add(bookmarksExpand, {
             //    position: "top-left",
             //    index: 4
@@ -596,11 +717,12 @@ function queryIsoDistance() {
               searchFields: ["NAME"],
               displayField: "NAME",
               exactMatch: false,
-              outFields: ["NAME"],
+              outFields: ["NAME","CODEINSEE"],
               name: "Commune",
               placeholder: "Recherchez votre commune",
 			    maxResults: 3,
-  maxSuggestions: 36,
+  maxSuggestions: 15,
+  minSuggestCharacters:3
             }],
 			locationEnabled:false
         });
@@ -652,29 +774,33 @@ function queryIsoDistance() {
             position: "bottom-left"
         });
 
-
+//var coord_zoom
 		//when click, query on cities layer to get the INSEE code and then use it for get the isodistance
 		view.on("click", function(event){
 
   var query = comLayer.createQuery();
-  //console.log(event)
   query.geometry = view.toMap(event);  // the point location of the pointer
+  //console.log("comLayer");
+  //coord_zoom=event.mapPoint;
+  //console.log(coord_zoom);
   //console.log(query.geometry);
+  //console.log("comLayerFin");
   query.spatialRelationship = "intersects";  // this is the default
   query.returnGeometry = true;
   query.outFields = [ "CODEINSEE" ];
+  query.cacheHint=true;
 
   comLayer.queryFeatures(query)
     .then(function(response){
       // returns a feature set with features containing the
       //console.log(response.features[0].attributes.CODEINSEE);
+	  //console.log(coord_zoom);
     code_insee=response.features[0].attributes.CODEINSEE;
     queryIsoDistance().then(displayResults);
     });
 });
 
-
-      
+      /*
         function queryIsoDistance() {
           var query = isodistance.createQuery();
           //query.where = "numero = " + CodeInsee; //CA SERA CODE_INSEE a terme requété depuis la couche commune
@@ -705,7 +831,7 @@ function queryIsoDistance() {
 		  view.goTo(feature);
           resultsLayer.addMany(feature);  
         };
-		
+		*/
 		
 		
 		
@@ -760,6 +886,7 @@ function queryIsoDistance() {
                 location: point, // Set the location of the popup to the clicked location
                 collapsed: false,
                 actions: []
+
             }); */
             // // Si on veut lancer le calcul de zone dès que l'utilisateur clique sur la carte
             // computeZone(locationGraphic);
@@ -778,7 +905,7 @@ function queryIsoDistance() {
             popupDiv.appendChild(button);
 
             button.addEventListener ("click", function() {
-                computeZone(locationGraphic);
+                //computeZone(locationGraphic);
                 view.popup.close();
             });
 
@@ -827,46 +954,30 @@ function queryIsoDistance() {
         });
 
         // Gestion du résultat de recherche d'adresse
-        searchWidget.on("select-result", function(event){
+     /*   searchWidget.on("select-result", function(event){
             var popupContent = event.result.name;
             popup(popupContent, event.result.feature.geometry);
-        });
+
+        });*/
 		
 		searchWidget.on("select-result", function(event){
-  var query = comLayer.createQuery();
-  //console.log("searchwidget");
-  //console.log(event.result.feature.geometry);
-  query.geometry = event.result.feature.geometry;  // the point location of the pointer
-    //console.log("widget locate");
-	//console.log(query.geometry);
-  query.spatialRelationship = "intersects";  // this is the default
-  query.returnGeometry = true;
-  query.outFields = [ "CODEINSEE" ];
-
-  comLayer.queryFeatures(query)
-    .then(function(response){
-      // returns a feature set with features containing the
-     // console.log(response.features[0].attributes.CODEINSEE);
-    code_insee=response.features[0].attributes.CODEINSEE;
-	//console.log(code_insee);
+  code_insee = event.result.feature.attributes['CODEINSEE'];
+  
     queryIsoDistance().then(displayResults);
-    });
-});
 
+});
 
 
 function queryIsoDistance() {
           var query = isodistance.createQuery();
-          //query.where = "numero = " + CodeInsee; //CA SERA CODE_INSEE a terme requété depuis la couche commune
-
+		  query.cacheHint=true;
           query.where ="CODEINSEE = '"+code_insee+ "'";
-          
-          
           return isodistance.queryFeatures(query);
         };
-      
+
       
               function displayResults(results) {
+			  //console.log(results);
           resultsLayer.removeAll();
           var feature = results.features.map(function(graphic) {
             graphic.symbol = {
@@ -877,15 +988,37 @@ function queryIsoDistance() {
                 width: 2
             }
             };
-           // console.log(graphic.attributes.INSEE_COM);
+			//view.goTo(graphic.geometry.centroid);
             return graphic;
           });
-          //console.log(feature)
-		  view.goTo(feature)
-          resultsLayer.addMany(feature);    
+          console.log(feature[0]);
+	/*	 
+view.goTo({
+zoom:7,
+//center:[feature[0].geometry.centroid.x,feature[0].geometry.centroid.y]
+});*/
+
+
+
+
+
+//feature[0].geometry.extent.
+/*
+view.extent= {
+            // autocasts as new Extent()
+            xmin: 82293.8,//526214.864500001, //82293.8
+            ymin: 5838838.06,//6587360.0952, //5838838.06
+            xmax: 340466.54,//704357.719700001, //340466.54
+            ymax: 6111760.34,//6769901.0038, // 6111760.34
+            spatialReference: 3857//102110 //3857
+          };*/
+		  view.goTo(feature);
+          resultsLayer.addMany(feature);
+		  
+//console.log(feature[0].geometry.extent);
+//zoomToLayer(resultsLayer);		  
         };
-		
-		
+		//view.goTo(feature.geometry.extent);
 		
 		        function zoomToLayer(layer) {
           return layer.queryExtent().then(function(response) {
@@ -899,7 +1032,18 @@ function queryIsoDistance() {
 		
 		
 		
-		
+		/*
+
+
+
+
+
+
+
+
+
+
+
 
         // Calcul de la zone
         var serviceAreaTask = new ServiceAreaTask({
@@ -915,6 +1059,7 @@ function queryIsoDistance() {
             var featureSet = new FeatureSet({
                 features: [locationGraphic]
             });
+
             // //Set all of the input parameters for the service
             // var taskParameters = new ServiceAreaParameters({
             //     facilities: featureSet, // Location(s) to start from
@@ -938,6 +1083,8 @@ function queryIsoDistance() {
                 outSpatialReference: outSpatialReference // Spatial reference to match the view
             });
 
+
+
             var taskParameters2 = new ServiceAreaParameters({
                 facilities: featureSet, // Location(s) to start from
                 defaultBreaks: [100],
@@ -948,6 +1095,7 @@ function queryIsoDistance() {
                 travelMode: "2", // traveMode "Walking distance"
                 outSpatialReference: outSpatialReference // Spatial reference to match the view
             });
+
 
             return [taskParameters, taskParameters2];
         }
@@ -978,6 +1126,9 @@ function queryIsoDistance() {
                 });  
             });
         }
+
+
+
 
         function computeZone(graphicCenter){
 
@@ -1020,6 +1171,8 @@ function queryIsoDistance() {
             // });
             // view.graphics.add(bufferGraphic);
         }
+		
+		*/
 
         // RESPONSIVE DESIGN
         // Init view
@@ -1106,6 +1259,8 @@ function queryIsoDistance() {
             <h1>Carte du déconfinement : le périmètre à 100 km</h1>
             <div id="show-intro">
                 <p class="intro-p-desktop">Bienvenue ! Pour calculer la zone à 100 km par la route autour de votre commune, 3 méthodes possibles :​​</p>
+
+
                 <p class="intro-p-desktop">1- <span class="highlightFont">Recherchez le nom de votre commune​</span>, ou</p>
 
                 <p class="intro-p-desktop">2- <span class="highlightFont">Utilisez votre localisation actuelle​</span>, ou</p>
@@ -1116,6 +1271,8 @@ function queryIsoDistance() {
             <div id="show-about" class="hidden">
                 <button id="close-about" class="esri-icon-close"></button>
                 <p class="intro-p-desktop">Bienvenue ! Pour calculer la zone à 100 km par la route autour de votre commune, 3 méthodes possibles :​​</p>
+
+
                 <p class="intro-p-desktop">1- <span class="highlightFont">Recherchez le nom de votre commune​</span>, ou</p>
 
                 <p class="intro-p-desktop">2- <span class="highlightFont">Utilisez votre localisation actuelle​</span>, ou</p>
