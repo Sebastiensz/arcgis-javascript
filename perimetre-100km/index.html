@@ -47,18 +47,6 @@
             overflow: hidden;
         }
 
-        #widget_search{
-            height:50px;
-            max-width: 488px;
-            width: 100%;
-        }
-		
-		#widget_search{
-            height:50px;
-            max-width: 488px;
-            width: 100%;
-        }
-
         .invisible {
             visibility: collapse;
         }
@@ -191,7 +179,16 @@
 		.esri-input.esri-search__input::placeholder{
         color:rgb(64,64,64);
    }
-   
+   .esri-input.esri-search__input {
+                width: 210px;
+				max-width: 488px;
+}
+
+        #widget_search{
+            height:50px;
+            max-width: 488px;
+            width: 100%;
+        }
    
     </style>
     <link
@@ -370,8 +367,8 @@
         };
 
         var locator = new Locator({
-            //url: "https://utility.arcgis.com/usrsvcs/servers/60a8871933e44a249ca71bb13c2d823d/rest/services/World/GeocodeServer" //esri France
-			url:"https://services.esrifrance.fr/arcgis/tokenaccess/kbN*dPgsD3N.T8m.8vjwuP1*HLIAgGQtX2.QDFjalyzLsRC6iofyBBnhC3RksUzPoMytG21igwggred5u57qssqcV7IzAJurEg.9ai8z5KY-/rest/services/GEOCODAGE/BDAdresse_FranceDOM_Advanced_Plaque/GeocodeServer" //csl
+            url: "https://utility.arcgis.com/usrsvcs/servers/60a8871933e44a249ca71bb13c2d823d/rest/services/World/GeocodeServer" //esri France
+			//url:"https://services.esrifrance.fr/arcgis/tokenaccess/kbN*dPgsD3N.T8m.8vjwuP1*HLIAgGQtX2.QDFjalyzLsRC6iofyBBnhC3RksUzPoMytG21igwggred5u57qssqcV7IzAJurEg.9ai8z5KY-/rest/services/GEOCODAGE/BDAdresse_FranceDOM_Advanced_Plaque/GeocodeServer" //csl
         });
 
         var locatorSearchSource = new LocatorSearchSource({
@@ -390,11 +387,13 @@
             locator: locator,
             singleLineFieldName: "SingleLine",
             name: "Géocodage sur la France",
-            placeholder: "Vérifier si une commune est dans la zone",
+            //placeholder: "Vérifier si une commune est dans la zone",
+			placeholder:"Commune dans la zone ?",
             maxResults: 3,
             maxSuggestions: 6,
             suggestionsEnabled: true,
-            minSuggestCharacters: 3
+            minSuggestCharacters: 3,
+			locationEnabled:false
 			
         });
 
@@ -578,6 +577,7 @@
             position: "top-left",
             index: 2
         });
+
   var query = comLayer.createQuery();
   query.cacheHint=true;
   //console.log(event.target.graphic.geometry);
@@ -761,6 +761,11 @@ function queryIsoDistance() {
 //var coord_zoom
 		//when click, query on cities layer to get the INSEE code and then use it for get the isodistance
 		view.on("click", function(event){
+		
+					view.ui.add(searchWidget2, {
+            position: "top-left",
+            index: 2
+        });
 
   var query = comLayer.createQuery();
   query.geometry = view.toMap(event);  // the point location of the pointer
