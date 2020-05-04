@@ -965,6 +965,7 @@ function queryIsoDistance() {
         });*/
 		
 		searchWidget.on("select-result", function(event){
+			createGraphic(event.result.feature.geometry);
   code_insee = event.result.feature.attributes['CODEINSEE'];
   
     queryIsoDistance().then(displayResults);
