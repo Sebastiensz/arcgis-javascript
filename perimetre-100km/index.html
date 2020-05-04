@@ -52,6 +52,12 @@
             max-width: 488px;
             width: 100%;
         }
+		
+		#widget_search{
+            height:50px;
+            max-width: 488px;
+            width: 100%;
+        }
 
         .invisible {
             visibility: collapse;
@@ -185,6 +191,8 @@
 		.esri-input.esri-search__input::placeholder{
         color:rgb(64,64,64);
    }
+   
+   
     </style>
     <link
         rel="stylesheet"
@@ -377,6 +385,18 @@
             minSuggestCharacters: 3
 			
         });
+		
+		        var locatorSearchSource2 = new LocatorSearchSource({
+            locator: locator,
+            singleLineFieldName: "SingleLine",
+            name: "Géocodage sur la France",
+            placeholder: "Vérifier si une commune est dans la zone",
+            maxResults: 3,
+            maxSuggestions: 6,
+            suggestionsEnabled: true,
+            minSuggestCharacters: 3
+			
+        });
 
         var localBasemapsSource = LocalBasemapsSource({
             basemaps: [
@@ -554,6 +574,10 @@
 			
 			
 			locateWidget.on("locate", function(event){
+			view.ui.add(searchWidget2, {
+            position: "top-left",
+            index: 2
+        });
   var query = comLayer.createQuery();
   query.cacheHint=true;
   //console.log(event.target.graphic.geometry);
@@ -651,6 +675,27 @@ function queryIsoDistance() {
             popupEnabled: false, // popup is customized so default popup is disabled
             resultGraphicEnabled: false, // resultGraphic is customized so default resultGraphic is disabled
             sources : [locatorSearchSource]
+			/*sources:[            {
+              layer: chflLayer,
+              searchFields: ["NAME"],
+              displayField: "NAME",
+              exactMatch: false,
+              outFields: ["NAME","CODEINSEE"],
+              name: "Commune",
+              placeholder: "Recherchez votre commune",
+			    maxResults: 3,
+  maxSuggestions: 15,
+  minSuggestCharacters:3
+            }],*/
+			//locationEnabled:false
+        });
+		
+		        const searchWidget2 = new Search({
+            view: view,
+            includeDefaultSources: false,
+            popupEnabled: false, // popup is customized so default popup is disabled
+            resultGraphicEnabled: false, // resultGraphic is customized so default resultGraphic is disabled
+            sources : [locatorSearchSource2]
 			/*sources:[            {
               layer: chflLayer,
               searchFields: ["NAME"],
@@ -908,8 +953,15 @@ function queryIsoDistance() {
 });*/
 
 			searchWidget.on("select-result", function(event){
-			console.log("widget search");
-			console.log(event.result.feature.geometry);
+			
+						
+			view.ui.add(searchWidget2, {
+            position: "top-left",
+            index: 2
+        });
+			
+			//console.log("widget search");
+			//console.log(event.result.feature.geometry);
 			createGraphic(event.result.feature.geometry);
   var query = comLayer.createQuery();
   query.cacheHint=true;
@@ -928,6 +980,21 @@ function queryIsoDistance() {
     code_insee=response.features[0].attributes.CODEINSEE;
     queryIsoDistance().then(displayResults);
     });
+});
+
+searchWidget2.on("select-result", function(event){
+locationGraphic=createGraphic(event.result.feature.geometry);
+
+//verify intersection between resultsLayer and the city got from the searchWidget2
+isContains=GeometryEngine.intersects(resultsLayer.graphics.items[0].geometry,event.result.feature.geometry);
+if(isContains){
+locationGraphic.symbol.color="rgb(0,212,0)";
+}
+else{
+locationGraphic.symbol.color="rgb(255,0,0)";
+}
+
+
 });
 
 
@@ -980,16 +1047,6 @@ view.extent= {
 //zoomToLayer(resultsLayer);		  
         };
 		//view.goTo(feature.geometry.extent);
-		
-		        function zoomToLayer(layer) {
-          return layer.queryExtent().then(function(response) {
-            view.goTo(response.extent).catch(function(error) {
-              if (error.name != "AbortError") {
-                console.error(error);
-              }
-            });
-          });
-        }
 		
 		
 		
@@ -1203,7 +1260,6 @@ view.extent= {
             <div id="show-intro">
                 <p class="intro-p-desktop">Bienvenue ! Pour calculer la zone à 100 km par la route autour de votre commune, 3 méthodes possibles :​​</p>
                 <p class="intro-p-desktop">1- <span class="highlightFont">Recherchez le nom de votre commune​</span>, ou</p>
-
                 <p class="intro-p-desktop">2- <span class="highlightFont">Utilisez votre localisation actuelle​</span>, ou</p>
 				<p class="intro-p-desktop">3- <span class="highlightFont">Zoomez​</span> et naviguez librement dans la carte, puis <span class="highlightFont">cliquez sur le lieu de votre choix</span></p>
                 <p>Données : IGN, HERE   <span class="highlightFont">#RestezChezVous</span> <p>
@@ -1213,7 +1269,6 @@ view.extent= {
                 <button id="close-about" class="esri-icon-close"></button>
                 <p class="intro-p-desktop">Bienvenue ! Pour calculer la zone à 100 km par la route autour de votre commune, 3 méthodes possibles :​​</p>
                 <p class="intro-p-desktop">1- <span class="highlightFont">Recherchez le nom de votre commune​</span>, ou</p>
-
                 <p class="intro-p-desktop">2- <span class="highlightFont">Utilisez votre localisation actuelle​</span>, ou</p>
 				<p class="intro-p-desktop">3- <span class="highlightFont">Zoomez​</span> et naviguez librement dans la carte, puis <span class="highlightFont">cliquez sur le lieu de votre choix</span></p>
                 <p>Données : IGN, HERE   <span class="highlightFont">#RestezChezVous</span> <p>
