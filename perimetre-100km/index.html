@@ -182,6 +182,9 @@
         .esri-view-width-less-than-small .esri-zoom .esri-widget--button {
             display: none;
         }
+	    	  .esri-input.esri-search__input::placeholder{
+        color:rgb(64,64,64);
+   }
     </style>
     <link
         rel="stylesheet"
@@ -440,7 +443,7 @@
 
 
 		var map = new Map({
-        basemap: "topo-vector"
+        basemap: basemapTopographie
       });
 	  
 	  //map.add(comLayer, 0);
