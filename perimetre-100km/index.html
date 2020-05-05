@@ -182,16 +182,9 @@
    
 
 .esri-search {
-width:463px !important;
+width:100% !important;
 height:50px;
 }
-
-
-        #widget_search{
-            height:50px;
-            max-width: 488px;
-            width: 100%;
-        }
    
     </style>
     <link
@@ -382,7 +375,8 @@ height:50px;
             maxResults: 3,
             maxSuggestions: 6,
             suggestionsEnabled: true,
-            minSuggestCharacters: 3
+            minSuggestCharacters: 3,
+			autoNavigate:false
 			
         });
 		
@@ -972,6 +966,7 @@ function queryIsoDistance() {
 });*/
 
 			searchWidget.on("select-result", function(event){
+			
 			createGraphic(event.result.feature.geometry);
 						
 			view.ui.add(searchWidget2, {
