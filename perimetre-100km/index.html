@@ -566,9 +566,10 @@
                 index: 3
             });
             // Gestion du résultat du widget Locate
+			/*
             locateWidget.on("locate", function(event){
                 popupContentClick(event.target.graphic.geometry);
-            });
+            });*/
 
 			
 			
@@ -585,7 +586,7 @@
     //console.log("widget locate");
 	//console.log(query.geometry);
   query.spatialRelationship = "intersects";  // this is the default
-  query.returnGeometry = true;
+  //query.returnGeometry = true;
   query.outFields = [ "CODEINSEE" ];
 
   comLayer.queryFeatures(query)
@@ -775,7 +776,7 @@ function queryIsoDistance() {
   //console.log(query.geometry);
   //console.log("comLayerFin");
   query.spatialRelationship = "intersects";  // this is the default
-  query.returnGeometry = true;
+  //query.returnGeometry = true;
   query.outFields = [ "CODEINSEE" ];
   query.cacheHint=true;
 
@@ -839,6 +840,8 @@ function queryIsoDistance() {
 
         // GESTION POPUP
         // Popup affichée lors du clic sur la carte ou en résultat du widget Locate
+		
+		/*
         function popupContentClick(point){
             var lat = Math.round(point.latitude * 1000) / 1000;
             var lon = Math.round(point.longitude * 1000) / 1000;
@@ -849,10 +852,11 @@ function queryIsoDistance() {
 
             var params = {
                 location: point
-            };
+            };*/
 
             // Display the popup
             // Execute a reverse geocode using the clicked location
+			/*
             locator.locationToAddress(params).then(function(response) {
                 // If an address is successfully found, show it in the popup's content
 				//var a=response.address.split(' ');
@@ -864,9 +868,9 @@ function queryIsoDistance() {
                 // If the promise fails and no result is found, show a generic message
                 //view.popup.content = setContentInfo(popupContent + "<br>Pas d'adresse trouvée pour ce lieu", locationGraphic);
             });
-        }
+        }*/
 
-
+/*
         function popup(content, point){
             var locationGraphic = createGraphic(point);
            /* view.popup.open({
@@ -875,12 +879,14 @@ function queryIsoDistance() {
                 location: point, // Set the location of the popup to the clicked location
                 collapsed: false,
                 actions: []
-            }); */
+            }); 
             // // Si on veut lancer le calcul de zone dès que l'utilisateur clique sur la carte
             // computeZone(locationGraphic);
 
             return locationGraphic;
         }
+		
+		
 
         function setContentInfo(content, locationGraphic) {
             // Création du contenu de la popup personnalisée
@@ -898,7 +904,7 @@ function queryIsoDistance() {
             });
 
             return popupDiv;
-        }
+        }*/
 
         function createGraphic(point) {
             // Suppression de tout les graphic présents
@@ -925,11 +931,14 @@ function queryIsoDistance() {
         }
 
         // Gestion manuelle de la popup de la view
+		/*
         view.popup.autoOpenEnabled = false;
         view.popup.collapsed = false;
         view.popup.collapseEnabled = false;
         view.popup.dockEnabled = false;
+		*/
         // Gestion du clic sur la carte
+		/*
         view.on("click", function(event) {
             popupContentClick(event.mapPoint);
         });
@@ -939,7 +948,7 @@ function queryIsoDistance() {
                     popup.collapsed = false;
                 }
             });
-        });
+        });*/
 
         // Gestion du résultat de recherche d'adresse
      /*   searchWidget.on("select-result", function(event){
@@ -972,9 +981,9 @@ function queryIsoDistance() {
   query.cacheHint=true;
   //console.log(event.target.graphic.geometry);
   query.geometry = (event.result.feature.geometry);  // the point location of the pointer
-	console.log(query.geometry);
+	//console.log(query.geometry);
   query.spatialRelationship = "intersects";  // this is the default
-  query.returnGeometry = true;
+  //query.returnGeometry = true;
   query.outFields = [ "CODEINSEE" ];
 
   comLayer.queryFeatures(query)
