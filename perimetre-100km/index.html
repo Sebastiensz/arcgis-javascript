@@ -363,7 +363,6 @@ height:50px;
 
         var locator = new Locator({
             url: "https://utility.arcgis.com/usrsvcs/servers/60a8871933e44a249ca71bb13c2d823d/rest/services/World/GeocodeServer" //esri France
-			//url:"https://services.esrifrance.fr/arcgis/tokenaccess/kbN*dPgsD3N.T8m.8vjwuP1*HLIAgGQtX2.QDFjalyzLsRC6iofyBBnhC3RksUzPoMytG21igwggred5u57qssqcV7IzAJurEg.9ai8z5KY-/rest/services/GEOCODAGE/BDAdresse_FranceDOM_Advanced_Plaque/GeocodeServer" //csl
 		});
 
         var locatorSearchSource = new LocatorSearchSource({
@@ -478,9 +477,9 @@ height:50px;
             const printWidget = new Print({
                 view: view,
                 // specify your own print service
-                printServiceUrl: "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
-                //printServiceUrl: "https://maps.esrifrance.fr/server/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
-                //printServiceUrl: "https://wssecured.esrifrance.fr/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
+                printServiceUrl: "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",
+				allowedFormats: ["jpg", "png8", "png32"],
+				allowedLayouts: ["a3-landscape", "a3-portrait"],
             });
             // Affichage du widget Print sous forme d'un objet Expand
             const printExpand = new Expand({
@@ -493,6 +492,7 @@ height:50px;
                 position: "top-right",
                 index: 1
             });
+			
 
             printExpand.watch("expanded ", function(value){
                 var select = document.querySelectorAll("[data-target-property='layout']")[0];
