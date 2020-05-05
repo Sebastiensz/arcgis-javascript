@@ -208,7 +208,6 @@ height:50px;
         "esri/tasks/support/ServiceAreaParameters",*/
       require([
         "esri/Basemap",
-        "esri/WebMap",
         "esri/Map",
         "esri/layers/MapImageLayer",
         "esri/views/MapView",
@@ -233,7 +232,7 @@ height:50px;
         "esri/core/watchUtils",
 		      "esri/layers/FeatureLayer",
       "esri/tasks/support/Query","esri/layers/GraphicsLayer", "widgets/ShareWidget/ShareWidget"
-      ], function(Basemap, WebMap, Map, MapImageLayer, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
+      ], function(Basemap, Map, MapImageLayer, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
         Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, projection, FeatureSet, watchUtils,FeatureLayer,Query,GraphicsLayer,ShareWidget) {
 
         var center = null;
@@ -319,11 +318,13 @@ height:50px;
          // }
        // });
    
+   /*
 	   		var webmap = new WebMap({
           portalItem: {
             id: "44f316764f724efc850b4147fdf676a1"
           }
         });
+		*/
 
         var basemapTopographie = new Basemap({
             portalItem: {
