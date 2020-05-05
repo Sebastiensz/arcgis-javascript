@@ -184,8 +184,10 @@
 .esri-search {
 width:100% !important;
 height:50px;
-}.esri-search {
-width:100% !important;
+}
+
+.esri-search-widget-mobile {
+width:306px !important;
 height:50px;
 }
    
@@ -680,6 +682,7 @@ height:50px;
             position: "top-left",
             index: 3
         });
+		
 
         var homeBtn = new Home({
           view: view
@@ -871,13 +874,9 @@ function queryIsoDistance() {
         function setTitleMobile(isMobile) {
             if (isMobile) {
                 view.ui.remove(titleDiv);
-				console.log("dojo style");
-				//dojoQuery(".esri-search").style("width", "600px");
-				var nodes=dojoQuery(".esri-search");
-				console.log(nodes);
-				if (nodes.length>0){
-				domStyle.set(nodes,"width", "600px");
-				}
+                if (searchWidget != null && searchWidget.container != null){
+                    searchWidget.container.classList.add("esri-search-widget-mobile");
+                }
             } else {
                 view.ui.add(titleDiv, {
                     position: "top-left",
