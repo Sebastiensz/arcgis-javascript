@@ -184,6 +184,9 @@
 .esri-search {
 width:100% !important;
 height:50px;
+}.esri-search {
+width:100% !important;
+height:50px;
 }
    
     </style>
@@ -204,12 +207,9 @@ height:50px;
     </script>
     <script src="https://js.arcgis.com/4.14/"></script>
     <script>
-	/*        "esri/tasks/ServiceAreaTask",
-        "esri/tasks/support/ServiceAreaParameters",*/
       require([
         "esri/Basemap",
         "esri/Map",
-        "esri/layers/MapImageLayer",
         "esri/views/MapView",
         "esri/widgets/Zoom",
         "esri/widgets/Home",
@@ -222,18 +222,14 @@ height:50px;
         "esri/widgets/Locate",
         "esri/widgets/Print",
         "esri/widgets/ScaleBar",
-        "esri/widgets/Bookmarks",
         "esri/Graphic",
         "esri/geometry/geometryEngine",
         "esri/geometry/Circle",
-        "esri/geometry/SpatialReference",
-        "esri/geometry/projection",
-        "esri/tasks/support/FeatureSet",
         "esri/core/watchUtils",
 		      "esri/layers/FeatureLayer",
-      "esri/tasks/support/Query","esri/layers/GraphicsLayer", "widgets/ShareWidget/ShareWidget"
-      ], function(Basemap, Map, MapImageLayer, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
-        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, projection, FeatureSet, watchUtils,FeatureLayer,Query,GraphicsLayer,ShareWidget) {
+      "esri/tasks/support/Query","esri/layers/GraphicsLayer", "widgets/ShareWidget/ShareWidget","dojo/dom-style", "dojo/dom","dojo/query"
+      ], function(Basemap, Map, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
+        Locate, Print, ScaleBar, Graphic, GeometryEngine, Circle, watchUtils,FeatureLayer,Query,GraphicsLayer,ShareWidget,domStyle,dom,dojoQuery) {
 
         var center = null;
         var zoomLevel = null;
@@ -564,14 +560,7 @@ height:50px;
                 position: "top-left",
                 index: 3
             });
-            // Gestion du résultat du widget Locate
-			/*
-            locateWidget.on("locate", function(event){
-                popupContentClick(event.target.graphic.geometry);
-            });*/
-
-			
-			
+		
 			locateWidget.on("locate", function(event){
 			createGraphic(event.target.graphic.geometry);
 			view.ui.add(searchWidget2, {
@@ -581,73 +570,19 @@ height:50px;
 
   var query = comLayer.createQuery();
   query.cacheHint=true;
-  //console.log(event.target.graphic.geometry);
   query.geometry = (event.target.graphic.geometry);  // the point location of the pointer
-    //console.log("widget locate");
-	//console.log(query.geometry);
   query.spatialRelationship = "intersects";  // this is the default
-  //query.returnGeometry = true;
+  query.returnGeometry = false;
   query.outFields = [ "CODEINSEE" ];
 
   comLayer.queryFeatures(query)
     .then(function(response){
       // returns a feature set with features containing the
-      //console.log(response.features[0].attributes.CODEINSEE);
     code_insee=response.features[0].attributes.CODEINSEE;
     queryIsoDistance().then(displayResults);
     });
 });
 
-/*
-function queryIsoDistance() {
-          var query = isodistance.createQuery();
-          //query.where = "numero = " + CodeInsee; //CA SERA CODE_INSEE a terme requété depuis la couche commune
-
-          query.where ="CODEINSEE = '"+code_insee+ "'";
-          
-          
-          return isodistance.queryFeatures(query);
-        }; */
-      
-      /*
-              function displayResults(results) {
-          resultsLayer.removeAll();
-          var feature = results.features.map(function(graphic) {
-            graphic.symbol = {
-              type: "simple-fill",
-              color: [0, 122, 194, 0.1],
-			  outline: {  // autocasts as new SimpleLineSymbol()
-                color: "rgba(0,122,194,100)",
-                width: 2
-            }
-            };
-           // console.log(graphic.attributes.INSEE_COM);
-            return graphic;
-            
-          });
-          //console.log(feature)
-		  view.goTo(feature)
-          resultsLayer.addMany(feature); 
-//console.log(view.scale);		  
-        };
-		*/
-
-			
-            const bookmarksWidget = new Bookmarks({
-                view: view,
-                editingEnabled: false
-            });
-            // Affichage du widget Bookmarks sous forme d'un objet Expand
-            const bookmarksExpand = new Expand({
-            	view: view,
-            	content: bookmarksWidget,
-                expandTooltip: "Géosignets",
-                group: "expands"
-            });
-           // view.ui.add(bookmarksExpand, {
-            //    position: "top-left",
-            //    index: 4
-            //});
 
             var basemapGalleryWidget = new BasemapGallery({
                 activeBasemap: basemapTopographie,
@@ -770,13 +705,8 @@ function queryIsoDistance() {
 
   var query = comLayer.createQuery();
   query.geometry = view.toMap(event);  // the point location of the pointer
-  //console.log("comLayer");
-  //coord_zoom=event.mapPoint;
-  //console.log(coord_zoom);
-  //console.log(query.geometry);
-  //console.log("comLayerFin");
   query.spatialRelationship = "intersects";  // this is the default
-  //query.returnGeometry = true;
+  query.returnGeometry = false;
   query.outFields = [ "CODEINSEE" ];
   query.cacheHint=true;
 
@@ -790,41 +720,6 @@ function queryIsoDistance() {
     });
 });
 
-      /*
-        function queryIsoDistance() {
-          var query = isodistance.createQuery();
-          //query.where = "numero = " + CodeInsee; //CA SERA CODE_INSEE a terme requété depuis la couche commune
-
-          query.where ="CODEINSEE = '"+code_insee+ "'";
-          
-          
-          return isodistance.queryFeatures(query);
-        };
-      
-      
-              function displayResults(results) {
-          resultsLayer.removeAll();
-          var feature = results.features.map(function(graphic) {
-            graphic.symbol = {
-              type: "simple-fill",
-              color: [0, 122, 194, 0.1],
-			  outline: {  // autocasts as new SimpleLineSymbol()
-                color: "rgba(0,122,194,100)",
-                width: 2
-            }
-            };
-           // console.log(graphic.attributes.INSEE_COM);
-            return graphic;
-            
-          });
-          //console.log(feature);
-		  view.goTo(feature);
-          resultsLayer.addMany(feature);  
-        };
-		*/
-		
-		
-		
         // Affichage du cadre consignes du gouvernement
         view.ui.add("source", {
             position: "bottom-right",
@@ -838,73 +733,7 @@ function queryIsoDistance() {
             index: 1
         });
 
-        // GESTION POPUP
-        // Popup affichée lors du clic sur la carte ou en résultat du widget Locate
-		
-		/*
-        function popupContentClick(point){
-            var lat = Math.round(point.latitude * 1000) / 1000;
-            var lon = Math.round(point.longitude * 1000) / 1000;
 
-            var popupContent = "Longitude/Latitude : " + lon + ", " + lat;
-
-            var locationGraphic = popup(popupContent, point);
-
-            var params = {
-                location: point
-            };*/
-
-            // Display the popup
-            // Execute a reverse geocode using the clicked location
-			/*
-            locator.locationToAddress(params).then(function(response) {
-                // If an address is successfully found, show it in the popup's content
-				//var a=response.address.split(' ');
-				//console.log(a);
-				//console.log(response.address.split(' ')[3][0]+response.address.split(' ')[3][1]+response.address.split(' ')[3][2]+response.address.split(' ')[3][3]+response.address.split(' ')[3][4]);
-                //view.popup.content = setContentInfo(popupContent + "<br>" + response.address, locationGraphic);
-            })
-            .catch(function(error) {
-                // If the promise fails and no result is found, show a generic message
-                //view.popup.content = setContentInfo(popupContent + "<br>Pas d'adresse trouvée pour ce lieu", locationGraphic);
-            });
-        }*/
-
-/*
-        function popup(content, point){
-            var locationGraphic = createGraphic(point);
-           /* view.popup.open({
-                title: "Résultat de la recherche",
-                content: setContentInfo(content, locationGraphic),
-                location: point, // Set the location of the popup to the clicked location
-                collapsed: false,
-                actions: []
-            }); 
-            // // Si on veut lancer le calcul de zone dès que l'utilisateur clique sur la carte
-            // computeZone(locationGraphic);
-
-            return locationGraphic;
-        }
-		
-		
-
-        function setContentInfo(content, locationGraphic) {
-            // Création du contenu de la popup personnalisée
-            // avec le bouton permettant de lancer le calcul de zone
-            var popupDiv = document.createElement("div");
-            popupDiv.innerHTML = content + "<br>"
-            var button = document.createElement("button");
-            button.innerHTML = "Calculer la zone";
-            button.id='calculZone';
-            popupDiv.appendChild(button);
-
-            button.addEventListener ("click", function() {
-                //computeZone(locationGraphic);
-                view.popup.close();
-            });
-
-            return popupDiv;
-        }*/
 
         function createGraphic(point) {
             // Suppression de tout les graphic présents
@@ -930,42 +759,6 @@ function queryIsoDistance() {
             return graphic;
         }
 
-        // Gestion manuelle de la popup de la view
-		/*
-        view.popup.autoOpenEnabled = false;
-        view.popup.collapsed = false;
-        view.popup.collapseEnabled = false;
-        view.popup.dockEnabled = false;
-		*/
-        // Gestion du clic sur la carte
-		/*
-        view.on("click", function(event) {
-            popupContentClick(event.mapPoint);
-        });
-        view.when(function() {
-            popup.watch("collapsed", function(value){
-                if(value && popup.currentDockPosition === 'bottom-center'){
-                    popup.collapsed = false;
-                }
-            });
-        });*/
-
-        // Gestion du résultat de recherche d'adresse
-     /*   searchWidget.on("select-result", function(event){
-            var popupContent = event.result.name;
-            popup(popupContent, event.result.feature.geometry);
-        });*/
-		
-		/*
-		searchWidget.on("select-result", function(event){
-		console.log(event);
-		createGraphic(event.result.feature.geometry);
-  code_insee = event.result.feature.attributes['CODEINSEE'];
-  
-    queryIsoDistance().then(displayResults);
-
-});*/
-
 			searchWidget.on("select-result", function(event){
 			
 			createGraphic(event.result.feature.geometry);
@@ -984,7 +777,7 @@ function queryIsoDistance() {
   query.geometry = (event.result.feature.geometry);  // the point location of the pointer
 	//console.log(query.geometry);
   query.spatialRelationship = "intersects";  // this is the default
-  //query.returnGeometry = true;
+  query.returnGeometry = false;
   query.outFields = [ "CODEINSEE" ];
 
   comLayer.queryFeatures(query)
@@ -1040,156 +833,12 @@ function queryIsoDistance() {
             return graphic;
           });
           console.log(feature[0]);
-	/*	 
-view.goTo({
-zoom:7,
-//center:[feature[0].geometry.centroid.x,feature[0].geometry.centroid.y]
-});*/
 
-
-//feature[0].geometry.extent.
-/*
-view.extent= {
-            // autocasts as new Extent()
-            xmin: 82293.8,//526214.864500001, //82293.8
-            ymin: 5838838.06,//6587360.0952, //5838838.06
-            xmax: 340466.54,//704357.719700001, //340466.54
-            ymax: 6111760.34,//6769901.0038, // 6111760.34
-            spatialReference: 3857//102110 //3857
-          };*/
 		  view.goTo(feature);
           resultsLayer.addMany(feature);
-		  
-//console.log(feature[0].geometry.extent);
-//zoomToLayer(resultsLayer);		  
+		  	  
         };
-		//view.goTo(feature.geometry.extent);
-		
-		
-		
-		/*
 
-        // Calcul de la zone
-        var serviceAreaTask = new ServiceAreaTask({
-            url: "https://wssecured.esrifrance.fr/arcgis/rest/services/BDTopo_routing/NetworkAnalysis/NAServer/ServiceArea"
-        });
-        // Calcul de la zone
-        var serviceAreaTask2 = new ServiceAreaTask({
-            url: "https://wssecured.esrifrance.fr/arcgis/rest/services/HERE_routing/NetworkAnalysis/NAServer/ServiceArea"
-        });
-
-        function createServiceAreaParams(locationGraphic, outSpatialReference) {
-            // Create one or more locations (facilities) to solve for
-            var featureSet = new FeatureSet({
-                features: [locationGraphic]
-            });
-            // //Set all of the input parameters for the service
-            // var taskParameters = new ServiceAreaParameters({
-            //     facilities: featureSet, // Location(s) to start from
-            //     defaultBreaks: [1000],
-            //     impedanceAttribute: "METERS",
-            //     restrictionAttributes: ["Pieton"],
-            //     useHierarchy: false,
-            //     restrictUTurns: "allow-backtrack",
-            //     travelDirection: "from-facility",
-            //     //outputPolygons: "detailed",
-            //     outSpatialReference: outSpatialReference // Spatial reference to match the view
-            // });
-            var taskParameters = new ServiceAreaParameters({
-                facilities: featureSet, // Location(s) to start from
-                defaultBreaks: [100],
-                travelDirection: "from-facility",
-                //outputPolygons: "detailed",
-                trimOuterPolygon: false,
-                trimPolygonDistance: 100,
-                travelMode: "2", // traveMode "Meters"
-                outSpatialReference: outSpatialReference // Spatial reference to match the view
-            });
-
-            var taskParameters2 = new ServiceAreaParameters({
-                facilities: featureSet, // Location(s) to start from
-                defaultBreaks: [100],
-                travelDirection: "from-facility",
-                //outputPolygons: "detailed",
-                trimOuterPolygon: false,
-                trimPolygonDistance: 100,
-                travelMode: "2", // traveMode "Walking distance"
-                outSpatialReference: outSpatialReference // Spatial reference to match the view
-            });
-
-            return [taskParameters, taskParameters2];
-        }
-
-        function executeServiceAreaTask(serviceAreaParams) {
-            serviceAreaTask2.solve(serviceAreaParams[1]).then(function(result){
-                if (result.serviceAreaPolygons.length) {
-                    // Draw each service area polygon
-                    result.serviceAreaPolygons.forEach(function(graphic){
-                        graphic.symbol = zoneSym;
-                        view.graphics.add(graphic,0);
-                        view.goTo(graphic);
-                    });
-                }
-            }, function(error){
-                // If first service doesn't work, try second service
-                serviceAreaTask.solve(serviceAreaParams[0]).then(function(result){
-                    if (result.serviceAreaPolygons.length) {
-                        // Draw each service area polygon
-                        result.serviceAreaPolygons.forEach(function(graphic){
-                            graphic.symbol = zoneSym;
-                            view.graphics.add(graphic,0);
-                            view.goTo(graphic);
-                        });
-                    }
-                }, function(error){
-                    console.log(error);
-                });  
-            });
-        }
-
-        function computeZone(graphicCenter){
-
-            // Draw simple circle, only if supported by browser
-            if (projection.isSupported()) {
-                projection.load().then(function() {
-                    const outSpatialReference = new SpatialReference({ wkid: 2154 });
-
-                    var geom_proj = projection.project(graphicCenter.geometry, outSpatialReference);
-
-                    var circle = new Circle({
-                        center: geom_proj,
-                        radius: 1000*100
-                    });
-
-
-                    var graphicCircle = new Graphic({
-                    geometry: circle,
-                    symbol: {
-                            type: "simple-fill",
-                            color: "rgba(0,122,194,0)",
-                            outline: {  // autocasts as new SimpleLineSymbol()
-                                color: "rgba(0,122,194,100)",
-                                width: 2,
-                                style: "short-dot"
-                            }
-                        }
-                    });
-                    view.graphics.add(graphicCircle,0);
-                });
-            }
-
-            var serviceAreaParams = createServiceAreaParams(graphicCenter, view.spatialReference);
-            executeServiceAreaTask(serviceAreaParams);
-
-            // var buffer = GeometryEngine.buffer(graphicCenter.geometry, 1, "kilometers");
-            // var bufferGraphic = new Graphic({
-            //     geometry: buffer,
-            //     symbol: zoneSym
-            // });
-            // view.graphics.add(bufferGraphic);
-        }
-		
-		*/
 
         // RESPONSIVE DESIGN
         // Init view
@@ -1202,6 +851,7 @@ view.extent= {
                 case "xsmall":
                     updateView(true);
                     break;
+					
                 case "small":
                 case "medium":
                 case "large":
@@ -1221,6 +871,13 @@ view.extent= {
         function setTitleMobile(isMobile) {
             if (isMobile) {
                 view.ui.remove(titleDiv);
+				console.log("dojo style");
+				//dojoQuery(".esri-search").style("width", "600px");
+				var nodes=dojoQuery(".esri-search");
+				console.log(nodes);
+				if (nodes.length>0){
+				domStyle.set(nodes,"width", "600px");
+				}
             } else {
                 view.ui.add(titleDiv, {
                     position: "top-left",
