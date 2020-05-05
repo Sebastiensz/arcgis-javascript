@@ -179,10 +179,13 @@
 		.esri-input.esri-search__input::placeholder{
         color:rgb(64,64,64);
    }
-   .esri-input.esri-search__input {
-                width: 210px;
-				max-width: 488px;
+   
+
+.esri-search {
+width:463px !important;
+height:50px;
 }
+
 
         #widget_search{
             height:50px;
@@ -369,7 +372,7 @@
         var locator = new Locator({
             url: "https://utility.arcgis.com/usrsvcs/servers/60a8871933e44a249ca71bb13c2d823d/rest/services/World/GeocodeServer" //esri France
 			//url:"https://services.esrifrance.fr/arcgis/tokenaccess/kbN*dPgsD3N.T8m.8vjwuP1*HLIAgGQtX2.QDFjalyzLsRC6iofyBBnhC3RksUzPoMytG21igwggred5u57qssqcV7IzAJurEg.9ai8z5KY-/rest/services/GEOCODAGE/BDAdresse_FranceDOM_Advanced_Plaque/GeocodeServer" //csl
-        });
+		});
 
         var locatorSearchSource = new LocatorSearchSource({
             locator: locator,
@@ -387,13 +390,14 @@
             locator: locator,
             singleLineFieldName: "SingleLine",
             name: "Géocodage sur la France",
-            //placeholder: "Vérifier si une commune est dans la zone",
-			placeholder:"Commune dans la zone ?",
+            placeholder: "Vérifier si une commune est dans la zone",
+			//placeholder:"Commune dans la zone ?",
             maxResults: 3,
             maxSuggestions: 6,
             suggestionsEnabled: true,
             minSuggestCharacters: 3,
-			locationEnabled:false
+			locationEnabled:false,
+			autoNavigate:false
 			
         });
 
@@ -574,6 +578,7 @@
 			
 			
 			locateWidget.on("locate", function(event){
+			createGraphic(event.target.graphic.geometry);
 			view.ui.add(searchWidget2, {
             position: "top-left",
             index: 2
@@ -671,7 +676,7 @@ function queryIsoDistance() {
 
         const searchWidget = new Search({
             view: view,
-            container: "widget_search",
+            //container: "widget_search",
             includeDefaultSources: false,
             popupEnabled: false, // popup is customized so default popup is disabled
             resultGraphicEnabled: false, // resultGraphic is customized so default resultGraphic is disabled
@@ -762,7 +767,7 @@ function queryIsoDistance() {
 //var coord_zoom
 		//when click, query on cities layer to get the INSEE code and then use it for get the isodistance
 		view.on("click", function(event){
-		
+		createGraphic(event.mapPoint);
 					view.ui.add(searchWidget2, {
             position: "top-left",
             index: 2
@@ -967,7 +972,7 @@ function queryIsoDistance() {
 });*/
 
 			searchWidget.on("select-result", function(event){
-			
+			createGraphic(event.result.feature.geometry);
 						
 			view.ui.add(searchWidget2, {
             position: "top-left",
@@ -999,6 +1004,8 @@ function queryIsoDistance() {
 searchWidget2.on("select-result", function(event){
 locationGraphic=createGraphic(event.result.feature.geometry);
 
+//view.center([event.result.feature.geometry.latitude,event.result.feature.geometry.longitude]);
+
 //verify intersection between resultsLayer and the city got from the searchWidget2
 isContains=GeometryEngine.intersects(resultsLayer.graphics.items[0].geometry,event.result.feature.geometry);
 if(isContains){
@@ -1007,7 +1014,7 @@ locationGraphic.symbol.color="rgb(0,212,0)";
 else{
 locationGraphic.symbol.color="rgb(255,0,0)";
 }
-
+view.goTo([locationGraphic.geometry.longitude,locationGraphic.geometry.latitude]);
 
 });
 
@@ -1261,7 +1268,7 @@ view.extent= {
                 <span class="esri-icon-font-fallback-text">Aide</span>
             </div>
         </div>
-        <div id="widget_search"></div>
+
         <div id="logoDiv" style="background-color: #FFFFFF; height: 60px"><a href="https://www.esrifrance.fr/" target="_blank"><img style="margin-top: 10px" src="./images/esri-france-logo-halo.png" alt="Esri France" width="150" /></a></div>
         <div id="source" style="background-color: #FFFFFF; height: 60px" class="esri-widget">
             <span class="highlightFont">#RestezChezVous​</span>
