@@ -203,7 +203,7 @@ height:50px;
         window.dojoConfig = {
             packages: [{
                 name: "widgets",
-                location: locationPath+ "/widgets"
+                location: locationPath+"/widgets"
             }]
         };
     </script>
@@ -754,6 +754,8 @@ height:50px;
                     }
                 }
             });
+			
+			
 
             
 
@@ -761,7 +763,32 @@ height:50px;
             view.graphics.add(graphic);
             return graphic;
         }
+		
+		        function createGraphic2(point) {
+            // Suppression de tout les graphic présents
+            // Création d'un graphic à l'emplacement en paramètre
+            var graphic = new Graphic({
+                geometry: point,
+                symbol: {
+                    type: "simple-marker",
+                    color: "#007AC2",
+                    size: 8,
+                    outline: {
+                        color: "#FFFFFF",
+                        width: 1
+                    }
+                }
+            });
+			
+			
 
+            
+
+            // Affichage du graphic créé
+            view.graphics.add(graphic);
+            return graphic;
+        }
+		
 			searchWidget.on("select-result", function(event){
 			
 			createGraphic(event.result.feature.geometry);
@@ -794,7 +821,7 @@ height:50px;
 });
 
 searchWidget2.on("select-result", function(event){
-locationGraphic=createGraphic(event.result.feature.geometry);
+locationGraphic=createGraphic2(event.result.feature.geometry);
 
 //view.center([event.result.feature.geometry.latitude,event.result.feature.geometry.longitude]);
 
