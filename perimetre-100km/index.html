@@ -777,10 +777,11 @@ ga('send', 'pageview');
             var feature = results.features.map(function(graphic) {
                 graphic.symbol = {
                     type: "simple-fill",
-                    color: [0, 122, 194, 0.1],
+                    color: [0, 122, 194, 0],
                     outline: {  // autocasts as new SimpleLineSymbol()
                         color: "rgba(0,122,194,100)",
-                        width: 2
+                        width: 2,
+						style: "short-dot"
                     }
                 };
                 //view.goTo(graphic.geometry.centroid);
@@ -800,11 +801,10 @@ ga('send', 'pageview');
             geometry: circle,
             symbol: {
                     type: "simple-fill",
-                    color: "rgba(0,122,194,0)",
+                    color: [0, 122, 194, 0.1],
                     outline: {  // autocasts as new SimpleLineSymbol()
                         color: "rgba(0,122,194,100)",
-                        width: 2,
-                        style: "short-dot"
+                        width: 2
                     }
                 }
             });
