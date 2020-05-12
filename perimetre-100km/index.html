@@ -1,3 +1,9 @@
+<!––Author : Sebastien Szollosi
+Blog : codethemap.fr  https://www.codethemap.fr/
+Technology : ArcGIS API for JavaScript  https://developers.arcgis.com/javascript/
+Company : Esri France
+––>
+
 <html>
   <head>
     <meta charset="utf-8" />
@@ -197,6 +203,7 @@
     />
 	<link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css"/>
 	<link rel="stylesheet" href="./widgets/ShareWidget/css/Share.css"/>
+	<link rel=icon href=./favicon_32.ico>
 	<script>
         var locationPath = location.pathname.replace(/\/[^\/]+$/, "");
         window.dojoConfig = {
@@ -300,11 +307,19 @@ ga('send', 'pageview');
 
 
         var isodistance = new FeatureLayer({ 
-            url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Isodistances_100km_chfl_3857/FeatureServer/0",
+            url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/buffer100km_plus_dep_selection_clipped_3857/FeatureServer",
             outFields: ["CODEINSEE"],
             popupEnabled:false,
             visible:false
         });
+		
+		var deconfDpmt = new FeatureLayer({ 
+              portalItem: {
+    id: "9d65a7e94382416abd201eafcb2916fe"
+  },
+            popupEnabled:false,
+        });
+	
 
         var basemapTopographie = new Basemap({
             portalItem: {
@@ -391,6 +406,7 @@ ga('send', 'pageview');
         //map.add(comLayer, 0);
         map.add(resultsLayer,0);
 		map.add(resultsLayer2,0);
+		map.add(deconfDpmt);
         var code_insee
 
 		
@@ -710,19 +726,17 @@ ga('send', 'pageview');
                     }
                 }
             });
-			
-			
-
-            
 
             // Affichage du graphic créé
             view.graphics.add(graphic);
             return graphic;
         };
 
+		var geom_point;
         function getIsoDistance(geom){
             locationGraphic=createGraphic(geom);
-			computeZone(locationGraphic);
+			geom_point=locationGraphic;
+			//computeZone(locationGraphic);
             view.ui.add(searchWidget2, {
                 position: "top-left",
                 index: 2
@@ -741,10 +755,11 @@ ga('send', 'pageview');
                 code_insee=response.features[0].attributes.CODEINSEE;
                 queryIsoDistance().then(displayResults);
             });
-        }
+        };
+		
 
         searchWidget.on("select-result", function(event){
-            getIsoDistance(event.result.feature.geometry)
+            getIsoDistance(event.result.feature.geometry);
         });
 
         searchWidget2.on("select-result", function(event){
@@ -753,10 +768,14 @@ ga('send', 'pageview');
             //view.center([event.result.feature.geometry.latitude,event.result.feature.geometry.longitude]);
 
             //verify intersection between resultsLayer and the city got from the searchWidget2
-            isContains=GeometryEngine.contains(resultsLayer2.graphics.items[0].geometry,event.result.feature.geometry);
+if (resultsLayer.graphics.length>0){
+            isContains=GeometryEngine.contains(resultsLayer.graphics.items[0].geometry,event.result.feature.geometry); //pour cercle normal
+			}
+			if (resultsLayer2.graphics.length>0){
+			isContains=GeometryEngine.contains(resultsLayer2.graphics.items[0].geometry,event.result.feature.geometry); //pour cercle+dptmt
+			}
             if(isContains){
                 locationGraphic.symbol.color="rgb(0,212,0)";
-				console.log(resultsLayer2);
             }
             else{
                 locationGraphic.symbol.color="rgb(255,0,0)";
@@ -774,14 +793,15 @@ ga('send', 'pageview');
         function displayResults(results) {
             //console.log(results);
             resultsLayer.removeAll();
+			resultsLayer2.removeAll();
+			if(results.features.length>0){
             var feature = results.features.map(function(graphic) {
                 graphic.symbol = {
                     type: "simple-fill",
-                    color: [0, 122, 194, 0],
+                    color: [0, 122, 194, 0.1],
                     outline: {  // autocasts as new SimpleLineSymbol()
                         color: "rgba(0,122,194,100)",
-                        width: 1,
-						style: "short-dash"
+                        width: 2
                     }
                 };
                 //view.goTo(graphic.geometry.centroid);
@@ -789,6 +809,9 @@ ga('send', 'pageview');
             });
             view.goTo(feature);
             resultsLayer.addMany(feature);
+			}else{
+			computeZone(geom_point);
+			}
         };
 		
 		       function computeZone(graphicCenter){
@@ -813,7 +836,7 @@ ga('send', 'pageview');
             //var serviceAreaParams = createServiceAreaParams(graphicCenter, view.spatialReference);
             //executeServiceAreaTask(serviceAreaParams);
 
-            //view.goTo(graphicCircle);
+            view.goTo(graphicCircle);
 			resultsLayer2.add(graphicCircle);
 
         };
