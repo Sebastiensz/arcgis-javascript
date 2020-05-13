@@ -3,7 +3,6 @@ Blog : codethemap.fr  https://www.codethemap.fr/
 Technology : ArcGIS API for JavaScript  https://developers.arcgis.com/javascript/
 Company : Esri France
 ––>
-
 <html>
   <head>
     <meta charset="utf-8" />
@@ -307,7 +306,7 @@ ga('send', 'pageview');
 
 
         var isodistance = new FeatureLayer({ 
-            url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/buffer100km_plus_dep_selection_clipped_3857/FeatureServer",
+            url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/buffer100km_plus_dep_clipped_3857_v4/FeatureServer",
             outFields: ["CODEINSEE"],
             popupEnabled:false,
             visible:false
@@ -726,16 +725,18 @@ ga('send', 'pageview');
                     }
                 }
             });
+			
+			
+
+            
 
             // Affichage du graphic créé
             view.graphics.add(graphic);
             return graphic;
         };
 
-		var geom_point;
         function getIsoDistance(geom){
             locationGraphic=createGraphic(geom);
-			geom_point=locationGraphic;
 			//computeZone(locationGraphic);
             view.ui.add(searchWidget2, {
                 position: "top-left",
@@ -755,27 +756,21 @@ ga('send', 'pageview');
                 code_insee=response.features[0].attributes.CODEINSEE;
                 queryIsoDistance().then(displayResults);
             });
-        };
-		
+        }
 
         searchWidget.on("select-result", function(event){
-            getIsoDistance(event.result.feature.geometry);
+            getIsoDistance(event.result.feature.geometry)
         });
 
         searchWidget2.on("select-result", function(event){
             locationGraphic=createGraphic2(event.result.feature.geometry);
-
             //view.center([event.result.feature.geometry.latitude,event.result.feature.geometry.longitude]);
 
             //verify intersection between resultsLayer and the city got from the searchWidget2
-if (resultsLayer.graphics.length>0){
-            isContains=GeometryEngine.contains(resultsLayer.graphics.items[0].geometry,event.result.feature.geometry); //pour cercle normal
-			}
-			if (resultsLayer2.graphics.length>0){
-			isContains=GeometryEngine.contains(resultsLayer2.graphics.items[0].geometry,event.result.feature.geometry); //pour cercle+dptmt
-			}
+            isContains=GeometryEngine.contains(resultsLayer.graphics.items[0].geometry,event.result.feature.geometry);
             if(isContains){
                 locationGraphic.symbol.color="rgb(0,212,0)";
+				console.log(resultsLayer2);
             }
             else{
                 locationGraphic.symbol.color="rgb(255,0,0)";
@@ -793,8 +788,6 @@ if (resultsLayer.graphics.length>0){
         function displayResults(results) {
             //console.log(results);
             resultsLayer.removeAll();
-			resultsLayer2.removeAll();
-			if(results.features.length>0){
             var feature = results.features.map(function(graphic) {
                 graphic.symbol = {
                     type: "simple-fill",
@@ -809,9 +802,7 @@ if (resultsLayer.graphics.length>0){
             });
             view.goTo(feature);
             resultsLayer.addMany(feature);
-			}else{
-			computeZone(geom_point);
-			}
+			//console.log(feature);
         };
 		
 		       function computeZone(graphicCenter){
