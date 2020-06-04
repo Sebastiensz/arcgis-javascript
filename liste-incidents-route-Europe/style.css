@@ -1,0 +1,30 @@
+html,
+body,
+#viewDiv {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+}
+
+#titleDiv {
+    font-weight: 400;
+    font-style: normal;
+    font-size: 1.2rem;
+    padding: 10px;
+}
+
+#formDiv {
+    background: white;
+    padding: 10px;
+    width: 100%;
+}
+
+#filter-type {
+    width: 200px;
+    margin-bottom: 10px;
+}
+
+#cluster {
+    margin-top: 10px;
+}

@@ -1,0 +1,52 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>ArcGIS API for JavaScript Hello World App</title>
+
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.15/esri/css/main.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://js.arcgis.com/4.15/"></script>
+    <script src="./script.js" type="text/javascript"></script>
+
+</head>
+
+<body>
+    <div id="viewDiv">
+        <div id="titleDiv" class="esri-widget">
+            Liste des incidents de la route - Europe
+        </div>
+        <div id="formDiv" class="esri-widget">
+            <div id="filter">
+                Type d'incidents :
+                <select id="filter-type" class="esri-select">
+                    <option value="">Tous</option>
+                    <option value="CONSTRUCTION">Construction</option>
+                    <option value="ROAD_CLOSURE">Route barrée</option>
+                    <option value="MISCELLANEOUS">Divers</option>
+                    <option value="ROADHAZARD">Route dangereuse</option>
+                    <option value="LANE_RESTRICTION">Restriction de voie</option>
+                    <option value="ACCIDENT">Accident</option>
+                    <option value="CONGESTION">embouteillage</option>
+                    <option value="DISABLEDVEHICLE">Véhicule en panne</option>
+                    <option value="PLANNED EVENT">Evénement</option>
+                    <option value="OTHER NEWS">Autres informations</option>
+                </select> Année :
+                <select id="filter-date" class="esri-select">
+                    <option value="">Toutes</option>
+                    <option value="2020">2020</option>
+                    <option value="2019">2019</option>
+                    <option value="2018">2018</option>
+                    <option value="2017">2017</option>
+                    <option value="2016">2016</option>
+                    <option value="2015">2015</option>
+                </select>
+            </div>
+            <button id="cluster" class="esri-button">Activer regroupement</button>
+        </div>
+    </div>
+</body>
+
+</html>
