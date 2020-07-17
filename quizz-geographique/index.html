@@ -1,0 +1,183 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Testez votre géographie</title>
+  <style>
+    html, body, #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+    
+            #titleDiv {
+            padding: 5px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 20px;
+            color: white;
+            background-color: #007AC2;
+        }
+                #questionDiv {
+            padding: 5px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 20px;
+            color: white;
+            background-color: #007AC2;
+        }
+    
+                    #counterPoints {
+            padding: 5px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 20px;
+            color: white;
+            background-color: #007AC2;
+        }
+  </style>
+  
+    <link rel="stylesheet" href="https://js.arcgis.com/4.15/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.15/"></script>
+  
+  <script>  
+    require([
+      "esri/Map",
+      "esri/views/MapView","esri/layers/FeatureLayer","esri/tasks/support/Query"
+    ], function(Map, MapView,FeatureLayer,Query) {
+      
+      var country_table = [];
+      
+      var map = new Map({
+        basemap: "satellite"
+      });
+
+      var view = new MapView({
+        container: "viewDiv",
+        map: map,
+        zoom: 3
+      });
+      
+      
+  
+      
+      
+      var countrieslayer = new FeatureLayer({
+        portalItem: {
+          id: "0d4ec22b3f894d2591ebf67c991b84ca"
+        },
+              popupEnabled: false
+      });
+      retrieveData();
+      map.add(countrieslayer, 1);
+      
+      var reponse, Points;
+      var randValue;
+      
+      function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+      
+              view.ui.add(titleDiv, {
+            position: "top-left",
+            index: 0
+        });
+      
+                    view.ui.add(questionDiv, {
+            position: "top-right",
+            index: 0
+        });
+      
+      view.ui.add(counterPoints, {
+            position: "top-right",
+            index: 1
+        });
+      
+      
+      //gestion des points 
+      var pts=0;
+      var j=0;
+      var ptsElement = document.querySelector( '.pts' );
+      var questionElement = document.querySelector( '.question' );
+      randValue=0;
+      		view.on("click", function(event){
+            getPays(event.mapPoint);
+        });
+      
+      
+      
+      
+      function retrieveData(){
+        
+        for (let i = 1; i < 242; i++) {
+         var query2 = countrieslayer.createQuery();
+            query2.cacheHint=true;
+            query2.returnGeometry = false;
+            query2.outFields = [ "*" ];
+            query2.where = "OBJECTID = " + i;
+            countrieslayer.queryFeatures(query2)
+            .then(function(response){
+               country_table.push(response.features[0].attributes.NAME_FR);
+            })
+        }
+      }
+      
+      
+      function getPays(geom){
+        if(j<21){
+        var query = countrieslayer.createQuery();
+            query.cacheHint=true;
+            query.geometry = (geom);  // the point location of the pointer
+            query.spatialRelationship = "intersects";  // this is the default
+            query.returnGeometry = false;
+            query.outFields = [ "NAME_FR" ];
+
+            countrieslayer.queryFeatures(query)
+            .then(function(response){
+              
+                // returns a feature set with features containing the
+                reponse=response.features[0].attributes.NAME_FR;
+              if(reponse===country_table[randValue]){
+                pts=pts+1;
+                ptsElement.innerHTML=pts;
+                //alert("GG");
+              }
+              else{
+                console.log(reponse);
+                console.log(country_table[randValue])
+                ptsElement.innerHTML=pts;
+              }
+                          randValue=getRandomInt(242);
+            questionElement.innerHTML = String(country_table[randValue]);
+            });
+          j=j+1;
+      }
+        else{
+          alert("Votre score est de "+ pts+"/20. Le jeu est fini");
+        }
+      };
+
+      
+     
+      
+      
+      
+      
+      
+      
+
+    });
+  </script>
+</head>
+<body>
+  <div id="viewDiv">
+    <div id="titleDiv" class="esri-widget"><div id="title">Testez votre géographie</div></div>
+    
+  </div>
+  <div id="questionDiv" class="esri-widget">Trouvez le pays suivant : <span class="question">Pays à deviner</span></div>
+  <div id="counterPoints" class="esri-widget"><span class="pts">Points</span></div>
+</body>
+</html>
+
+
