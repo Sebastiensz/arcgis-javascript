@@ -403,6 +403,7 @@
 
         // Desktop
         var titleDiv = document.getElementById("titleDiv");
+        /*
         view.when(function() {
             // Widget Print
             const printWidget = new Print({
@@ -425,7 +426,37 @@
                 var select = document.querySelectorAll("[data-target-property='layout']")[0];
                 select.value = "a4-landscape";
             });
+*/
+                view.when(function() {
+            // Widget Print
+            const printWidget = new Print({
+                view: view,
+                // specify your own print service
+                printServiceUrl: "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",
+				allowedFormats: ["jpg", "png8", "png32"],
+				allowedLayouts: ["a4-landscape", "a4-portrait"]
+            });
 
+            // Affichage du widget Print sous forme d'un objet Expand
+            const printExpand = new Expand({
+            	view: view,
+            	content: printWidget,
+                expandTooltip: "Exporter",
+                group: "expands"
+            });
+            view.ui.add(printExpand, {
+                position: "top-right",
+                index: 1
+            });
+
+            printExpand.watch("expanded ", function(value){
+                var select = document.querySelectorAll("[data-target-property='layout']")[0];
+                select.value = "a4-portrait";
+				var select2 = document.querySelectorAll("[data-target-property='format']")[0];
+				select2.value="jpg";
+            });
+                  //fin Print
+        
             view.watch("scale", function(value){
                 // Manually update printed scale as printed scale is only an integer
                 // So to be sure to get same result than in the application, printed scale must be current scale truncated to integer 
