@@ -222,9 +222,9 @@
         "esri/tasks/support/ServiceAreaParameters",
         "esri/tasks/support/FeatureSet",
         "esri/core/watchUtils",
-        "widgets/ShareWidget/ShareWidget"
+        "widgets/ShareWidget/ShareWidget", "esri/widgets/Track"
       ], function(Basemap, WebMap, Map, MapImageLayer, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
-        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils, ShareWidget) {
+        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils, ShareWidget,Track) {
 
         var center = null;
         var zoomLevel = null;
@@ -359,6 +359,12 @@
             zoom: zoomLevel,
             center: center
         });
+	      
+	      // typical usage
+var track = new Track({
+  view: view
+});
+	      
 
         // Gestion de l'intro/aide
         document.getElementById("close-about").addEventListener("click", closeMenu);
