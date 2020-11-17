@@ -63,7 +63,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       var cases = fieldValues[0];
       var deaths = fieldValues[1];
        var result=Round((deaths/cases) * 100,2)
-      return result;
+      return deaths;
     </script>
 
   <script>
@@ -191,7 +191,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         // Whether the majority of people are in the labor force or not
         {
           name: "lethality-arcade",
-          title: "Taux de létalité",
+          title: "Nombre de réanimations",
           expression: document.getElementById("lethality-arcade").text
         },
 
@@ -200,13 +200,13 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
 
       var template = {
         // autocasts as new Popup
-        title: "COVID-19 - {Numéro_département}",
+        title: "COVID-19 - {Nom_departement}",
         content: [
           {
             type: "text",
             text:
-              "{Numéro_département}: Il y a {hosp} nouveaux hospitalisés identifiés et déclarés le {date} et" +
-              " {rea} en réanimation du covid-19 ce jour-ci."
+              "{Nom_departement}: Il y a {hosp} nouveaux hospitalisés identifiés et déclarés le {date} et" +
+              " {rea} en réanimation du Covid-19 ce jour-ci."
           },
           {
             type: "fields",
