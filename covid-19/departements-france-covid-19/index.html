@@ -129,13 +129,13 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
             stops: [
               {
                 value: 3000,
-                size: "132px"
+                size: "142px"
               },{
                 value: 2000,
-                size: "112px"
+                size: "122px"
               },{
                 value: 1500,
-                size: "100px"
+                size: "110px"
               },{
                 value: 1000,
                 size: "82px"
@@ -194,13 +194,12 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
           title: "Taux de létalité",
           expression: document.getElementById("lethality-arcade").text
         },
-        // Get Arcade expression returning the share of the total comprised
-        // by the predominant category
+
       ];
 
 
       var template = {
-        // autocasts as new PopupTemplate()
+        // autocasts as new Popup
         title: "COVID-19 - {Numéro_département}",
         content: [
           {
