@@ -1,0 +1,361 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <!--
+  ArcGIS API for JavaScript, https://js.arcgis.com
+  For more information about the widgets-timeslider sample, read the original sample description at developers.arcgis.com.
+  https://developers.arcgis.com/javascript/latest/sample-code/widgets-timeslider/index.html
+
+url des donnees https://ourworldindata.org/coronavirus-source-data
+
+css : https://developers.arcgis.com/javascript/latest/guide/styling/
+
+  -->
+  <title>Daily COVID-19 cases around the world"</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.14/esri/themes/dark/main.css" />
+  <script src="https://js.arcgis.com/4.14/"></script>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #timeSlider {
+      position: absolute;
+      left: 100px;
+      right: 100px;
+      bottom: 20px;
+    }
+
+    #titleDiv {
+      padding: 10px;
+      font-weight: bold;
+      text-align: center;
+      font-size: 20px;
+    }
+    
+    #source {
+      padding: 10px;
+      font-weight: normal;
+      text-align: center;
+      font-size:12px;
+      position: absolute;
+      right: 10px;
+      bottom: 120px;
+      width:160px;
+      }
+    #logoDiv {
+      border: 0px dotted red;
+    }
+  </style>
+
+  <script type="text/plain" id="lethality-arcade">
+
+      var fieldValues = [ $feature.hosp, $feature.rea];
+      var cases = fieldValues[0];
+      var deaths = fieldValues[1];
+       var result=Round((deaths/cases) * 100,2)
+      return deaths;
+    </script>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/widgets/TimeSlider",
+      "esri/widgets/Expand",
+      "esri/widgets/Legend",
+      "esri/widgets/Search",
+      "esri/widgets/Zoom",
+      "esri/widgets/Home",
+      "esri/widgets/Expand",
+      "esri/widgets/Legend"
+    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Expand, Legend) {
+
+      const renderer = {
+        type: "simple",
+        symbol: {
+          type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+          size: 4,
+          color: [255, 255, 214, 0.8], //"#FDEDEC"
+          outline: {  // autocasts as new SimpleLineSymbol()
+            color: [255, 255, 255, 0.5],
+            width: "0.5px"
+          }
+        },
+        visualVariables: [
+          {
+            type: "color",
+            field: "rea",
+           // normalizationField: "total_cases",
+            legendOptions: {
+              title: "Nombre de réanimations"
+            },
+            stops: [{
+              value: 300,
+              color: [196, 47, 30, 0.7], //"#B03A2E"
+              label: "4 % de cas décédés"
+            }, {
+              value: 100,
+              color: [228, 145, 67, 0.7], //"#CB4335"
+              label: "3 % de cas décédés"
+            }, {
+              value: 50,
+              color: [240, 205, 100, 0.7], //"#EC7063"
+              label: "2 % de cas décédés"
+            },
+            {
+              value: 10,
+              color: [255, 255, 183, 0.7],
+              label: "1 % de cas décédés"
+            }
+            ]
+          },
+          {
+            type: "size",
+            field: "hosp_normal",
+            legendOptions: {
+              title: "Cas quotidiens dans le pays"
+            },
+            stops: [
+              {
+                value: 0.2,
+                size: "142px"
+              },{
+                value: 0.15,
+                size: "122px"
+              },{
+                value: 0.14,
+                size: "110px"
+              },{
+                value: 0.13,
+                size: "82px"
+              }, {
+                value: 0.1,
+                size: "64px"
+              }, {
+                value: 0.09,
+                size: "42px"
+              },
+              {
+                value: 0.05,
+                size: "24px"
+              },
+              {
+                value:0.01,
+                size:"6px"},
+              {
+                value:0.001,
+                size:"3px"},
+              {
+                value:0,
+                size:"0px"}
+            ]
+          }
+        ]
+      };
+
+
+      var layer = new FeatureLayer({    url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Cas_quotidiens_covid19_par_departements/FeatureServer/0",
+       renderer: renderer
+      });
+      
+
+      const map = new Map({
+        //basemap: "satellite",
+        basemap: "dark-gray",
+        layers: [layer]
+      });
+
+      const view = new MapView({
+        map: map,
+        container: "viewDiv",
+        constraints: {
+                rotationEnabled: false
+            },
+        zoom: 6,
+        center: [2.3, 46.5]
+      });
+
+      var arcadeExpressionInfos = [
+        // Get Arcade expression returning the predominant demographic in the county:
+        // Whether the majority of people are in the labor force or not
+        {
+          name: "lethality-arcade",
+          title: "Nombre de réanimations",
+          expression: document.getElementById("lethality-arcade").text
+        },
+
+      ];
+
+
+      var template = {
+        // autocasts as new Popup
+        title: "COVID-19 - {Nom_departement}",
+        content: [
+          {
+            type: "text",
+            text:
+              "{Nom_departement}: Il y a {hosp} nouveaux hospitalisés identifiés et déclarés le {date} et" +
+              " {rea} en réanimation du Covid-19 ce jour-ci."
+          },
+          {
+            type: "fields",
+            fieldInfos: [
+              {
+                fieldName: "rad",
+                label: "Nombre cumulé de personnes retournées à domicile",
+                format: {
+                  digitSeparator: true,
+                  places: 0
+                }
+              },
+              {
+                fieldName: "dc",
+                label: "Nombre cumulé de personnes décédées à l'hôpital",
+                format: {
+                  digitSeparator: true,
+                  places: 0
+                }
+              },
+              {
+                fieldName: "expression/lethality-arcade",
+                format: {
+                  digitSeparator: true,
+                  places: 0
+                }
+              }
+            ]
+          }
+        ],
+        expressionInfos: arcadeExpressionInfos
+      };
+
+      layer.popupTemplate = template;
+
+      const timeSlider = new TimeSlider({
+        container: "timeSlider",
+        mode: "instant",
+        view: view
+      });
+      view.ui.add(timeSlider, "manual");
+      let timeLayerView;
+      view.whenLayerView(layer).then(function (lv) {
+        timeLayerView = lv;
+        const fullTimeExtent = layer.timeInfo.fullTimeExtent;
+
+        timeSlider.fullTimeExtent = fullTimeExtent;
+        timeSlider.stops = {
+          interval: {
+            value: 1,
+            unit: "days"
+          },
+          timeExtent: {
+            start: fullTimeExtent.start,//1579564800000,
+            end: fullTimeExtent.end//1584403200000
+          }
+        }
+        
+              timeSlider.play();
+        
+      });
+
+      view.ui.add(timeSlider, "manual");
+      
+      timeSlider.watch("timeExtent", function(value){
+        // update layer view filter to reflect current timeExtent
+        timeLayerView.filter = {
+          timeExtent: value
+        };
+      });
+
+      timeSlider.set({
+        loop: false,
+        playRate: 120
+      });
+
+      view.ui.remove("zoom");
+
+      view.ui.add("titleDiv", {
+        position: "top-left",
+        index: 1
+      });
+      
+      view.ui.add("source","manual");
+      
+      const zoom = new Zoom({
+        view: view
+      });
+      view.ui.add(zoom, {
+        position: "top-left",
+        index: 2
+      });
+
+      const searchWidget = new Search({
+        view: view
+      });
+      // Adds the search widget below other elements in
+      // the top left corner of the view
+      view.ui.add(searchWidget, {
+        position: "top-right",
+        index: 1
+      });
+      
+      view.ui.add("logoDiv", "top-right");
+
+      var homeWidget = new Home({
+        view: view
+      });
+
+      // adds the home widget to the top left corner of the MapView
+      view.ui.add(homeWidget, "top-left");
+
+      const legend = new Legend({
+        view: view,
+        layerInfos: [{
+          layer: layer,
+          title: "Légende",
+        }]
+      });
+      const legendExpand = new Expand({
+        expandIconClass: "esri-icon-drag-horizontal",
+        expandTooltip: "Legend",
+        view: view,
+        expanded: false,
+        content: legend,
+      });
+      view.ui.add(legendExpand, "top-left");
+
+
+
+    });
+
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+  <div id="logoDiv"><a href="https://www.esrifrance.fr/"><img src="./images/esri_france_emblem_tag_srgbrev.png" alt="Esri France" width="150" /></a></div>
+  <div id="timeSlider"></div>
+  <div id="titleDiv" class="esri-widget">
+    <div id="titleText">Cas quotidiens de covid-19 en France normalisés par départements</div>
+  </div>
+  
+  <div id="source" class="esri-widget" >
+    <div id="titleText">Web app built with <nobr><a style="color:orange;" href="https://developers.arcgis.com/javascript/">ArcGIS API for JavaScript</a></nobr> Source code :<a style="color:orange;" href="https://github.com/Sebastiensz/demos_arcgisJS/tree/master/Covid19-spreading">Github</a></p>
+    <p>Data source:
+      <a style="color:orange;" href="https://ourworldindata.org/coronavirus-source-data"> Our World in Data</a>
+    </p> </div>
+    </div>
+</body>
+
+</html>
