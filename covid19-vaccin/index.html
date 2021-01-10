@@ -97,8 +97,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         visualVariables: [
           {
             type: "color",
-            field: "total_deaths",
-            normalizationField: "total_cases",
+            field: "total_vaccinatio",
             legendOptions: {
               title: "Taux de létalité"
             },
@@ -124,7 +123,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
           },
           {
             type: "size",
-            field: "total_cases",
+            field: "total_vaccinatio",
             legendOptions: {
               title: "Total des cas dans le pays"
             },
@@ -169,7 +168,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
 
       var layer = new FeatureLayer({
         //url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/data_full_covid19/FeatureServer/0",
-        url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COVID19_centroids_country/FeatureServer/0",
+        url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COVID19_centroids_country_vaccin/FeatureServer/0",
         renderer: renderer
       });
 
@@ -209,30 +208,22 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
           {
             type: "text",
             text:
-              "{SHORT_NAME}: Il y a {total_cases} contaminés identifiés et déclarés le {date} dont" +
-              " {expression/lethality-arcade} de cas décédés."
+              "{SHORT_NAME}: Il y a {total_vaccinatio} vaccinés."
           },
           {
             type: "fields",
             fieldInfos: [
               {
-                fieldName: "total_cases",
-                label: "Nombre de personnes atteintes par le Covid-19 identifiées et déclarées",
+                fieldName: "total_vaccinatio",
+                label: "Nombre de vaccinés",
                 format: {
                   digitSeparator: true,
                   places: 0
                 }
               },
               {
-                fieldName: "total_deaths",
-                label: "Nombre de morts par le Covid-19",
-                format: {
-                  digitSeparator: true,
-                  places: 0
-                }
-              },
-              {
-                fieldName: "expression/lethality-arcade",
+                fieldName: "total_vaccinatio",
+                label: "Nombre de vaccinés",
                 format: {
                   digitSeparator: true,
                   places: 0
