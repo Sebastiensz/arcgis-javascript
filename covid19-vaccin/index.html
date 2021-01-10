@@ -57,14 +57,6 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
     }
   </style>
 
-  <script type="text/plain" id="lethality-arcade">
-      // Returns the share of the dominant demographic as a percentage
-      var fieldValues = [ $feature.total_cases, $feature.total_deaths ];
-      var cases = fieldValues[0];
-      var deaths = fieldValues[1];
-       var result=Round((deaths/cases) * 100,2)
-      return result + ' %';
-    </script>
 
   <script>
     require([
