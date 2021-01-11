@@ -182,12 +182,12 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
 
       var template = {
         // autocasts as new PopupTemplate()
-        title: "COVID-19 - {SHORT_NAME}",
+        title: "Vaccin contre la COVID-19 - {SHORT_NAME}",
         content: [
           {
             type: "text",
             text:
-              "{SHORT_NAME}: Il y a {total_vaccinatio} vaccinés contre la Covid-19 le {date_} selon les derniers chiffres connus à ce jour."
+              "{SHORT_NAME}: Il y a {total_vaccinatio} vaccinés contre la Covid-19 le {date_} selon les derniers chiffres connus à ce jour. Sur l'ensemble de la population cela représente {total_vaccinatio}%. "
           },
           {
             type: "fields",
@@ -400,9 +400,9 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
   </div>
   
   <div id="source" class="esri-widget" >
-    <div id="titleText">Web app built with <nobr><a style="color:orange;" href="https://developers.arcgis.com/javascript/">ArcGIS API for JavaScript</a></nobr> Source code :<a style="color:orange;" href="https://github.com/Sebastiensz/arcgis-javascript/tree/master/Covid19-spreading">Github</a></p>
+    <div id="titleText">Web app réealisée avec <nobr><a style="color:green;" href="https://developers.arcgis.com/javascript/">ArcGIS API for JavaScript</a></nobr> Source code :<a style="color:green;" href="https://github.com/Sebastiensz/arcgis-javascript/edit/master/covid19-vaccin/index.html">Github</a></p>
     <p>Data source:
-      <a style="color:orange;" href="https://ourworldindata.org/coronavirus-source-data"> Our World in Data</a>
+      <a style="color:green;" href="https://ourworldindata.org/covid-vaccinations"> Our World in Data</a>
     </p> </div>
     </div>
 </body>
