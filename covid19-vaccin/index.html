@@ -80,7 +80,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         symbol: {
           type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
           size: 4,
-          color: [255, 255, 214, 0.8], //"#FDEDEC"
+          color: [107,142,35, 0.8], //"#FDEDEC"
           outline: {  // autocasts as new SimpleLineSymbol()
             color: [255, 255, 255, 0.5],
             width: "0.5px"
@@ -89,27 +89,30 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         visualVariables: [
           {
             type: "color",
-            field: "total_vaccinatio",
+            field: "total_vaccinat_1",
             legendOptions: {
-              title: "Taux de létalité"
+              title: "Taux de vaccinés contre la Covid-19"
             },
             stops: [{
-              value: 1111,
-              color: [196, 47, 30, 0.7], //"#B03A2E"
-              label: "4 % de cas décédés"
+              value: 60,
+              color: [21,146,42, 0.8], //"#B03A2E"
+              label: "60 % de vaccinés dans le pays"
+            },{
+              value: 40,
+              color: [35,176,57, 0.8], //"#B03A2E"
+              label: "40 % de vaccinés dans le pays"
+            },{
+              value: 20,
+              color: [49,192,73, 0.8], //"#B03A2E"
+              label: "20 % de vaccinés dans le pays"
             }, {
-              value: 111,
-              color: [228, 145, 67, 0.7], //"#CB4335"
-              label: "3 % de cas décédés"
+              value: 10,
+              color: [108,205,124, 0.8], //"#CB4335"
+              label: "10 % de vaccinés dans le pays"
             }, {
-              value: 11,
-              color: [240, 205, 100, 0.7], //"#EC7063"
-              label: "2 % de cas décédés"
-            },
-            {
               value: 1,
-              color: [255, 255, 183, 0.7],
-              label: "1 % de cas décédés"
+              color: [141,222,154, 0.8], //"#EC7063"
+              label: "1 % de vaccinés dans le pays"
             }
             ]
           },
@@ -117,37 +120,33 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
             type: "size",
             field: "total_vaccinatio",
             legendOptions: {
-              title: "Total des cas dans le pays"
+              title: "Total des vaccinés Covid-19 dans le pays"
             },
-            stops: [
-              {
-                value: 10000000,
-                size: "214px"
-              },{
-                value: 8000000,
+            stops: [{
+                value: 1000000000,
                 size: "200px"
               },{
-                value: 3000000,
+                value: 100000000,
                 size: "156px"
               },{
-                value: 1000000,
+                value: 20000000,
                 size: "128px"
               }, {
-                value: 500000,
+                value: 5000000,
                 size: "100px"
               }, {
-                value: 100000,
+                value: 1000000,
                 size: "64px"
               },
               {
-                value: 20000,
+                value: 100000,
                 size: "24px"
               },
               {
-                value:1000,
+                value:10000,
                 size:"6px"},
               {
-                value:200,
+                value:1000,
                 size:"3px"},
               {
                 value:0,
@@ -188,7 +187,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
           {
             type: "text",
             text:
-              "{SHORT_NAME}: Il y a {total_vaccinatio} vaccinés le {date_}."
+              "{SHORT_NAME}: Il y a {total_vaccinatio} vaccinés contre la Covid-19 le {date_} selon les derniers chiffres connus à ce jour."
           },
           {
             type: "fields",
@@ -202,11 +201,11 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
                 }
               },
               {
-                fieldName: "total_vaccinatio",
-                label: "Nombre de vaccinés",
+                fieldName: "total_vaccinat_1",
+                label: "Taux de vaccinés %",
                 format: {
                   digitSeparator: true,
-                  places: 0
+                  places: 3
                 }
               }
             ]
@@ -254,7 +253,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
 
       timeSlider.set({
         loop: false,
-        playRate: 100
+        playRate: 220
       });
 
       view.ui.remove("zoom");
