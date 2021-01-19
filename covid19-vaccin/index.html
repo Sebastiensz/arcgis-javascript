@@ -72,10 +72,11 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       "esri/widgets/Expand",
       "esri/widgets/Legend",
       "esri/widgets/Bookmarks",
-      "esri/webmap/Bookmark"
-    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Expand, Legend, Bookmarks, Bookmark) {
+      "esri/webmap/Bookmark",
+	  "esri/widgets/Popup"
+    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Expand, Legend, Bookmarks, Bookmark,Popup) {
 
-      const renderer = {
+      var renderer = {
         type: "simple",
         symbol: {
           type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
@@ -127,24 +128,24 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
               title: "Total des vaccinés Covid-19 dans le pays"
             },
             stops: [{
-                value: 1000000000,
-                size: "200px"
-              },{
-                value: 100000000,
-                size: "156px"
-              },{
                 value: 20000000,
-                size: "128px"
-              }, {
+                size: "72px"
+              },{
+                value: 10000000,
+                size: "64px"
+              },{
                 value: 5000000,
-                size: "100px"
+                size: "48px"
               }, {
                 value: 1000000,
-                size: "64px"
+                size: "24px"
+              }, {
+                value: 500000,
+                size: "12px"
               },
               {
                 value: 100000,
-                size: "24px"
+                size: "9px"
               },
               {
                 value:10000,
@@ -166,6 +167,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COVID19_centroids_country_vaccin/FeatureServer/0",
         renderer: renderer
       });
+	  
 
       const map = new Map({
         //basemap: "satellite",
@@ -180,9 +182,10 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
                 rotationEnabled: false
             },
         zoom: 3,
-        center: [25, 35]
+        center: [2.35,48.85],
       });
 
+view.popup.collapseEnabled= false;
 
       var template = {
         // autocasts as new PopupTemplate()
@@ -257,7 +260,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
 
       timeSlider.set({
         loop: false,
-        playRate: 220
+        playRate: 160
       });
 
       view.ui.remove("zoom");
@@ -387,6 +390,167 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         content: legend,
       });
       view.ui.add(legendExpand, "top-left");
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+        isResponsiveSize = view.widthBreakpoint === "xsmall";
+        updateView(isResponsiveSize);
+
+        // Breakpoints
+        view.watch("widthBreakpoint", function(breakpoint) {
+            switch (breakpoint) {
+                case "xsmall":
+                    updateView(true);
+                    break;
+					
+                case "small":
+				updateView(true);
+				break;
+                case "medium":
+                case "large":
+                case "xlarge":
+                    updateView(false);
+                    break;
+                default:
+            }
+			
+			
+			renderer = {
+        type: "simple",
+        symbol: {
+          type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+          size: 4,
+          color: [107,142,35, 0.8], //"#FDEDEC"
+          outline: {  // autocasts as new SimpleLineSymbol()
+            color: [255, 255, 255, 0.5],
+            width: "0.5px"
+          }
+        },
+        visualVariables: [
+          {
+            type: "color",
+            field: "total_vaccinat_1",
+            legendOptions: {
+              title: "Taux de vaccinés contre la Covid-19"
+            },
+            stops: [
+              {value: 20,
+              color: [25,128,49, 0.8], //"#B03A2E"
+              label: "20 % de vaccinés dans le pays"
+            },{
+              value: 10,
+              color: [21,146,42, 0.8], //"#B03A2E"
+              label: "10 % de vaccinés dans le pays"
+            },{
+              value: 5,
+              color: [35,176,57, 0.8], //"#B03A2E"
+              label: "5 % de vaccinés dans le pays"
+            },{
+              value: 3,
+              color: [49,192,73, 0.8], //"#B03A2E"
+              label: "3 % de vaccinés dans le pays"
+            }, {
+              value: 1,
+              color: [108,205,124, 0.8], //"#CB4335"
+              label: "1 % de vaccinés dans le pays"
+            }, {
+              value: 1,
+              color: [141,222,154, 0.8], //"#EC7063"
+              label: "0,05 % de vaccinés dans le pays"
+            }
+            ]
+          },
+          {
+            type: "size",
+            field: "total_vaccinatio",
+            legendOptions: {
+              title: "Total des vaccinés Covid-19 dans le pays"
+            },
+            stops: [{
+                value: 20000000,
+                size: "32px"
+              },{
+                value: 10000000,
+                size: "28px"
+              },{
+                value: 5000000,
+                size: "26px"
+              }, {
+                value: 1000000,
+                size: "22px"
+              }, {
+                value: 500000,
+                size: "17px"
+              },
+              {
+                value: 100000,
+                size: "14px"
+              },
+              {
+                value:10000,
+                size:"12px"},
+              {
+                value:1000,
+                size:"6px"},
+              {
+                value:0,
+                size:"0px"}
+            ]
+          }
+        ]
+      };
+			
+			layer.renderer=renderer
+			
+			
+        });	  
+	  
+	          function updateView(isMobile) {
+            setTitleMobile(isMobile);
+            setScaleBarWidgetMobile(isMobile);
+        }
+
+        function setTitleMobile(isMobile) {
+            if (isMobile) {
+                view.ui.remove(titleDiv);
+				view.ui.remove(searchWidget);
+				view.ui.remove(source);
+				view.ui.remove(timeSlider);
+				
+            } else {
+                view.ui.add(titleDiv, {
+                    position: "top-left",
+                    index: 0
+                });
+				view.ui.add(timeSlider, "manual");
+            }
+			
+			
+        }
+
+
+
+        function setScaleBarWidgetMobile(isMobile) {
+            if (isMobile) {
+
+            } else {
+            }
+        }
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
 
 
 
