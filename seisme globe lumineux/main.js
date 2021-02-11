@@ -17,7 +17,7 @@ require([
           {
             type: "fill",
             outline: {
-              color: [255, 255, 255, 0.8],
+              color: [255,99,71,0.8],//[255, 255, 255, 0.8],
               size: 1
             }
           }
@@ -38,7 +38,7 @@ require([
         symbolLayers: [
           {
             type: "line",
-            material: { color: [255, 133, 125, 0.7] },
+            material: { color: [255,99,71,0.7]},//[255, 133, 125, 0.7] },
             size: 3
           }
         ]
@@ -120,7 +120,7 @@ require([
             resource: {
               primitive: "sphere"
             },
-            material: { color: [255,127,80, 0.8] },
+            material: { color: [255,99,71,0.8]},//[255,127,80, 0.8] },
             depth: 10000,
             height: 10000,
             width: 10000
@@ -144,8 +144,8 @@ require([
             title: "Magnitude"
           },
           stops: [
-            { value: 6, color: [254, 240, 217], label: "4.5 - 6" },
-            { value: 7, color: [179, 0, 0], label: ">7" }
+            { value: 6, color: [255,99,71,0.8], label: "4.5 - 6" }, //[254, 240, 217]
+            { value: 7, color: [255,99,71,0.8], label: ">7" }//[179, 0, 0]
           ]
         }
       ]
