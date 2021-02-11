@@ -67,7 +67,7 @@ require([
         type: "color",
         color: [0, 0, 0, 0]
       },
-      starsEnabled: false,
+      starsEnabled: true,
       atmosphereEnabled: false
     },
     ui: {
