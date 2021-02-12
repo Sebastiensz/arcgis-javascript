@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Earthquakes in 2019</title>
+    <title>Séismes en  2019</title>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -15,29 +15,27 @@
     <h1 class="title">Major earthquakes in 2019</h1>
     <div id="details">
       <div id="legend">
-        In 2019, there were 13456 earthquakes with magnitude higher or equal to 4. In this visualization, small yellow
-        spheres (
+        En 2019, il y a eu 13456 tremblements de terre de magnitude supérieure ou égale à 4. Dans cette visualisation, les petites sphères oranges (
         <div class="small-circle"></div>
-        ) are earthquakes with magnitudes between 4 and 6. Large red spheres (
+        ) sont les séismes avec une magnitude de 4 à 6. Les grandes sphères rouges sont (
         <div class="big-circle"></div>
-        ) are earthquakes with a magnitude higher than 7. In between, the color and size of spheres are interpolated.
-        Earthquake depth is exaggerated by a factor of 6. The orange lines (
+        ) les séismes avec une magnitude supérieure à 7. Entre les deux, la couleur et la taille des sphères sont interpolées.
+       La profondeur du séisme est exagérée par un facteur de 6. Les lignes oranges (
         <div class="orange-line"></div>
-        ) represent the boundaries of the tectonic plates. Earthquake data from
+        ) représente les délimitations des plaques tectoniques. Données sismiques de
         <a href="https://earthquake.usgs.gov/earthquakes/search/">USGS</a>.
         <a href="https://www.arcgis.com/home/item.html?id=2b93b06dc0dc4e809d3c8db5cb96ba69"
-          >Country borders feature service</a
+          >Le service d'entités des frontières des pays</a
         >
-        is made available by the <a href="https://livingatlas.arcgis.com/en/">Living Atlas</a>. Visualization created
-        with <a href="https://developers.arcgis.com/javascript">Esri's ArcGIS API for JavaScript</a>.
+        est mis à disposition par le <a href="https://livingatlas.arcgis.com/en/">Living Atlas</a>. Visualisation créée avec  <a href="https://developers.arcgis.com/javascript">l'ArcGIS API JavaScript d'Esri</a>.
       </div>
-      <button id="legend-control">Hide explanation</button>
+      <button id="legend-control">Cacher l'explication</button>
       <p>
         <button id="toggle-exaggeration">
-          Toggle exaggeration
+          Cocher l'exagération
         </button>
-        to visualize the actual depth and the exaggerated depth. The list below displays the earthquakes with magnitude
-        higher than 7 in chronological order.
+        pour visualiser la profondeur réelle ou la profondeur exagérée. TLa liste ci-dessous affiche les tremblements de terre avec magnitude
+         supérieur à 7 dans l'ordre chronologique.
       </p>
       <div id="earthquake-list"></div>
     </div>
