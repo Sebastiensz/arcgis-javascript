@@ -76,7 +76,7 @@ view.popup.autoOpenEnabled = true;
   const layer = new FeatureLayer({
     url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Simu_Madeire_Running/FeatureServer/0",
     popupTemplate:{
-      content: "Le coureur {Prénom} {Nom} est en course le {date_}."
+      content: "Le coureur {Prénom} {Nom} est arrivé à ce checkpoint le {date_}."
     }
   });
 
@@ -162,7 +162,24 @@ view.popup.autoOpenEnabled = true;
     <div id="titleText">Course de Madeire</div>
     <div>Edition 2019</div>
   </div>
-  
-  
+    <div id="classementDiv" class="esri-widget">
+    <div id="titleText">Course de Madeire</div>
+      <div>1er Marco Silva</div>
+      <div>2ème Yann Alarcon</div>
+      <div>3ème Oscar Arza</div>
+      <div>4ème António Alves</div>
+      <div>5ème Diogo Abreu</div>
+      <div>6ème Pedro Barros</div>
+      <div>7ème Samuel Bard</div>
+      <div>8ème Rodrigo Barbosa</div>
+      <div>9ème Katerina Argalasova</div>
+      <div>10ème Philippe Aussenac</div>
+      <div>11ème Sebastien Baecher</div>
+      <div>12ème Patricia Barco Judlin</div>
+      <div>13ème Duarte Aguiar</div>
+      <div>14ème Rita Basto</div>
+      <div>Felipe Aveiro abandon</div>
+      
+  </div>
 </body>
 </html>
