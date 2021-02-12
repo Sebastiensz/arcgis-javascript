@@ -151,8 +151,8 @@ require([
       ]
     },
     popupTemplate: {
-      content: "Magnitude {mag} {type} hit {place} on {time} at a depth of {depth} km.",
-      title: "Earthquake info",
+      content: "Un séisme de magnitude {mag} {type} s'est produit à {place} le {time} à une profondeur de {depth} km.",
+      title: "Info séisme",
       fieldInfos: [
         {
           fieldName: "time",
