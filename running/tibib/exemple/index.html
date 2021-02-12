@@ -23,7 +23,7 @@
       text-align: center;
       vertical-align: baseline;
       cursor: pointer;
-      height: 40px;
+      height: 50px;
     }
 
     .season-item:focus {
@@ -68,10 +68,13 @@ let floodLayerView;
     zoom:10,
     center:[-16.2749989,32.37166518]
   });
-
+view.popup.autoOpenEnabled = true;
 //Trailheads feature layer (points)
   const layer = new FeatureLayer({
-    url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Simu_Madeire_Running/FeatureServer/0"
+    url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Simu_Madeire_Running/FeatureServer/0",
+    popupTemplate:{
+      content: "Le coureur {Prénom} {Nom} est en course."
+    }
   });
 
   map.add(layer);
@@ -96,7 +99,7 @@ let floodLayerView;
       function filterBySeason(event) {
         const selectedSeason = event.target.getAttribute("data-season");
         floodLayerView.filter = {
-          where: "Nom = '" + selectedSeason + "'"
+          where: "Dossard = " + selectedSeason
         };
       }
 
@@ -134,21 +137,21 @@ let floodLayerView;
   <div id="viewDiv"></div>
   
   <div id="seasons-filter" class="esri-widget">
-    <div class="season-item visible-season" data-season="Abreu">Abreu</div>
-    <div class="season-item visible-season" data-season="Aguiar">Aguiar</div>
-    <div class="season-item visible-season" data-season="Alarcon">Alarcon</div>
-    <div class="season-item visible-season" data-season="Alves">Alves</div>
-    <div class="season-item visible-season" data-season="Argalasova">Argalasova</div>
-    <div class="season-item visible-season" data-season="Arza">Arza</div>
-    <div class="season-item visible-season" data-season="Aussenac">Aussenac</div>
-    <div class="season-item visible-season" data-season="Aveiro">Aveiro</div>
-    <div class="season-item visible-season" data-season="Baecher">Baecher</div>
-    <div class="season-item visible-season" data-season="Barbosa">Barbosa</div>
-    <div class="season-item visible-season" data-season="Barco Judlin">Barco Judlin</div>
-    <div class="season-item visible-season" data-season="Bard">Bard</div>
-    <div class="season-item visible-season" data-season="Barros">Barros</div>
-    <div class="season-item visible-season" data-season="Basto">Basto</div>
-    <div class="season-item visible-season" data-season="Silva">Silva</div>
+    <div class="season-item visible-season" data-season="1031">Diogo Abreu</div>
+    <div class="season-item visible-season" data-season="1327">Duarte Aguiar</div>
+    <div class="season-item visible-season" data-season="1008">Yann Alarcon</div>
+    <div class="season-item visible-season" data-season="1052">Antonio Alves</div>
+    <div class="season-item visible-season" data-season="1163">Katerina Argalasova</div>
+    <div class="season-item visible-season" data-season="1053">Oscar Arza</div>
+    <div class="season-item visible-season" data-season="1255">Philippe Aussenac</div>
+    <div class="season-item visible-season" data-season="1121">Filipe Aveiro</div>
+    <div class="season-item visible-season" data-season="1322">Sébastien Baecher</div>
+    <div class="season-item visible-season" data-season="1107">Rodrigo Barbosa</div>
+    <div class="season-item visible-season" data-season="1336">Patricia Barco Judlin</div>
+    <div class="season-item visible-season" data-season="1095">Samuel Bard</div>
+    <div class="season-item visible-season" data-season="1040">Pedro Barros</div>
+    <div class="season-item visible-season" data-season="1395">Rita Basto</div>
+    <div class="season-item visible-season" data-season="1405">Marco Silva</div>
   </div>
   <div id="viewDiv"></div>
   <div id="titleDiv" class="esri-widget">
