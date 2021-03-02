@@ -378,37 +378,8 @@ view.popup.collapseEnabled= false;
       view.ui.add(legendExpand, "top-left");
 	  
 	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-	  
-        isResponsiveSize = view.widthBreakpoint === "xsmall";
-        updateView(isResponsiveSize);
-
-        // Breakpoints
-        view.watch("widthBreakpoint", function(breakpoint) {
-            switch (breakpoint) {
-                case "xsmall":
-                    updateView(true);
-                    break;
-					
-                case "small":
-				updateView(true);
-				break;
-                case "medium":
-                case "large":
-                case "xlarge":
-                    updateView(false);
-                    break;
-                default:
-            }
-			
-			
-			renderer = {
+      //Config du nouveau renderer 
+      			var renderer2 = {
         type: "simple",
         symbol: {
           type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
@@ -461,19 +432,19 @@ view.popup.collapseEnabled= false;
             },
             stops: [{
                 value:50000000 ,
-                size: "112px"
-              },{
-                value:15000000 ,
                 size: "64px"
               },{
-                value:4000000 ,
+                value:15000000 ,
                 size: "48px"
               },{
-                value:1000000 ,
+                value:4000000 ,
                 size: "24px"
+              },{
+                value:1000000 ,
+                size: "12px"
               }, {
                 value:100000 ,
-                size: "12px"},
+                size: "3px"},
               {
                 value:0,
                 size:"0px"}
@@ -481,24 +452,22 @@ view.popup.collapseEnabled= false;
           }
         ]
       };
-			
-			layer.renderer=renderer
-			
-			
-        });	  
+      
+      
+      
 	  
-	          function updateView(isMobile) {
-            setTitleMobile(isMobile);
-            setScaleBarWidgetMobile(isMobile);
+      function updateView(isMobile) {
+        setTitleMobile(isMobile);
+        setScaleBarWidgetMobile(isMobile);
         }
 
         function setTitleMobile(isMobile) {
             if (isMobile) {
-                view.ui.remove(titleDiv);
-				view.ui.remove(searchWidget);
-				view.ui.remove(source);
-				view.ui.remove(timeSlider);
-				
+              layer.renderer=renderer2
+              view.ui.remove(titleDiv);
+              view.ui.remove(searchWidget);
+              view.ui.remove(source);
+              view.ui.remove(timeSlider);
             } else {
                 view.ui.add(titleDiv, {
                     position: "top-left",
@@ -514,9 +483,7 @@ view.popup.collapseEnabled= false;
 
         function setScaleBarWidgetMobile(isMobile) {
             if (isMobile) {
-
-            } else {
-            }
+            } else {}
         }
 	  
 	  
@@ -524,9 +491,35 @@ view.popup.collapseEnabled= false;
 	  
 	  
 	  
-	  
-	  
+        var isResponsiveSize = view.widthBreakpoint === "xsmall";
+        updateView(isResponsiveSize);
 
+        // Breakpoints
+        view.watch("widthBreakpoint", function(breakpoint) {
+            switch (breakpoint) {
+                case "xsmall":
+                    updateView(true);
+                    break;
+					
+                case "small":
+				updateView(true);
+				break;
+                case "medium":
+                case "large":
+                case "xlarge":
+                    updateView(false);
+                    break;
+                default:
+            }
+			
+		
+			
+			
+        });	  
+	  
+	  
+	  
+	  
 
 
     });
