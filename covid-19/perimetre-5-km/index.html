@@ -1,0 +1,943 @@
+<!––Author : Sebastien Szollosi
+Blog : codethemap.fr  https://www.codethemap.fr/
+Technology : ArcGIS API for JavaScript  https://developers.arcgis.com/javascript/
+Company : Esri France
+––>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+        name="viewport"
+        content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Le périmètre à 5 kilomètres</title>
+
+    <style>
+        html,
+        body,
+        #viewDiv,
+        #container {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            color: #323232;
+            font-family: "Avenir Next W00", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        #titleDiv {
+            padding: 5px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 20px;
+            color: white;
+            background-color: #007AC2;
+        }
+
+        #logoDiv {
+            border: 0px dotted red;
+        }
+
+        #source {
+            padding: 10px;
+            font-weight: normal;
+            text-align: center; 
+            font-size:12px;
+            width:160px;
+        }
+
+        #title {
+            margin: 10px;
+            font-size: 20px;
+            overflow: hidden;
+        }
+
+        .invisible {
+            visibility: collapse;
+        }
+
+        .esri-expand .esri-expand__content {
+            box-shadow: none;
+        }
+
+        /* intro and about page */
+        #viewDiv {
+            filter: blur(0px);
+            transition: filter 0.4s;
+        }
+
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1em;
+            box-sizing: border-box;
+        }
+
+        #introDiv {
+            position: relative;
+            width: 70%;
+            max-width: 850px;
+            min-height: 350px;
+            flex: 1;
+            background-color: #fff;
+            padding: 3em;
+            box-sizing: border-box;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        #introDiv h1 {
+            font-size: 2em;
+            margin-top: 0;
+            margin-bottom: 1em;
+        }
+
+        .intro-p-desktop {
+            line-height: 1.5em;
+        }
+        .intro-p-mobile {
+            line-height: normal;
+        }
+
+        #container a:hover {
+            color: white;
+            background: #007AC2;
+        }
+
+        #container a {
+            color: #007AC2;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        button.esri-icon-close {
+            position: absolute;
+            top: 1.5em;
+            right: 1.5em;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        #about {
+            color: white;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .highlightFont{
+            font-weight: bold;
+            color: #007AC2;
+        }
+
+        #start-appli {
+            border-radius: 0.2em;
+            padding: 0.8em 1.5em;
+            font-size: 1em;
+            margin: 2em auto;
+            margin-bottom: 0;
+            display: block;
+            border: 1px solid white;
+            background: #007AC2;
+            color: white;
+            font-family: "Avenir Next W00", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        #calculZone {
+            padding: 0.8em 1.5em;
+            font-size: 1em;
+            margin: 1em auto;
+            display: block;
+            border: 1px solid white;
+            background: #007AC2;
+            color: white;
+        }
+
+        #start-appli:hover, #calculZone:hover {
+            cursor: pointer;
+        }
+
+        .esri-view-height-xsmall
+        .esri-ui-corner
+        .esri-expand
+        .esri-legend.esri-widget,
+        .esri-view-height-small
+        .esri-ui-corner
+        .esri-expand
+        .esri-legend.esri-widget {
+            max-height: 100%;
+        }
+
+        .esri-view-width-less-than-small .esri-zoom .esri-widget--button {
+            display: none;
+        }
+		
+		.esri-input.esri-search__input::placeholder{
+            color:rgb(64,64,64);
+        }
+   
+        .esri-search {
+            width:100% !important;
+            height:50px;
+        }
+
+        .esri-search-widget-mobile {
+            width:306px !important;
+            height:50px;
+        }
+   
+    </style>
+    <link
+        rel="stylesheet"
+        href="https://js.arcgis.com/4.14/esri/themes/light/main.css"
+    />
+	<link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css"/>
+	<link rel="stylesheet" href="./widgets/ShareWidget/css/Share.css"/>
+	<link rel=icon href=./favicon_32.ico>
+	<script>
+        var locationPath = location.pathname.replace(/\/[^\/]+$/, "");
+        window.dojoConfig = {
+            packages: [{
+                name: "widgets",
+                location: locationPath+"/widgets"
+            }]
+        };
+    </script>
+    <script src="https://js.arcgis.com/4.14/"></script>
+
+    <script>
+      require([
+        "esri/Basemap",
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/widgets/Zoom",
+        "esri/widgets/Home",
+        "esri/widgets/Expand",
+        "esri/widgets/Search",
+        "esri/widgets/BasemapGallery",
+        "esri/widgets/BasemapGallery/support/LocalBasemapsSource",
+        "esri/tasks/Locator",
+        "esri/widgets/Search/LocatorSearchSource",
+        "esri/widgets/Locate",
+        "esri/widgets/Print",
+        "esri/widgets/ScaleBar",
+        "esri/Graphic",
+        "esri/geometry/geometryEngine",
+        "esri/geometry/Circle",
+        "esri/core/watchUtils",
+		"esri/layers/FeatureLayer",
+        "esri/tasks/support/Query","esri/layers/GraphicsLayer", "widgets/ShareWidget/ShareWidget","esri/WebMap"
+      ], function(Basemap, Map, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
+        Locate, Print, ScaleBar, Graphic, GeometryEngine, Circle, watchUtils,FeatureLayer,Query,GraphicsLayer,ShareWidget,WebMap) {
+
+        var center = null;
+        var zoomLevel = null;
+        var mode = "";
+
+        // Décodage des paramètres de l'URL, s'il y en a (centrage et niveau de zoom)
+        var positionParams = window.location.href.indexOf('?');
+        if (positionParams > 0){
+            var endUrl = window.location.href.substr(positionParams + 1);
+
+            var params = endUrl.split("&");
+            params.forEach(param => {
+                // Récupération de chaque couple key=value
+                var paramKeyValue = param.split("=");
+                var key = paramKeyValue[0];
+                var value = paramKeyValue[1];
+                switch(key){
+                    case "center":
+                        var coordinates = value.split(",");
+                        var x = coordinates[0];
+                        var y = coordinates[1];
+                        center = {
+                            type: "point", // autocasts as new Point()
+                            longitude: x,
+                            latitude: y
+                        };
+                        break;
+                    case "level":
+                        zoomLevel = value;
+                        break;
+                    default:
+                        console.error("Unknown URL param '" + key + "'");
+                }
+            })
+
+            if (center != null && zoomLevel != null){
+                mode = "param";
+            }
+            else
+            {
+                console.error("Problem with URL parameters");
+            }
+        }
+
+        if (mode != "param"){
+            document.getElementById("introDiv").classList.remove("hidden");
+        }
+		
+		        var webmap = new WebMap({
+          portalItem: {
+            id: "6ce8e6df7cc3471892974a98f5f09c13"
+          }
+        });
+
+      //  var resultsLayer = new GraphicsLayer();
+		var resultsLayer2 = new GraphicsLayer();
+	/*	var comLayer = new FeatureLayer({
+            url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Communes_France_2020/FeatureServer/0",
+            outFields :['CODEINSEE'],
+            popupEnabled:false
+        });*/
+
+
+      /*  var isodistance = new FeatureLayer({ 
+            url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/buffer100km_plus_dep_clipped_3857_v4/FeatureServer",
+            outFields: ["CODEINSEE"],
+            popupEnabled:false,
+            visible:false
+        });*/
+		
+		var deconfDpmt = new FeatureLayer({ 
+              portalItem: {
+    id: "4bd9b90a009347e4b3bf774136a737a2"
+  },
+            popupEnabled:false,
+        });
+	
+
+        var basemapTopographie = new Basemap({
+            portalItem: {
+                id: "4ee49e2bbc0644b19fb96fef466f0de4"
+            }
+        });
+        var basemapRues = new Basemap({
+            portalItem: {
+                id: "9d93429825e54ea98435ff4d709924c5"
+            }
+        });
+        var basemapOSM = new Basemap({
+            portalItem: {
+                id: "95ba0f7fc3fb45e0861da51677102c4e"
+            }
+        });
+
+        var basemapOSMPastels = new Basemap({
+            portalItem: {
+                id: "a8e0d9baa5be4d378624f18f1df3e09a"
+            }
+        });
+
+        var basemapHybrid = new Basemap({
+            portalItem: {
+                id: "ce52199dce1b4f978667303e982bbb1e"
+            }
+        });
+
+        var zoneSym = {
+            type: "simple-fill",
+            color: "rgba(0,122,194,.05)",
+            outline: {  // autocasts as new SimpleLineSymbol()
+                color: "rgba(0,122,194,100)",
+                width: 2
+            }
+        };
+
+        var locator = new Locator({
+            //url: "https://utility.arcgis.com/usrsvcs/servers/60a8871933e44a249ca71bb13c2d823d/rest/services/World/GeocodeServer" //esri France
+			url:"https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer"
+		});
+
+        var locatorSearchSource = new LocatorSearchSource({
+            locator: locator,
+            singleLineFieldName: "SingleLine",
+            name: "Géocodage sur la France",
+            placeholder: "Rechercher une adresse",
+            maxResults: 3,
+            maxSuggestions: 6,
+            suggestionsEnabled: true,
+            minSuggestCharacters: 6,
+			autoNavigate:false
+			
+        });
+		
+		var locatorSearchSource2 = new LocatorSearchSource({
+            locator: locator,
+            singleLineFieldName: "SingleLine",
+            name: "Géocodage sur la France",
+            placeholder: "Vérifier si une adresse est dans la zone",
+			//placeholder:"Commune dans la zone ?",
+            maxResults: 3,
+            maxSuggestions: 6,
+            suggestionsEnabled: true,
+            minSuggestCharacters: 6,
+			locationEnabled:false,
+			autoNavigate:false
+        });
+
+        var localBasemapsSource = LocalBasemapsSource({
+            basemaps: [
+                basemapTopographie,
+                basemapRues,
+                basemapOSM,
+                basemapHybrid,
+                basemapOSMPastels
+            ]
+        });
+
+		var map = new Map({
+            basemap: basemapTopographie
+        });
+	  
+        //map.add(comLayer, 0);
+     //   map.add(resultsLayer,0);
+		map.add(resultsLayer2,0);
+		//map.add(deconfDpmt);
+        var code_insee
+
+		
+        var view = new MapView({
+            container: "viewDiv",
+			map:webmap,
+            constraints: {
+                rotationEnabled: false
+            },
+            zoom: 5,
+            center: [3, 47]
+        });
+		
+		
+//previous place for the query
+
+        // Gestion de l'intro/aide
+        document.getElementById("close-about").addEventListener("click", closeMenu);
+
+        document.getElementById("start-appli").addEventListener("click", function () {
+            closeMenu();
+            view.when(function () {
+             //   watchUtils.whenFalseOnce(view, "updating", rotate);
+            });
+        });
+
+        document.getElementById("container").addEventListener("click", function (e) {
+            if (e.target.id === "container") {
+                closeMenu();
+                view.when(function () {
+             //   watchUtils.whenFalseOnce(view, "updating", rotate);
+                });
+            }
+        });
+
+        function closeMenu() {
+            document.getElementById("container").style.display = "none";
+            view.container.style.filter = "blur(0px)";
+        }
+
+        let intro = true;
+        document.getElementById("about").addEventListener("click", function () {
+        document.getElementById("container").style.display = "flex";
+        //view.container.style.filter = "blur(10px)";
+        if (intro) {
+            document.getElementById("introDiv").classList.remove("hidden");
+            document.getElementById("show-about").classList.remove("hidden");
+            document.getElementById("show-intro").classList.add("hidden");
+            intro = false;
+        }
+        });
+
+        view.ui.add("about", {
+            position: "top-right",
+            index: 0
+        });
+        // Fin gestion de l'intro/aide
+
+        // Desktop
+        var titleDiv = document.getElementById("titleDiv");
+        view.when(function() {
+            // Widget Print
+            const printWidget = new Print({
+                view: view,
+                // specify your own print service
+                printServiceUrl: "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",
+				allowedFormats: ["jpg", "png8", "png32"],
+				allowedLayouts: ["a4-landscape", "a4-portrait"]
+            });
+
+            // Affichage du widget Print sous forme d'un objet Expand
+            const printExpand = new Expand({
+            	view: view,
+            	content: printWidget,
+                expandTooltip: "Exporter",
+                group: "expands"
+            });
+            view.ui.add(printExpand, {
+                position: "top-right",
+                index: 1
+            });
+
+            printExpand.watch("expanded ", function(value){
+                var select = document.querySelectorAll("[data-target-property='layout']")[0];
+                select.value = "a4-portrait";
+				var select2 = document.querySelectorAll("[data-target-property='format']")[0];
+				select2.value="jpg";
+            });
+			
+			view.watch("scale", function(value){
+                // Manually update printed scale as printed scale is only an integer
+                // So to be sure to get same result than in the application, printed scale must be current scale truncated to integer
+                printWidget.templateOptions.scaleEnabled = true;
+                printWidget.templateOptions.scale = Math.trunc(view.scale);
+            });
+			
+            view.watch("stationary", function(isStationary){
+                // Si on touche à la carte, on force la fermeture du widget share pour forcer
+                // la génération d'un nouveau lien de partage mis à jour avec les nouvelles coordonnées
+                if (!isStationary && view.widthBreakpoint != "xsmall"){
+                    shareExpand.collapse();
+                }
+            });
+			
+			// Widget Share
+            const shareWidget = new ShareWidget({
+                view,
+                container: document.createElement("div")
+            });
+            // Affichage du widget Share sous forme d'un objet Expand
+            const shareExpand = new Expand({
+            	view: view,
+            	content: shareWidget,
+                expandTooltip: "Partager",
+                group: "expands"
+            });
+            view.ui.add(shareExpand, {
+                position: "top-right",
+                index: 2
+            });
+
+            shareExpand.watch("expanded", function(value){
+                // Déclenchement manuel de la génération d'URL
+                shareWidget.shareModalOpened = value;
+            });
+
+            view.watch("stationary", function(isStationary){
+                // Si on touche à la carte, on force la fermeture du widget share pour forcer
+                // la génération d'un nouveau lien de partage mis à jour avec les nouvelles coordonnées
+                if (!isStationary && view.widthBreakpoint != "xsmall"){
+                    shareExpand.collapse();
+                }
+            });
+			
+			
+
+            const locateWidget = new Locate({
+                view: view,
+                graphic: new Graphic({
+                    symbol: { type: "simple-marker" }  // overwrites the default symbol used for the
+                    // graphic placed at the location of the user when found
+                }),
+				scale:2095438
+            });
+            view.ui.add(locateWidget, {
+                position: "top-left",
+                index: 3
+            });
+		
+			locateWidget.on("locate", function(event){
+                getIsoDistance(event.target.graphic.geometry)
+            });
+
+            var basemapGalleryWidget = new BasemapGallery({
+                activeBasemap: basemapTopographie,
+                view: view,
+                source: localBasemapsSource
+            });
+            // Affichage du widget BasemapGallery sous forme d'un objet Expand
+            const basemapGalleryExpand = new Expand({
+            	view: view,
+            	content: basemapGalleryWidget,
+                expandTooltip: "Fonds de carte",
+                group: "expands"
+            });
+            view.ui.add(basemapGalleryExpand, {
+                position: "top-left",
+                index: 5
+            });
+
+
+        });
+		
+        const searchWidget = new Search({
+            view: view,
+            //container: "widget_search",
+            includeDefaultSources: false,
+            popupEnabled: false, // popup is customized so default popup is disabled
+            resultGraphicEnabled: false, // resultGraphic is customized so default resultGraphic is disabled
+            sources : [locatorSearchSource]
+            // sources:[{
+            //     layer: chflLayer,
+            //     searchFields: ["NAME"],
+            //     displayField: "NAME",
+            //     exactMatch: false,
+            //     outFields: ["NAME","CODEINSEE"],
+            //     name: "Commune",
+            //     placeholder: "Recherchez votre commune",
+            //     maxResults: 3,
+            //     maxSuggestions: 15,
+            //     minSuggestCharacters:3
+            // }],
+			// locationEnabled:false
+        });
+		
+		const searchWidget2 = new Search({
+            view: view,
+            includeDefaultSources: false,
+            popupEnabled: false, // popup is customized so default popup is disabled
+            resultGraphicEnabled: false, // resultGraphic is customized so default resultGraphic is disabled
+            sources : [locatorSearchSource2],
+            // sources:[{
+            //     layer: chflLayer,
+            //     searchFields: ["NAME"],
+            //     displayField: "NAME",
+            //     exactMatch: false,
+            //     outFields: ["NAME","CODEINSEE"],
+            //     name: "Commune",
+            //     placeholder: "Recherchez votre commune",
+            //     maxResults: 3,
+            //     maxSuggestions: 15,
+            //     minSuggestCharacters:3
+            // }],
+			locationEnabled:false
+        });
+
+        // Widget ScaleBar
+        const scaleBarWidget = new ScaleBar({
+            view: view,
+            style: "line",
+            unit: "metric"
+        });
+
+        // // Mobile
+        // var expandWidget = new Expand({
+        //   view: view,
+        //   content: document.getElementById("searchDiv")
+        // });
+
+        // CHARGEMENT WIDGETS
+        // Boutons de zoom supprimés pour pouvoir placer le titre en haut à droite
+        view.ui.remove("zoom");
+        view.ui.add(titleDiv, {
+            position: "top-left",
+            index: 0
+        });
+
+        view.ui.add(searchWidget, {
+            position: "top-left",
+            index: 1
+        });
+
+        const zoomWidget = new Zoom({
+            view: view
+        });
+        view.ui.add(zoomWidget, {
+            position: "top-left",
+            index: 3
+        });
+		
+
+        var homeBtn = new Home({
+          view: view
+        });
+
+        view.ui.add(homeBtn, {
+            position: "top-left",
+            index: 6
+        });
+
+        view.ui.add(scaleBarWidget, {
+            position: "bottom-left"
+        });
+
+        //var coord_zoom
+		//when click, query on cities layer to get the INSEE code and then use it for get the isodistance
+		view.on("click", function(event){
+            getIsoDistance(event.mapPoint)
+        });
+
+        // Affichage du cadre consignes du gouvernement
+        view.ui.add("source", {
+            position: "bottom-right",
+            index: 0
+        });
+
+        // Affichage du logo
+        //view.ui.add("logoDiv","manual");
+        view.ui.add("logoDiv", {
+            position: "bottom-right",
+            index: 1
+        });
+
+        function createGraphic(point) {
+            // Suppression de tout les graphic présents
+            view.graphics.removeAll();
+            // Création d'un graphic à l'emplacement en paramètre
+            var graphic = new Graphic({
+                geometry: point,
+                symbol: {
+                    type: "simple-marker",
+                    color: "#007AC2",
+                    size: 8,
+                    outline: {
+                        color: "#FFFFFF",
+                        width: 1
+                    }
+                }
+            });
+            // Affichage du graphic créé
+            view.graphics.add(graphic);
+            return graphic;
+        };
+		
+				        function createGraphic2(point) {
+            // Suppression de tout les graphic présents
+            // Création d'un graphic à l'emplacement en paramètre
+            var graphic = new Graphic({
+                geometry: point,
+                symbol: {
+                    type: "simple-marker",
+                    color: "#007AC2",
+                    size: 8,
+                    outline: {
+                        color: "#FFFFFF",
+                        width: 1
+                    }
+                }
+            });
+			
+			
+
+            
+
+            // Affichage du graphic créé
+            view.graphics.add(graphic);
+            return graphic;
+        };
+
+        function getIsoDistance(geom){
+            locationGraphic=createGraphic(geom);
+			//computeZone(locationGraphic);
+            view.ui.add(searchWidget2, {
+                position: "top-left",
+                index: 2
+            });
+			computeZone(geom);
+/*
+            var query = comLayer.createQuery();
+            query.cacheHint=true;
+            query.geometry = (geom);  // the point location of the pointer
+            query.spatialRelationship = "intersects";  // this is the default
+            query.returnGeometry = false;
+            query.outFields = [ "CODEINSEE" ];
+
+            comLayer.queryFeatures(query)
+            .then(function(response){
+                // returns a feature set with features containing the
+                code_insee=response.features[0].attributes.CODEINSEE;
+                //queryIsoDistance().then(displayResults);
+            });*/
+        }
+
+        searchWidget.on("select-result", function(event){
+            getIsoDistance(event.result.feature.geometry)
+        });
+
+        searchWidget2.on("select-result", function(event){
+            locationGraphic=createGraphic2(event.result.feature.geometry);
+            //view.center([event.result.feature.geometry.latitude,event.result.feature.geometry.longitude]);
+
+            //verify intersection between resultsLayer and the city got from the searchWidget2
+            isContains=GeometryEngine.contains(resultsLayer2.graphics.items[0].geometry,event.result.feature.geometry);
+            if(isContains){
+                locationGraphic.symbol.color="rgb(0,212,0)";
+				console.log(resultsLayer2);
+            }
+            else{
+                locationGraphic.symbol.color="rgb(255,0,0)";
+            }
+            view.goTo([locationGraphic.geometry.longitude,locationGraphic.geometry.latitude]);
+        });
+
+        function queryIsoDistance() {
+            var query = isodistance.createQuery();
+            query.cacheHint=true;
+            query.where ="CODEINSEE = '"+code_insee+ "'";
+            return isodistance.queryFeatures(query);
+        };
+      
+        function displayResults(results) {
+            //console.log(results);
+            resultsLayer.removeAll();
+            var feature = results.features.map(function(graphic) {
+                graphic.symbol = {
+                    type: "simple-fill",
+                    color: [0, 122, 194, 0.1],
+                    outline: {  // autocasts as new SimpleLineSymbol()
+                        color: "rgba(0,122,194,100)",
+                        width: 2
+                    }
+                };
+                //view.goTo(graphic.geometry.centroid);
+                return graphic;
+            });
+            view.goTo(feature);
+            resultsLayer.addMany(feature);
+			//console.log(feature);
+        };
+		
+		       function computeZone(graphicCenter){
+            // Draw simple circle
+			resultsLayer2.removeAll();
+            var circle = GeometryEngine.geodesicBuffer(graphicCenter, 5, "kilometers");
+            var graphicCircle = new Graphic({
+            geometry: circle,
+            symbol: {
+                    type: "simple-fill",
+                    color: [0, 122, 194, 0.04],
+                    outline: {  // autocasts as new SimpleLineSymbol()
+                        color: "rgba(0,122,194,100)",
+                        width: 2
+                    }
+                }
+            });
+            view.graphics.add(graphicCircle,0);
+
+            //var serviceAreaParams = createServiceAreaParams(graphicCenter, view.spatialReference);
+            //executeServiceAreaTask(serviceAreaParams);
+
+            view.goTo(graphicCircle);
+			resultsLayer2.add(graphicCircle);
+
+        };
+		
+
+        if (mode == "param"){
+            getIsoDistance(center);
+        }
+
+        // RESPONSIVE DESIGN
+        // Init view
+        isResponsiveSize = view.widthBreakpoint === "xsmall";
+        updateView(isResponsiveSize);
+
+        // Breakpoints
+        view.watch("widthBreakpoint", function(breakpoint) {
+            switch (breakpoint) {
+                case "xsmall":
+                    updateView(true);
+                    break;
+					
+                case "small":
+                case "medium":
+                case "large":
+                case "xlarge":
+                    updateView(false);
+                    break;
+                default:
+            }
+        });
+
+        function updateView(isMobile) {
+            setIntroMobile(isMobile);
+            setTitleMobile(isMobile);
+            setScaleBarWidgetMobile(isMobile);
+        }
+
+        function setTitleMobile(isMobile) {
+            if (isMobile) {
+                view.ui.remove(titleDiv);
+                if (searchWidget != null && searchWidget.container != null){
+                    searchWidget.container.classList.add("esri-search-widget-mobile");
+                }
+            } else {
+                view.ui.add(titleDiv, {
+                    position: "top-left",
+                    index: 0
+                });
+                if (searchWidget != null && searchWidget.container != null){
+                    searchWidget.container.classList.remove("esri-search-widget-mobile");
+                }
+            }
+        }
+
+        function setIntroMobile(isMobile) {
+            if (isMobile) {
+                document.getElementById("introDiv").style.padding = "2em";
+                document.getElementById("introDiv").style.marginBottom = "0em";
+                document.getElementById("introDiv").style.fontSize = "90%";
+            } else {
+                document.getElementById("introDiv").style.padding = "3em";
+                document.getElementById("introDiv").style.marginBottom = "1em";
+                document.getElementById("introDiv").style.fontSize = "100%";
+            }
+        }
+
+        function setScaleBarWidgetMobile(isMobile) {
+            if (isMobile) {
+                view.ui.remove(scaleBarWidget);
+            } else {
+                view.ui.add(scaleBarWidget, {
+                    position: "bottom-left"
+                });
+            }
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv">
+        <div id="titleDiv" class="esri-widget"><div id="title">Votre zone à 5 kilomètres</div></div>
+        <div id="about" class="esri-component esri-widget" title="Aide">
+            <div class="esri-widget--button">
+                <span class="esri-icon-question">
+                </span>
+                <span class="esri-icon-font-fallback-text">Aide</span>
+            </div>
+        </div>
+
+        <div id="logoDiv" style="background-color: #FFFFFF; height: 60px"><a href="https://www.esrifrance.fr/" target="_blank"><img style="margin-top: 10px" src="./images/esri-france-logo-halo.png" alt="Esri France" width="150" /></a></div>
+        <div id="source" style="background-color: #FFFFFF; height: 60px" class="esri-widget">
+            <span class="highlightFont">#RestezChezVous​</span>
+            Consignes sur <a href="https://www.gouvernement.fr/info-coronavirus" target="_blank">gouvernement.fr​</a>
+        </div>
+    </div>
+    <div id="container">
+        <div id="introDiv" class="hidden">
+            <h1 style="font-size:22px">Périmètre de 5 km</h1>
+            <div id="show-intro">
+                <p class="intro-p-desktop">Bienvenue ! Les déplacements sont limités à 5km autour de chez vous à Dunkerque et Nice le week-end pour une durée maximale d'une heure. Pour connaître le périmètre autour de chez vous, vous pouvez:​​</p>
+                <p class="intro-p-desktop"><span class="highlightFont">Recherchez votre adresse</span>, ou<span class="highlightFont"> utilisez votre localisation actuelle​</span>, ou <span class="highlightFont">zoomez​</span> et naviguez librement dans la carte, puis <span class="highlightFont">cliquez sur le lieu de votre choix.</span> Vous verrez alors le périmètre de 20 km à vol d'oiseau autour de votre domicile.</p>
+				<p class="intro-p-desktop">Puis ensuite,  avec la seconde zone de recherche, vous pourrez vérifier si une adresse est dans la zone de 5 kms autour de votre domicile (point vert) ou en dehors de celle-ci (point rouge).</p>
+                <button id="start-appli">Commencer</button><br>
+				<p class="intro-p-desktop">Une application <span class="highlightFont"><a href="https://www.esrifrance.fr/">Esri France</a></span></p>
+            </div>
+            <div id="show-about" class="hidden">
+                <button id="close-about" class="esri-icon-close"></button>
+                <p class="intro-p-desktop">Les déplacements sont limités à 5km autour de chez vous à Dunkerque et Nice le week-end pour une durée maximale d'une heure. Pour connaître le périmètre autour de chez vous, vous pouvez:</p>
+                <p class="intro-p-desktop"><span class="highlightFont">Recherchez votre adresse​</span>, ou<span class="highlightFont"> utilisez votre localisation actuelle​</span>, ou <span class="highlightFont">zoomez​</span> et naviguez librement dans la carte, puis <span class="highlightFont">cliquez sur le lieu de votre choix.</span> Vous verrez alors le périmètre de 20 km à vol d'oiseau autour de votre domicile.</p>
+				<p class="intro-p-desktop">Puis ensuite,  avec la seconde zone de recherche, vous pourrez vérifier si une adresse est dans la zone de 5 kms autour de votre domicile (point vert) ou en dehors de celle-ci (point rouge).</p>
+				<p class="intro-p-desktop">Une application <span class="highlightFont"><a href="https://www.esrifrance.fr/">Esri France</a></span><p>
+            </div>
+        </div>
+    </div>
+  </body>
+</html>
