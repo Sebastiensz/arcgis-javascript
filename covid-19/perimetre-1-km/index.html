@@ -1,0 +1,947 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+        name="viewport"
+        content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Carte du confinement : le périmètre d'1 kilomètre</title>
+
+    <style>
+        html,
+        body,
+        #viewDiv,
+        #container {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            color: #323232;
+            font-family: "Avenir Next W00", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        #titleDiv {
+            padding: 5px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 20px;
+            color: white;
+            background-color: #007AC2;
+        }
+
+        #logoDiv {
+            border: 0px dotted red;
+        }
+
+        #source {
+            padding: 10px;
+            font-weight: normal;
+            text-align: center; 
+            font-size:12px;
+            width:160px;
+        }
+
+        #title {
+            margin: 10px;
+            font-size: 20px;
+            overflow: hidden;
+        }
+
+        #widget_search{
+            height:50px;
+            max-width: 488px;
+            width: 100%;
+        }
+
+        .invisible {
+            visibility: collapse;
+        }
+
+        .esri-expand .esri-expand__content {
+            box-shadow: none;
+        }
+
+        /* intro and about page */
+        #viewDiv {
+            filter: blur(0px);
+            transition: filter 0.4s;
+        }
+
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1em;
+            box-sizing: border-box;
+        }
+
+        #introDiv {
+            position: relative;
+            width: 70%;
+            max-width: 850px;
+            min-height: 350px;
+            flex: 1;
+            background-color: #fff;
+            padding: 3em;
+            box-sizing: border-box;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        #introDiv h1 {
+            font-size: 2em;
+            margin-top: 0;
+            margin-bottom: 1em;
+        }
+
+        .intro-p-desktop {
+            line-height: 1.5em;
+        }
+        .intro-p-mobile {
+            line-height: normal;
+        }
+
+        #container a:hover {
+            color: white;
+            background: #007AC2;
+        }
+
+        #container a {
+            color: #007AC2;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        button.esri-icon-close {
+            position: absolute;
+            top: 1.5em;
+            right: 1.5em;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        #about {
+            color: white;
+            box-shadow: none;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .highlightFont{
+            font-weight: bold;
+            color: #007AC2;
+        }
+
+        #start-appli {
+            border-radius: 0.2em;
+            padding: 0.8em 1.5em;
+            font-size: 1em;
+            margin: 2em auto;
+            margin-bottom: 0;
+            display: block;
+            border: 1px solid white;
+            background: #007AC2;
+            color: white;
+            font-family: "Avenir Next W00", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        #calculZone {
+            padding: 0.8em 1.5em;
+            font-size: 1em;
+            margin: 1em auto;
+            display: block;
+            border: 1px solid white;
+            background: #007AC2;
+            color: white;
+        }
+
+        #start-appli:hover, #calculZone:hover {
+            cursor: pointer;
+        }
+
+        .esri-view-height-xsmall
+        .esri-ui-corner
+        .esri-expand
+        .esri-legend.esri-widget,
+        .esri-view-height-small
+        .esri-ui-corner
+        .esri-expand
+        .esri-legend.esri-widget {
+            max-height: 100%;
+        }
+
+        .esri-view-width-less-than-small .esri-zoom .esri-widget--button {
+            display: none;
+        }
+    </style>
+    <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css"/>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.14/esri/themes/light/main.css"/>
+    <link rel="stylesheet" href="./widgets/ShareWidget/css/Share.css"/>
+    <script>
+        var locationPath = location.pathname.replace(/\/[^\/]+$/, "");
+        window.dojoConfig = {
+            packages: [{
+                name: "widgets",
+                location: locationPath + "/widgets"
+            }]
+        };
+    </script>
+    <script src="https://js.arcgis.com/4.14/"></script>
+    <script>
+      require([
+        "esri/Basemap",
+        "esri/WebMap",
+        "esri/Map",
+        "esri/layers/MapImageLayer",
+        "esri/views/MapView",
+        "esri/widgets/Zoom",
+        "esri/widgets/Home",
+        "esri/widgets/Expand",
+        "esri/widgets/Search",
+        "esri/widgets/BasemapGallery",
+        "esri/widgets/BasemapGallery/support/LocalBasemapsSource",
+        "esri/tasks/Locator",
+        "esri/widgets/Search/LocatorSearchSource",
+        "esri/widgets/Locate",
+        "esri/widgets/Print",
+        "esri/widgets/ScaleBar",
+        "esri/widgets/Bookmarks",
+        "esri/Graphic",
+        "esri/geometry/geometryEngine",
+        "esri/geometry/Circle",
+        "esri/geometry/SpatialReference",
+        "esri/tasks/ServiceAreaTask",
+        "esri/tasks/support/ServiceAreaParameters",
+        "esri/tasks/support/FeatureSet",
+        "esri/core/watchUtils",
+        "widgets/ShareWidget/ShareWidget", "esri/widgets/Track"
+      ], function(Basemap, WebMap, Map, MapImageLayer, MapView, Zoom, Home, Expand, Search, BasemapGallery, LocalBasemapsSource, Locator, LocatorSearchSource,
+        Locate, Print, ScaleBar, Bookmarks, Graphic, GeometryEngine, Circle, SpatialReference, ServiceAreaTask, ServiceAreaParameters, FeatureSet, watchUtils, ShareWidget,Track) {
+
+        var center = null;
+        var zoomLevel = null;
+        var mode = "";
+
+        // Décodage des paramètres de l'URL, s'il y en a (centrage et niveau de zoom)
+        var positionParams = window.location.href.indexOf('?');
+        if (positionParams > 0){
+            var endUrl = window.location.href.substr(positionParams + 1);
+
+            var params = endUrl.split("&");
+            params.forEach(param => {
+                // Récupération de chaque couple key=value
+                var paramKeyValue = param.split("=");
+                var key = paramKeyValue[0];
+                var value = paramKeyValue[1];
+                switch(key){
+                    case "center":
+                        var coordinates = value.split(",");
+                        var x = coordinates[0];
+                        var y = coordinates[1];
+                        center = {
+                            type: "point", // autocasts as new Point()
+                            longitude: x,
+                            latitude: y
+                        };
+                        break;
+                    case "level":
+                        zoomLevel = value;
+                        break;
+                    default:
+                        console.error("Unknown URL param '" + key + "'");
+                }
+            })
+
+            if (center != null && zoomLevel != null){
+                mode = "param";
+            }
+            else
+            {
+                console.error("Problem with URL parameters");
+            }
+        }
+
+        if (mode != "param"){
+            document.getElementById("introDiv").classList.remove("hidden");
+        }
+
+        var webmap = new WebMap({
+          portalItem: {
+            id: "6ce8e6df7cc3471892974a98f5f09c13"
+          }
+        });
+
+        var basemapTopographie = new Basemap({
+            portalItem: {
+                id: "4ee49e2bbc0644b19fb96fef466f0de4"
+            }
+        });
+        var basemapRues = new Basemap({
+            portalItem: {
+                id: "9d93429825e54ea98435ff4d709924c5"
+            }
+        });
+        var basemapOSM = new Basemap({
+            portalItem: {
+                id: "95ba0f7fc3fb45e0861da51677102c4e"
+            }
+        });
+
+        var basemapOSMPastels = new Basemap({
+            portalItem: {
+                id: "a8e0d9baa5be4d378624f18f1df3e09a"
+            }
+        });
+
+        var basemapHybrid = new Basemap({
+            portalItem: {
+                id: "ce52199dce1b4f978667303e982bbb1e"
+            }
+        });
+
+        var zoneSym = {
+            type: "simple-fill",
+            color: "rgba(0,122,194,.05)",
+            outline: {  // autocasts as new SimpleLineSymbol()
+                color: "rgba(0,122,194,100)",
+                width: 2
+            }
+        };
+
+        var locator = new Locator({
+            url: "https://utility.arcgis.com/usrsvcs/servers/60a8871933e44a249ca71bb13c2d823d/rest/services/World/GeocodeServer"
+        });
+
+        var locatorSearchSource = new LocatorSearchSource({
+            locator: locator,
+            singleLineFieldName: "SingleLine",
+            name: "Géocodage sur la France",
+            placeholder: "Rechercher une adresse ou un lieu",
+            maxResults: 3,
+            maxSuggestions: 6,
+            suggestionsEnabled: true,
+            minSuggestCharacters: 3,
+		autoNavigate:false
+        });
+
+        var localBasemapsSource = LocalBasemapsSource({
+            basemaps: [
+                basemapTopographie,
+                basemapRues,
+                basemapOSM,
+                basemapHybrid,
+                basemapOSMPastels
+            ]
+        });
+
+        if (mode != "param"){
+            center = {
+                type: "point", // autocasts as new Point()
+                longitude: 3,
+                latitude: 47
+            };
+            zoomLevel = 5;
+        }
+        var view = new MapView({
+            container: "viewDiv",
+            map: webmap,
+            constraints: {
+                rotationEnabled: false
+            },
+            zoom: zoomLevel,
+            center: center
+        });
+	      
+	      // typical usage
+var track = new Track({
+  view: view
+});
+	              view.ui.add(track, "top-left");
+
+        // The sample will start tracking your location
+        // once the view becomes ready
+        view.when(function () {
+          track.start();
+        });
+	      
+
+        // Gestion de l'intro/aide
+        document.getElementById("close-about").addEventListener("click", closeMenu);
+
+        document.getElementById("start-appli").addEventListener("click", function () {
+            closeMenu();
+            view.when(function () {
+                watchUtils.whenFalseOnce(view, "updating", rotate);
+            });
+        });
+
+        document.getElementById("container").addEventListener("click", function (e) {
+            if (e.target.id === "container") {
+                closeMenu();
+                view.when(function () {
+                    watchUtils.whenFalseOnce(view, "updating", rotate);
+                });
+            }
+        });
+
+        function closeMenu() {
+            document.getElementById("container").style.display = "none";
+            view.container.style.filter = "blur(0px)";
+        }
+
+        let intro = true;
+        document.getElementById("about").addEventListener("click", function () {
+            document.getElementById("container").style.display = "flex";
+            //view.container.style.filter = "blur(10px)";
+            if (intro) {
+                document.getElementById("introDiv").classList.remove("hidden");
+                document.getElementById("show-about").classList.remove("hidden");
+                document.getElementById("show-intro").classList.add("hidden");
+                intro = false;
+            }
+        });
+
+        view.ui.add("about", {
+            position: "top-right",
+            index: 0
+        });
+        // Fin gestion de l'intro/aide
+
+        // Desktop
+        var titleDiv = document.getElementById("titleDiv");
+        /*
+        view.when(function() {
+            // Widget Print
+            const printWidget = new Print({
+                view: view,
+                printServiceUrl: "https://wssecured.esrifrance.fr/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task"
+            });
+            // Affichage du widget Print sous forme d'un objet Expand
+            const printExpand = new Expand({
+            	view: view,
+            	content: printWidget,
+                expandTooltip: "Exporter",
+                group: "expands"
+            });
+            view.ui.add(printExpand, {
+                position: "top-right",
+                index: 1
+            });
+
+            printExpand.watch("expanded", function(value){
+                var select = document.querySelectorAll("[data-target-property='layout']")[0];
+                select.value = "a4-landscape";
+            });
+*/
+                view.when(function() {
+            // Widget Print
+            const printWidget = new Print({
+                view: view,
+                // specify your own print service
+                printServiceUrl: "https://utility.arcgisonline.com/arcgis/rest/services/Utilities/PrintingTools/GPServer/Export%20Web%20Map%20Task",
+				allowedFormats: ["jpg", "png8", "png32"],
+				allowedLayouts: ["a4-landscape", "a4-portrait"]
+            });
+
+            // Affichage du widget Print sous forme d'un objet Expand
+            const printExpand = new Expand({
+            	view: view,
+            	content: printWidget,
+                expandTooltip: "Exporter",
+                group: "expands"
+            });
+            view.ui.add(printExpand, {
+                position: "top-right",
+                index: 1
+            });
+
+            printExpand.watch("expanded ", function(value){
+                var select = document.querySelectorAll("[data-target-property='layout']")[0];
+                select.value = "a4-portrait";
+				var select2 = document.querySelectorAll("[data-target-property='format']")[0];
+				select2.value="jpg";
+            });
+                  //fin Print
+        
+            view.watch("scale", function(value){
+                // Manually update printed scale as printed scale is only an integer
+                // So to be sure to get same result than in the application, printed scale must be current scale truncated to integer 
+                printWidget.templateOptions.scaleEnabled = true;
+                printWidget.templateOptions.scale = Math.trunc(view.scale);
+            });
+
+            // Widget Share
+            const shareWidget = new ShareWidget({
+                view,
+                container: document.createElement("div")
+            });
+            // Affichage du widget Share sous forme d'un objet Expand
+            const shareExpand = new Expand({
+            	view: view,
+            	content: shareWidget,
+                expandTooltip: "Partager",
+                group: "expands"
+            });
+            view.ui.add(shareExpand, {
+                position: "top-right",
+                index: 2
+            });
+
+            shareExpand.watch("expanded", function(value){
+                // Déclenchement manuel de la génération d'URL
+                shareWidget.shareModalOpened = value;
+            });
+
+            view.watch("stationary", function(isStationary){
+                // Si on touche à la carte, on force la fermeture du widget share pour forcer
+                // la génération d'un nouveau lien de partage mis à jour avec les nouvelles coordonnées
+                if (!isStationary && view.widthBreakpoint != "xsmall"){
+                    shareExpand.collapse();
+                }
+            });
+
+            const locateWidget = new Locate({
+                view: view,
+                graphic: new Graphic({
+                    symbol: { type: "simple-marker" }  // overwrites the default symbol used for the
+                    // graphic placed at the location of the user when found
+                })
+            });
+            view.ui.add(locateWidget, {
+                position: "top-left",
+                index: 3
+            });
+            // Gestion du résultat du widget Locate
+            locateWidget.on("locate", function(event){
+                popupContentClick(event.target.graphic.geometry);
+            });
+
+            const bookmarksWidget = new Bookmarks({
+                view: view,
+                editingEnabled: false
+            });
+            // Affichage du widget Bookmarks sous forme d'un objet Expand
+            const bookmarksExpand = new Expand({
+            	view: view,
+            	content: bookmarksWidget,
+                expandTooltip: "Géosignets",
+                group: "expands"
+            });
+            view.ui.add(bookmarksExpand, {
+                position: "top-left",
+                index: 4
+            });
+
+            var basemapGalleryWidget = new BasemapGallery({
+                activeBasemap: basemapTopographie,
+                view: view,
+                source: localBasemapsSource
+            });
+            // Affichage du widget BasemapGallery sous forme d'un objet Expand
+            const basemapGalleryExpand = new Expand({
+            	view: view,
+            	content: basemapGalleryWidget,
+                expandTooltip: "Fonds de carte",
+                group: "expands"
+            });
+            view.ui.add(basemapGalleryExpand, {
+                position: "top-left",
+                index: 5
+            });
+
+
+        });
+
+        const searchWidget = new Search({
+            view: view,
+            container: "widget_search",
+            includeDefaultSources: false,
+            popupEnabled: false, // popup is customized so default popup is disabled
+            resultGraphicEnabled: false, // resultGraphic is customized so default resultGraphic is disabled
+            sources : [locatorSearchSource]
+        });
+
+        // Widget ScaleBar
+        const scaleBarWidget = new ScaleBar({
+            view: view,
+            style: "line",
+            unit: "metric"
+        });
+
+        // CHARGEMENT WIDGETS
+        // Boutons de zoom supprimés pour pouvoir placer le titre en haut à droite
+        view.ui.remove("zoom");
+        view.ui.add(titleDiv, {
+            position: "top-left",
+            index: 0
+        });
+
+        view.ui.add(searchWidget, {
+            position: "top-left",
+            index: 1
+        });
+
+        const zoomWidget = new Zoom({
+            view: view
+        });
+        view.ui.add(zoomWidget, {
+            position: "top-left",
+            index: 3
+        });
+
+        var homeBtn = new Home({
+          view: view
+        });
+
+        view.ui.add(homeBtn, {
+            position: "top-left",
+            index: 6
+        });
+
+        view.ui.add(scaleBarWidget, {
+            position: "bottom-left"
+        });
+
+        // Affichage du cadre consignes du gouvernement
+        view.ui.add("source", {
+            position: "bottom-right",
+            index: 0
+        });
+
+        // Affichage du logo
+        //view.ui.add("logoDiv","manual");
+        view.ui.add("logoDiv", {
+            position: "bottom-right",
+            index: 1
+        });
+
+        // GESTION POPUP
+        // Popup affichée lors du clic sur la carte ou en résultat du widget Locate
+        function popupContentClick(point){
+            var lat = Math.round(point.latitude * 1000) / 1000;
+            var lon = Math.round(point.longitude * 1000) / 1000;
+
+            var popupContent = "Longitude/Latitude : " + lon + ", " + lat;
+
+            var locationGraphic = popup(popupContent, point);
+
+            var params = {
+                location: point
+            };
+
+            // Display the popup
+            // Execute a reverse geocode using the clicked location
+            locator.locationToAddress(params).then(function(response) {
+                // If an address is successfully found, show it in the popup's content
+                view.popup.content = setContentInfo(popupContent + "<br>" + response.address, locationGraphic);
+            })
+            .catch(function(error) {
+                // If the promise fails and no result is found, show a generic message
+                view.popup.content = setContentInfo(popupContent + "<br>Pas d'adresse trouvée pour ce lieu", locationGraphic);
+            });
+        }
+
+
+        function popup(content, point){
+            var locationGraphic = createGraphic(point);
+            view.popup.open({
+                title: "Résultat de la recherche",
+                content: setContentInfo(content, locationGraphic),
+                location: point, // Set the location of the popup to the clicked location
+                collapsed: false,
+                actions: []
+            });
+            // // Si on veut lancer le calcul de zone dès que l'utilisateur clique sur la carte
+            // computeZone(locationGraphic);
+
+            return locationGraphic;
+        }
+
+        function setContentInfo(content, locationGraphic) {
+            // Création du contenu de la popup personnalisée
+            // avec le bouton permettant de lancer le calcul de zone
+            var popupDiv = document.createElement("div");
+            popupDiv.innerHTML = content + "<br>"
+            var button = document.createElement("button");
+            button.innerHTML = "Calculer la zone";
+            button.id='calculZone';
+            popupDiv.appendChild(button);
+
+            button.addEventListener ("click", function() {
+                computeZone(locationGraphic);
+                view.popup.close();
+            });
+
+            return popupDiv;
+        }
+
+        function createGraphic(point) {
+            // Suppression de tout les graphic présents
+            view.graphics.removeAll();
+            // Création d'un graphic à l'emplacement en paramètre
+            var graphic = new Graphic({
+                geometry: point,
+                symbol: {
+                    type: "simple-marker",
+                    color: "#007AC2",
+                    size: 8,
+                    outline: {
+                        color: "#FFFFFF",
+                        width: 1
+                    }
+                }
+            });
+
+            // Affichage du graphic créé
+            view.graphics.add(graphic);
+            return graphic;
+        }
+
+        // Gestion manuelle de la popup de la view
+        view.popup.autoOpenEnabled = false;
+        view.popup.collapsed = false;
+        view.popup.collapseEnabled = false;
+        view.popup.dockEnabled = false;
+        // Gestion du clic sur la carte
+        view.on("click", function(event) {
+            popupContentClick(event.mapPoint);
+        });
+        view.when(function() {
+            popup.watch("collapsed", function(value){
+                if(value && popup.currentDockPosition === 'bottom-center'){
+                    popup.collapsed = false;
+                }
+            });
+        });
+
+        // Gestion du résultat de recherche d'adresse
+        searchWidget.on("select-result", function(event){
+            var popupContent = event.result.name;
+            popup(popupContent, event.result.feature.geometry);
+        });
+
+        // Calcul de la zone
+        var serviceAreaTask = new ServiceAreaTask({
+            url: "https://wssecured.esrifrance.fr/arcgis/rest/services/BDTopo_routing/NetworkAnalysis/NAServer/ServiceArea"
+        });
+        // Calcul de la zone
+        var serviceAreaTask2 = new ServiceAreaTask({
+            url: "https://wssecured.esrifrance.fr/arcgis/rest/services/HERE_routing/NetworkAnalysis/NAServer/ServiceArea"
+        });
+
+        function createServiceAreaParams(locationGraphic, outSpatialReference) {
+            // Create one or more locations (facilities) to solve for
+            var featureSet = new FeatureSet({
+                features: [locationGraphic]
+            });
+            // //Set all of the input parameters for the service
+            // var taskParameters = new ServiceAreaParameters({
+            //     facilities: featureSet, // Location(s) to start from
+            //     defaultBreaks: [1000],
+            //     impedanceAttribute: "METERS",
+            //     restrictionAttributes: ["Pieton"],
+            //     useHierarchy: false,
+            //     restrictUTurns: "allow-backtrack",
+            //     travelDirection: "from-facility",
+            //     //outputPolygons: "detailed",
+            //     outSpatialReference: outSpatialReference // Spatial reference to match the view
+            // });
+            var taskParameters = new ServiceAreaParameters({
+                facilities: featureSet, // Location(s) to start from
+                defaultBreaks: [1000],
+                travelDirection: "from-facility",
+                //outputPolygons: "detailed",
+                trimOuterPolygon: true,
+                trimPolygonDistance: 100,
+                travelMode: "2", // traveMode "Meters"
+                outSpatialReference: outSpatialReference // Spatial reference to match the view
+            });
+
+            var taskParameters2 = new ServiceAreaParameters({
+                facilities: featureSet, // Location(s) to start from
+                defaultBreaks: [1],
+                travelDirection: "from-facility",
+                //outputPolygons: "detailed",
+                trimOuterPolygon: true,
+                trimPolygonDistance: 100,
+                travelMode: "8", // traveMode "Walking distance"
+                outSpatialReference: outSpatialReference // Spatial reference to match the view
+            });
+
+            return [taskParameters, taskParameters2];
+        }
+
+        function executeServiceAreaTask(serviceAreaParams) {
+            var centerPoint = serviceAreaParams[1].facilities.features[0];
+            serviceAreaTask2.solve(serviceAreaParams[1]).then(function(result){
+                if (result.serviceAreaPolygons.length) {
+                    // Draw each service area polygon
+                    result.serviceAreaPolygons.forEach(function(graphic){
+                        graphic.symbol = zoneSym;
+                        view.graphics.add(graphic,0);
+                    });
+                }
+            }, function(error){
+                // If first service doesn't work, try second service
+                serviceAreaTask.solve(serviceAreaParams[0]).then(function(result){
+                    if (result.serviceAreaPolygons.length) {
+                        // Draw each service area polygon
+                        result.serviceAreaPolygons.forEach(function(graphic){
+                            graphic.symbol = zoneSym;
+                            view.graphics.add(graphic,0);
+                        });
+                    }
+                }, function(error){
+                    console.log(error);
+                });  
+            });
+        }
+
+        function computeZone(graphicCenter){
+
+            // Draw simple circle
+            var circle = GeometryEngine.geodesicBuffer(graphicCenter.geometry, 1, "kilometers");
+
+            var graphicCircle = new Graphic({
+            geometry: circle,
+            symbol: {
+                    type: "simple-fill",
+                    color: "rgba(0,122,194,0)",
+                    outline: {  // autocasts as new SimpleLineSymbol()
+                        color: "rgba(0,122,194,100)",
+                        width: 2,
+                        style: "short-dot"
+                    }
+                }
+            });
+            view.graphics.add(graphicCircle,0);
+
+            var serviceAreaParams = createServiceAreaParams(graphicCenter, view.spatialReference);
+            executeServiceAreaTask(serviceAreaParams);
+
+            view.goTo(graphicCircle);
+
+            // var buffer = GeometryEngine.buffer(graphicCenter.geometry, 1, "kilometers");
+            // var bufferGraphic = new Graphic({
+            //     geometry: buffer,
+            //     symbol: zoneSym
+            // });
+            // view.graphics.add(bufferGraphic);
+        }
+
+        if (mode == "param"){
+            var locationGraphic = createGraphic(center);
+            computeZone(locationGraphic);
+        }
+
+        // RESPONSIVE DESIGN
+        // Init view
+        isResponsiveSize = view.widthBreakpoint === "xsmall";
+        updateView(isResponsiveSize);
+
+        // Breakpoints
+        view.watch("widthBreakpoint", function(breakpoint) {
+            switch (breakpoint) {
+                case "xsmall":
+                    updateView(true);
+                    break;
+                case "small":
+                case "medium":
+                case "large":
+                case "xlarge":
+                    updateView(false);
+                    break;
+                default:
+            }
+        });
+
+        function updateView(isMobile) {
+            setIntroMobile(isMobile);
+            setTitleMobile(isMobile);
+            setScaleBarWidgetMobile(isMobile);
+        }
+
+        function setTitleMobile(isMobile) {
+            if (isMobile) {
+                view.ui.remove(titleDiv);
+            } else {
+                view.ui.add(titleDiv, {
+                    position: "top-left",
+                    index: 0
+                });
+            }
+        }
+
+        function setIntroMobile(isMobile) {
+            if (isMobile) {
+                document.getElementById("introDiv").style.padding = "2em";
+                document.getElementById("introDiv").style.marginBottom = "0em";
+                document.getElementById("introDiv").style.fontSize = "90%";
+            } else {
+                document.getElementById("introDiv").style.padding = "3em";
+                document.getElementById("introDiv").style.marginBottom = "1em";
+                document.getElementById("introDiv").style.fontSize = "100%";
+            }
+        }
+
+        function setScaleBarWidgetMobile(isMobile) {
+            if (isMobile) {
+                view.ui.remove(scaleBarWidget);
+            } else {
+                view.ui.add(scaleBarWidget, {
+                    position: "bottom-left"
+                });
+            }
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv">
+        <div id="titleDiv" class="esri-widget"><div id="title">Votre périmètre de confinement à 1 kilomètre</div></div>
+        <div id="about" class="esri-component esri-widget" title="Aide">
+            <div class="esri-widget--button">
+                <span class="esri-icon-question">
+                </span>
+                <span class="esri-icon-font-fallback-text">Aide</span>
+            </div>
+        </div>
+        <div id="widget_search"></div>
+        <div id="logoDiv" style="background-color: #FFFFFF; height: 60px"><a href="https://www.esrifrance.fr/" target="_blank"><img style="margin-top: 10px" src="./images/esri-france-logo-halo.png" alt="Esri France" width="150" /></a></div>
+        <div id="source" style="background-color: #FFFFFF; height: 60px" class="esri-widget">
+            <span class="highlightFont">#RestezChezVous​</span>
+            Consignes sur <a href="https://www.gouvernement.fr/info-coronavirus" target="_blank">gouvernement.fr​</a>
+        </div>
+    </div>
+    <div id="container">
+        <div id="introDiv" class="hidden">
+            <h1>Carte du confinement : le périmètre d'1 kilomètre</h1>
+            <div id="show-intro">
+                <p class="intro-p-desktop">Bienvenue ! Pour calculer la zone à 1 km autour de chez vous, 2 méthodes possibles :​</p>
+                <p class="intro-p-desktop">1- Recherchez une adresse ou un lieu, ou utilisez votre emplacement actuel, puis ​cliquez sur le bouton <span class="highlightFont">Calculer la zone​</span></p>
+                <span>ou</span>
+                <p class="intro-p-desktop">2- Zoomez et naviguez librement dans la carte, puis cliquez sur le lieu de votre choix,​ puis sur le bouton <span class="highlightFont">Calculer la zone​</span></p>
+                <p class="highlightFont">#RestezChezVous</p>
+                <button id="start-appli">Commencer</button>
+            </div>
+            <div id="show-about" class="hidden">
+                <button id="close-about" class="esri-icon-close"></button>
+                <p class="intro-p-desktop">Pour calculer la zone à 1 km autour de chez vous, 2 méthodes possibles :​</p>
+                <p class="intro-p-desktop">1- Recherchez une adresse ou un lieu, ou utilisez votre emplacement actuel, puis ​cliquez sur le bouton <span class="highlightFont">Calculer la zone​</span></p>
+                <span>ou</span>
+                <p class="intro-p-desktop">2- Zoomez et naviguez librement dans la carte, puis cliquez sur le lieu de votre choix,​ puis sur le bouton <span class="highlightFont">Calculer la zone​</span></p>
+                <p class="highlightFont">#RestezChezVous</p>
+            </div>
+        </div>
+    </div>
+  </body>
+</html>
