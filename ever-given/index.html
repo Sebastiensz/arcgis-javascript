@@ -1,0 +1,247 @@
+<!--
+
+To run this demo, you need to replace 'YOUR-API-KEY' with an API key from the ArcGIS Developers dashboard.
+
+Sign up for a free account and get an API key.
+
+https://developers.arcgis.com/documentation/mapping-apis-and-location-services/get-started/
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+ --><html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Evergreen boat</title>
+
+    <style>
+
+	  
+	  body {
+  font-family: "Epilogue", "Helvetica Neue", helvetica, arial, sans-serif;
+  margin: 2em;
+  height: 100%;
+  padding: 0
+}
+
+#info {
+  padding: 0 1em;
+}
+
+#controls {
+  padding: 1em;
+}
+
+
+h1 {
+  color: #373fff;
+}
+
+.h1-1 {
+  text-shadow: 2px 2px 0px coral;
+}
+
+.h1-2 {
+  text-shadow: 2px 2px 0px greenyellow;
+}
+
+#info-hider {
+  margin-left: 2.5em;
+}
+
+button {
+  padding: 0;
+  border: none;
+  font: inherit;
+  color: inherit;
+  background-color: transparent;
+  cursor: pointer;
+  font-size: 1.1em;
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  margin: 2px 0;
+  border: solid 1px transparent;
+  border-radius: 4px;
+  padding: 0.3em 0.7em;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #3333cc;
+}
+
+button.small {
+  font-size: 0.9em;
+}
+
+button.notactive {
+  border: solid 1px #3333cc;
+  background-color: #ddd;
+  color: #333;
+}
+
+html, body {
+  height: 100%;
+  width: 100vw;
+  margin: 0;
+}
+
+#container {
+  height: 900px;
+  width: 100%;
+  position: relative;
+}
+
+@media (max-height: 1200px) {
+  #container {
+    height: 500px;
+  }
+}
+
+#viewdiv{
+  height: 100%;
+  width:100%;
+}
+
+#evergiven {
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  height: auto;
+  width: 400px;
+  z-index: 1000;
+  transform: translate(-50%,-50%);  
+  -webkit-filter: drop-shadow(5px 5px 5px #222);
+  filter: drop-shadow(5px 5px 5px #222);
+}
+
+p.small {
+  font-size: 0.8em;
+  color: #555;
+}
+
+p.small a {
+  color: lightcoral;
+}
+
+.glitchButton {
+  z-index: 1000;
+}
+	  
+	  
+	  
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.19/"></script>
+
+    <script>
+      require(["esri/config","esri/Map", "esri/views/MapView"], function (esriConfig,Map, MapView) {
+
+
+        let map = new Map({
+          basemap: "topo" // Basemap layer service
+        });
+
+        const view = new MapView({
+          map: map,
+          center: [-71.041,42.36], // Longitude, latitude
+          zoom: 15, // Zoom level
+          container: "viewDiv" // Div element
+        });
+  	  let evergiven = document.getElementById("evergiven");
+	  let rotation = 0;
+let scale = 1.0;
+let scaling = false;
+let infoHidden = false;
+
+let scalecheck = document.getElementById("scalecheck");
+let scaletext = document.getElementById("scaletext");
+
+function turnScaleOn() {
+  scaling = true;
+  scalecheck.innerHTML = "✅";
+  scaletext.innerHTML = "is";
+  warpScale();
+}
+
+function turnScaleOff(resetScale) {
+  scaling = false;
+  scalecheck.innerHTML = "🔲";
+  scaletext.innerHTML = "isn't";
+  if (resetScale) {
+    scale = 1.0;
+  }
+  evergiven.style.transform = `translate(-50%,-50%) rotate(${rotation}deg) scale(${scale})`;
+}
+
+function warpScale() {
+  let metersPerPx =
+    (156543.03392 * Math.cos((view.center.latitude * Math.PI) / 180)) / //view.center.latitude
+    Math.pow(2, view.zoom);                                        //console.log(view.zoom);
+  scale = 1 / metersPerPx;
+  evergiven.style.transform = `translate(-50%,-50%) rotate(${rotation}deg) scale(${scale})`;
+}
+
+	 document.getElementById("rotator").addEventListener("click", e => {
+  rotation = rotation + 10;
+  evergiven.style.transform = `translate(-50%,-50%) rotate(${rotation}deg) scale(${scale})`;
+});
+
+document.getElementById("scale-bigger").addEventListener("click", e => {
+  turnScaleOff(false);
+  scale = scale + 0.05;
+  evergiven.style.transform = `translate(-50%,-50%) rotate(${rotation}deg) scale(${scale})`;
+});
+
+document.getElementById("scale-smaller").addEventListener("click", e => {
+  turnScaleOff(false);
+  scale = scale - 0.05;
+  evergiven.style.transform = `translate(-50%,-50%) rotate(${rotation}deg) scale(${scale})`;
+});
+
+document.getElementById("scaler").addEventListener("click", e => {
+  scaling ? turnScaleOff(true) : turnScaleOn();
+}); 
+
+map.on("zoom", () => {
+  if (scaling) {
+    warpScale();
+  }
+});
+      });	  
+	  
+    </script>
+
+  </head>
+  <body>
+      <button id="rotator">
+        ⤵️ Rotate the boat
+      </button>
+
+      <button id="scale-bigger">
+        ➕ Make the boat bigger
+      </button>
+
+      <button id="scale-smaller">
+        ➖ Make the boat smaller
+      </button>
+
+      <button id="scaler" class="notactive">
+        <span id="scalecheck">🔲</span> Boat <span id="scaletext">isn't</span> to scale
+      </button>
+    </div>
+	<div id="viewDiv">      <img
+        id="evergiven"
+        src="https://cdn.glitch.com/40d83f73-34cc-401e-90f3-d6b2f92f2b01%2Fevergiven.png?v=1616949352560"
+        alt="Evergiven"
+      /></div>
+  
+  
+  </body>
+</html>
