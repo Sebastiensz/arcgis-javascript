@@ -1,0 +1,87 @@
+html,
+body,
+#viewDiv {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  font-family: 'Open Sans Condensed', sans-serif;
+  background: rgb(5, 50, 56);
+}
+
+footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 80%;
+  margin: 5px auto;
+  color: white;
+  background-color: rgba(5, 50, 56, 0.7);
+}
+
+#populationSlider {
+  width: 80%;
+  height: 10px;
+  margin:10px auto;
+}
+
+footer>p {
+  margin-bottom: 30px;
+}
+
+.credits {
+  font-size: 0.8em;
+}
+
+a {
+  color: white;
+  text-decoration: none;
+  border-bottom: 1px dashed white;
+}
+.noUi-horizontal {
+  width: 5px;
+}
+
+.noUi-connect {
+  background: rgba(0, 228, 249, 0.5);
+  border: none;
+}
+
+.noUi-target {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.noUi-horizontal .noUi-handle {
+  background: rgb(11, 148, 160);
+  border-radius: 50%;
+  width: 15px;
+  height: 15px;
+  box-shadow: none;
+  left: -5px;
+  top: -4px;
+}
+
+.noUi-connect:hover, .noUi-handle {
+  cursor: pointer;
+}
+
+.noUi-handle:focus {
+  outline: none;
+}
+
+.noUi-marker-horizontal.noUi-marker {
+  height: 1px;
+}
+
+.noUi-tooltip {
+  font-size: 0.9em;
+  border: none;
+  padding: 1px;
+  background: transparent;
+  color: white;
+}
+
+.noUi-handle:after, .noUi-handle:before {
+  background: none;
+}
