@@ -26,7 +26,7 @@ require([
             primitive: "cube"
           },
           material: {
-            color: "#a600ff"//"#00E9FF"
+            color: "#00E9FF"
           },
           anchor: "bottom",
           width: 60000,
