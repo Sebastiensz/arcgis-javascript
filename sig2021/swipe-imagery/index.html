@@ -46,8 +46,8 @@
         const view = new MapView({
           container: "viewDiv",
           map: map,
-          zoom: 14,
-          center: [6.50, 43.37], // longitude, latitude
+          zoom: 13,
+          center: [6.40, 43.27], // longitude, latitude
           constraints: {
             maxZoom: 17,
             minZoom: 8
@@ -69,7 +69,7 @@
         const swipe = new Swipe({
           leadingLayers: [infrared],
           trailingLayers: [nearInfrared],
-          position: 35, // set position of widget to 35%
+          position: 50, // set position of widget to 35%
           view: view
         });
 
