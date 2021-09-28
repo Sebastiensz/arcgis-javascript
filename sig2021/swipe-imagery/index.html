@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Swipe Widget | Sample | ArcGIS API for JavaScript 4.21</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/dark/main.css" />
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/TileLayer",
+        "esri/widgets/LayerList",
+        "esri/widgets/Swipe",
+        "esri/widgets/Expand"
+      ], (Map, MapView, TileLayer, LayerList, Swipe, Expand) => {
+
+        const map = new Map({
+          basemap: "satellite"
+        });
+
+        const infrared = new TileLayer({
+          url: "https://tiles.arcgis.com/tiles/d3voDfTFbHOCRwVR/arcgis/rest/services/Imagerie_avant_et_apr%C3%A8s_l_incendie_du_Var_WTL3/MapServer",
+          maxScale: 3000
+        });
+        map.add(infrared);
+
+        const nearInfrared = new TileLayer({
+          url: "https://tiles.arcgis.com/tiles/d3voDfTFbHOCRwVR/arcgis/rest/services/Imagerie_avant_et_apr%C3%A8s_l_incendie_du_Var_WTL2/MapServer",
+          maxScale: 3000
+        });
+        map.add(nearInfrared);
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          zoom: 14,
+          center: [6.50, 43.37], // longitude, latitude
+          constraints: {
+            maxZoom: 17,
+            minZoom: 8
+          }
+        });
+
+        // create a layerlist and expand widget and add to the view
+        const layerList = new LayerList({
+          view: view
+        });
+        const llExpand = new Expand({
+          view: view,
+          content: layerList,
+          expanded: false
+        });
+        view.ui.add(llExpand, "top-right");
+
+        // create a new Swipe widget
+        const swipe = new Swipe({
+          leadingLayers: [infrared],
+          trailingLayers: [nearInfrared],
+          position: 35, // set position of widget to 35%
+          view: view
+        });
+
+        // add the widget to the view
+        view.ui.add(swipe);
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
