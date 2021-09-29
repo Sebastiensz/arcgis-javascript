@@ -48,6 +48,18 @@
           url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Imagerie_avant_et_après_l_incendie_du_Var_WFL1/FeatureServer/0",
         });
         map.add(zone_interet);
+        
+        
+        const French_hybrid_referenceLayer=new TileLayer({ url:"https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+        });
+        map.add(French_hybrid_referenceLayer);
+        
+        
+        
+           const zone_blanche= new FeatureLayer({     url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/LimiteZoneBruleeObservee/FeatureServer"
+        });
+        map.add(zone_blanche);     
+        
 
         const view = new MapView({
           container: "viewDiv",
