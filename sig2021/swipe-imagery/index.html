@@ -24,11 +24,11 @@
         "esri/layers/TileLayer",
         "esri/widgets/LayerList",
         "esri/widgets/Swipe",
-        "esri/widgets/Expand"
-      ], (Map, MapView, TileLayer, LayerList, Swipe, Expand) => {
+        "esri/widgets/Expand","esri/layers/FeatureLayer"
+      ], (Map, MapView, TileLayer, LayerList, Swipe, Expand,FeatureLayer) => {
 
         const map = new Map({
-          basemap: "satellite"
+          basemap: "hybrid"
         });
 
         const infrared = new TileLayer({
@@ -42,6 +42,12 @@
           maxScale: 3000
         });
         map.add(nearInfrared);
+        
+        
+        const zone_interet= new FeatureLayer({
+          url:"https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/Imagerie_avant_et_après_l_incendie_du_Var_WFL1/FeatureServer/0",
+        });
+        map.add(zone_interet);
 
         const view = new MapView({
           container: "viewDiv",
