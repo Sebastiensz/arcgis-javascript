@@ -100,17 +100,17 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
               title: "Taux de létalité"
             },
             stops: [{
-              value: 0.04,
-              color: [196, 47, 30, 0.7], //"#B03A2E"
-              label: "4 % de cas décédés"
-            }, {
               value: 0.03,
-              color: [228, 145, 67, 0.7], //"#CB4335"
+              color: [196, 47, 30, 0.7], //"#B03A2E"
               label: "3 % de cas décédés"
             }, {
               value: 0.02,
-              color: [240, 205, 100, 0.7], //"#EC7063"
+              color: [228, 145, 67, 0.7], //"#CB4335"
               label: "2 % de cas décédés"
+            }, {
+              value: 0.015,
+              color: [240, 205, 100, 0.7], //"#EC7063"
+              label: "1.5 % de cas décédés"
             },
             {
               value: 0.01,
@@ -126,35 +126,36 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
               title: "Nombre de cas quotidiens dans le pays"
             },
             stops: [
+         //     {
+        //        value: 10000000,
+        //        size: "214px"
+         //     },{
+           //     value: 8000000,
+            //    size: "200px"
+         //     },{
+          //      value: 3000000,
+          //      size: "156px"
+             // },
               {
-                value: 10000000,
-                size: "214px"
-              },{
-                value: 8000000,
-                size: "200px"
-              },{
-                value: 3000000,
-                size: "156px"
-              },{
-                value: 1000000,
+                value: 20000,
                 size: "128px"
               }, {
-                value: 500000,
+                value: 10000,
                 size: "100px"
               }, {
-                value: 100000,
+                value: 5000,
                 size: "64px"
               },
               {
-                value: 20000,
+                value: 1000,
                 size: "24px"
               },
               {
-                value:1000,
-                size:"6px"},
+                value:500,
+                size:"12px"},
               {
                 value:200,
-                size:"3px"},
+                size:"6px"},
               {
                 value:0,
                 size:"0px"}
