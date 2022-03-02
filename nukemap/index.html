@@ -1,0 +1,133 @@
+<!--
+
+To run this demo, you need to replace 'YOUR_API_KEY' with an API key from the ArcGIS Developer dashboard.
+
+Sign up for a free account and get an API key.
+
+https://developers.arcgis.com/documentation/mapping-apis-and-services/get-started/
+
+ --><html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>ArcGIS API for JavaScript Tutorials: Display a map</title>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
+
+    <script>
+      require(["esri/config","esri/Map", "esri/views/MapView",
+        "esri/layers/GraphicsLayer",
+        "esri/Graphic",
+        "esri/geometry/geometryEngine"], function (esriConfig,Map, MapView, GraphicsLayer, Graphic, geometryEngine) {
+        
+        const map = new Map({
+          basemap: "dark-gray-vector" // Basemap layer service
+        });
+
+        const view = new MapView({
+          map: map,
+          center: [-2,42], // Longitude, latitude
+          zoom: 4, // Zoom level
+          container: "viewDiv" // Div element
+        });
+        
+        const bufferLayer = new GraphicsLayer();
+        const pointLayer = new GraphicsLayer();
+        map.addMany([bufferLayer, pointLayer]);
+        
+        const polySym = {
+          type: "simple-fill", // autocasts as new SimpleFillSymbol()
+          color: [140, 140, 222, 0.5],
+          outline: {
+            color: [0, 0, 0, 0.5],
+            width: 2
+          }
+        };
+        
+        const pointSym = {
+          type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+          color: [255, 0, 0],
+          outline: {
+            color: [255, 255, 255],
+            width: 1
+          },
+          size: 7
+        };
+        
+        view.on("click", event => {
+          bufferPoint(event,view);
+        });
+        
+        view.on("click", event => {
+          bufferPoint(event.mapPoint);
+        });
+ 
+        
+        function createBuffer(event, view) {
+          // prevent further propagation of the current event bubbling up the event chain.
+          // in this case, it will prevent default `drag` event behavior for the MapView
+          // which is to move around the view by dragging the pointer.
+          event.stopPropagation();
+
+          // convert screen coordinates to map coordinates
+          const point = view.toMap({
+            x: event.x,
+            y: event.y
+          });
+
+          if (point) {
+            bufferPoint(point);
+          }
+        }
+        
+        
+         function bufferPoint(point) {
+
+          clearGraphics();
+
+          // removes z-values from the point when taken from a SceneView.
+          // GeometryEngine does not support 3D geometries.
+          point.hasZ = false;
+          point.z = undefined;
+
+          pointLayer.add(
+            new Graphic({
+              geometry: point,
+              symbol: pointSym
+            })
+          );
+
+          const buffer = geometryEngine.geodesicBuffer(point, 560, "kilometers");
+          bufferLayer.add(
+            new Graphic({
+              geometry: buffer,
+              symbol: polySym
+            })
+          );
+        }
+        
+        function clearGraphics() {
+          pointLayer.removeAll();
+          bufferLayer.removeAll();
+        }
+
+      });
+    </script>
+
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
