@@ -1,0 +1,202 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+
+<title>Earthquakes in the last month</title>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+      #séisme {
+        color:brown;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.21/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.21/"></script>
+<select id="séisme"></select>
+    <script>
+      require([
+        "esri/Map",
+        "esri/layers/GeoJSONLayer",
+        "esri/views/MapView","esri/widgets/Legend","esri/widgets/Home","esri/widgets/Expand"
+      ], function(Map, GeoJSONLayer, MapView,Legend,Home,Expand) {
+
+        
+        
+        // Paste the url into a browser's address bar to download and view the attributes
+        // in the GeoJSON file. These attributes include:
+        // * mag - magnitude
+        // * type - earthquake or other event such as nuclear test
+        // * place - location of the event
+        // * time - the time of the event
+        // Use the Arcade Date() function to format time field into a human-readable format
+
+        const template = {
+          title: "Info séisme",
+          content: "Magnitude {mag} {type} a frappé {place} le {time}",
+          fieldInfos: [
+            {
+              fieldName: "time",
+              format: {
+                dateFormat: "short-date-short-time"
+              }
+            }
+          ]
+        };
+
+        //size of points depends on the magnitude
+        const renderer = {
+          type: "simple",
+          field: "mag",
+          symbol: {
+            type: "simple-marker",
+            color: "red",
+            outline: {
+              color: "white"
+            }
+          },
+          visualVariables: [
+            {
+              type: "size",
+              field: "mag",
+              stops: [
+                {
+                  value: 0.5,
+                  size: "1px"
+                },
+                {
+                  
+                  value: 1,
+                  size: "3px"
+                },
+                {
+                  value: 2.5,
+                  size: "8px"
+                },
+                {
+                  value: 4,
+                  size: "12px"
+                },
+                {
+                  value: 5,
+                  size: "25px"
+                },
+                {
+                  value: 6,
+                  size: "40px"
+                },
+                {
+                  value: 7,
+                  size: "60px"
+                },
+                {
+                  value: 10,
+                  size: "150px"
+                }
+              ]
+            }
+          ]
+        };
+
+        //load a first layer
+        const geojsonLayer = new GeoJSONLayer({
+          url: "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson",
+          renderer: renderer, //optional
+          popupTemplate:template
+        });
+
+        const map = new Map({
+          //basemap: "oceans",
+          basemap: "satellite",
+          layers: [geojsonLayer]
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          center: [2.3488, 48.8534],
+          zoom: 3,
+          map: map
+        });
+        // create a dropdown list with several options to see more or less recent earthquakes
+      let séisme=document.getElementById("séisme");
+      
+        let option1=document.createElement("option");
+     option1.textContent="all_month.geojson";
+      séisme.appendChild(option1);
+   //   option1.textContent="Séismes dans le dernier mois";
+        
+     let option2=document.createElement("option");
+     option2.textContent="all_week.geojson";
+      séisme.appendChild(option2);
+    //  option2.textContent="Séismes dans la dernière semaine";  
+        
+      let option3=document.createElement("option");
+      option3.textContent="all_day.geojson";
+      séisme.appendChild(option3);
+    //  option3.textContent="Séismes dans le dernier jour";  
+        
+      let option4=document.createElement("option");
+      option4.textContent="all_hour.geojson";
+      séisme.appendChild(option4);
+    //  option4.textContent="Séismes dans la dernière heure";  
+        
+ view.ui.add(séisme, "top-right"); //position the dropdown list at the top-right       
+    // define the event when we change the earthquake in the dropdown list, the map is updated with the new layer
+        var homeWidget = new Home({
+        view: view
+      });
+
+      // adds the home widget to the top left corner of the MapView
+      view.ui.add(homeWidget, "top-left");
+
+ const legend = new Legend({
+        view: view,
+        layerInfos: [{
+          layer: geojsonLayer,
+          title: "Légende",
+        }]
+      });
+      const legendExpand = new Expand({
+        expandIconClass: "esri-icon-drag-horizontal",
+        expandTooltip: "Legend",
+        view: view,
+        expanded: false,
+        content: legend,
+      });
+      view.ui.add(legendExpand, "top-left");   
+        
+séisme.addEventListener("change",function(){
+  let selectedService=séisme.options[séisme.selectedIndex].textContent;
+        let layer = new GeoJSONLayer({
+          url:"https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/" +selectedService,
+          renderer:renderer,
+          popupTemplate:template,
+        })
+        map.removeAll(); //don't have too much layers loaded
+        map.add(layer);
+
+      })
+  
+      });
+
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
