@@ -56,13 +56,13 @@
       var view = new MapView({
         container: "viewDiv",
         map: map,
-        zoom: 3
+        zoom: 3,
+      constraints: {
+        maxZoom: 12,
+        minZoom: 3
+      }
       });
-     
-     
  
-     
-     
       var countrieslayer = new FeatureLayer({
         portalItem: {
           id: "7f9f157a99cf4e1c9f451562c35fe428"
@@ -72,7 +72,7 @@
       retrieveData();
       map.add(countrieslayer, 1);
      
-      var reponse, Points;
+      var reponse,reponse2, Points;
       var randValue;
      
       function getRandomInt(max) {
@@ -124,6 +124,28 @@
       }
      
      
+      function queryFeatureCountryTable(){
+         var countryQueryreponse = {
+         where: "NAME_FR ='"+ country_table[randValue]+"'",  // Set by select element
+         spatialRelationship: "intersects", // Relationship operation to apply
+         //geometry: view.extent, // Restricted to visible extent of the map
+         outFields: [ "NAME_FR" ], // Attributes to return
+         returnGeometry: true
+        };           
+              
+ countrieslayer.queryFeatures(countryQueryreponse)
+        .then(function(response2){
+   //console.log("bonjour");
+   //console.log(response2.features);
+          view.goTo(response2.features[0].geometry.extent);
+        })
+   //.catch((error) => {
+         // console.log(error.error);
+        //});    
+        
+      }; //fin de queryFeatureCountryTable
+      
+      
       function getPays(geom){
         if(j<=20){
         var query = countrieslayer.createQuery();
@@ -138,37 +160,38 @@
              
                 // returns a feature set with features containing the
                 reponse=response.features[0].attributes.NAME_FR;
-             
-         
-              if(reponse===country_table[randValue]){
+       
+              
+  ////////////////////////////////////////////////                      
+              
+              
+              
+              
+              
+ //////////////////////////////////////////////////      
+              
+              //Test de la bonne réponse
+              if(reponse===country_table[randValue]){ //bonne réponse
                 pts=pts+1;
-                ptsElement.innerHTML=pts;
+                ptsElement.innerHTML=pts+"/"+ j+ " points";
                 //alert("Bonne réponse !");
                 view.goTo(response.features[0].geometry.extent);
               }
-              else{
-                //alert("Vous avez cliqué sur le pays suivant : " + reponse);
-               console.log(countrieslayer);
- view.goTo(response.features[0].geometry.extent);               console.log(country_table[randValue])
-                ptsElement.innerHTML=pts;
+              else{ //mauvaise reponse
+
+ //view.goTo(response.features[0].geometry.extent);  
+queryFeatureCountryTable();
+                ptsElement.innerHTML=pts+"/"+ j+ " points";
               }
-                          randValue=getRandomInt(242);
+             randValue=getRandomInt(242); //nouveau pays au hasard pour le jeu
             questionElement.innerHTML = String(country_table[randValue]);
             });
           j=j+1;
       }
-        else{
+        else{ //fin du jeu
           //alert("Votre score est de "+ pts+"/20. Le jeu est fini");
         }
-      };
-
-      //if (j==20){
-    //  alert("Votre score est de "+ pts+"/20. Le jeu est fini");
-   //   }
-     
-     
-     
-     
+      };   //fin de getPays
      
      
      
