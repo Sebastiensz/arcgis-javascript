@@ -44,8 +44,7 @@
   <script>  
     require([
       "esri/Map",
-      "esri/views/MapView","esri/layers/FeatureLayer","esri/tasks/support/Query"
-    ], function(Map, MapView,FeatureLayer,Query) {
+      "esri/views/MapView","esri/layers/FeatureLayer","esri/tasks/support/Query",'esri/symbols/SimpleLineSymbol','esri/symbols/SimpleFillSymbol'], function(Map, MapView,FeatureLayer,Query,SimpleLineSymbol,SimpleFillSymbol) {
      
       var country_table = [];
      
@@ -67,8 +66,19 @@
         portalItem: {
           id: "7f9f157a99cf4e1c9f451562c35fe428"
         },
-              popupEnabled: false
+              popupEnabled: false,
+          renderer: {
+    type: 'simple',
+    symbol: new SimpleFillSymbol({
+      outline: new SimpleLineSymbol({
+        color: 'white',
+        width: 1
+      })
+    })
+  }
       });
+      
+      
       retrieveData();
       map.add(countrieslayer, 1);
      
@@ -135,9 +145,76 @@
               
  countrieslayer.queryFeatures(countryQueryreponse)
         .then(function(response2){
-   //console.log("bonjour");
-   //console.log(response2.features);
+   //console.log(response2.features[0].symbol);
           view.goTo(response2.features[0].geometry.extent);
+   
+   //le bout ci dessous permet de tout mettre en rouge, mais maintenant je veux qu'uniquement une entité soit en rouge
+   
+   /*
+             response2.features[0].graphic={
+    type: 'simple',
+    symbol: new SimpleFillSymbol({
+      outline: new SimpleLineSymbol({
+        color: 'red',
+        width: 1
+      })
+    })
+  };*/
+   
+   // Obtenir la première entité dans la réponse
+var feature = response2.features[0];
+
+// Modifier la symbologie de l'entité pour ajouter un contour rouge
+feature.symbol = {
+  type: "simple-fill",  // Utiliser un symbole de remplissage simple
+  color: [128, 128, 128, 0],       // Couleur de remplissage blanche
+  outline: {            // Définir l'outline (contour)
+    color: "red",       // Couleur du contour rouge
+    width: "3px"        // Largeur du contour
+  }
+};
+
+// Ajouter l'entité mise en évidence à la couche de géométries de la vue
+view.graphics.add(feature);
+
+// Centrer la vue sur l'entité mise en évidence
+view.goTo(feature.geometry);
+   
+   
+  
+   /*
+     response2.features[0].graphic={
+    type: 'simple',
+    symbol: new SimpleFillSymbol({
+      outline: new SimpleLineSymbol({
+        color: 'red',
+        width: 1
+      })
+    })
+  };*/
+
+   //countrieslayer.renderer.symbol.outline.color = [128, 128, 128, 0.8];
+  /*
+var feature = response2.features[0].graphic;
+        feature.symbol = {
+          type: "simple-line",
+          color: "red",
+          width: "3px"
+        };
+        view.graphics.add(feature);
+   */
+   
+   
+   
+  /*response2.features[0] = new SimpleFillSymbol({
+    color: 'green',
+    outline: new SimpleLineSymbol({
+      color: 'red',
+      width: 2
+    })
+  });*/
+   
+   
         })
    //.catch((error) => {
          // console.log(error.error);
@@ -162,25 +239,37 @@
                 reponse=response.features[0].attributes.NAME_FR;
        
               
-  ////////////////////////////////////////////////                      
-              
-              
-              
-              
-              
- //////////////////////////////////////////////////      
-              
+
               //Test de la bonne réponse
               if(reponse===country_table[randValue]){ //bonne réponse
                 pts=pts+1;
                 ptsElement.innerHTML=pts+"/"+ j+ " points";
                 //alert("Bonne réponse !");
                 view.goTo(response.features[0].geometry.extent);
+
+                var feature2 = response.features[0];
+
+// Modifier la symbologie de l'entité pour ajouter un contour rouge
+feature2.symbol = {
+  type: "simple-fill",  // Utiliser un symbole de remplissage simple
+  color: [128, 128, 128, 0],       // Couleur de remplissage blanche
+  outline: {            // Définir l'outline (contour)
+    color: "green",       // Couleur du contour rouge
+    width: "3px"        // Largeur du contour
+  }
+};
+
+// Ajouter l'entité mise en évidence à la couche de géométries de la vue
+view.graphics.add(feature2);
+
+// Centrer la vue sur l'entité mise en évidence
+view.goTo(feature2.geometry);
+                
               }
               else{ //mauvaise reponse
 
- //view.goTo(response.features[0].geometry.extent);  
-queryFeatureCountryTable();
+                //view.goTo(response.features[0].geometry.extent);  
+                queryFeatureCountryTable();
                 ptsElement.innerHTML=pts+"/"+ j+ " points";
               }
              randValue=getRandomInt(242); //nouveau pays au hasard pour le jeu
