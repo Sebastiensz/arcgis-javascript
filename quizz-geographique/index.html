@@ -44,7 +44,7 @@
   <script>  
     require([
       "esri/Map",
-      "esri/views/MapView","esri/layers/FeatureLayer","esri/tasks/support/Query",'esri/symbols/SimpleLineSymbol','esri/symbols/SimpleFillSymbol'], function(Map, MapView,FeatureLayer,Query,SimpleLineSymbol,SimpleFillSymbol) {
+      "esri/views/MapView","esri/layers/FeatureLayer","esri/tasks/support/Query",'esri/symbols/SimpleLineSymbol','esri/symbols/SimpleFillSymbol',"esri/widgets/Home"], function(Map, MapView,FeatureLayer,Query,SimpleLineSymbol,SimpleFillSymbol,Home) {
      
       var country_table = [];
      
@@ -103,7 +103,13 @@
             position: "top-right",
             index: 1
         });
+      
+        // Créez une instance du widget d'accueil en passant la vue de carte en tant qu'argument
+  var homeWidget = new Home({
+    view: view
+  });
      
+  view.ui.add(homeWidget, "top-left");     
      
       //gestion des points
       var pts=0;
@@ -224,7 +230,10 @@ var feature = response2.features[0].graphic;
       
       
       function getPays(geom){
-        if(j<=20){
+     if(j>20){
+       alert("Jeu terminé votre score est de "+String(pts)+"/20");
+     }   
+     if(j<=20){
         var query = countrieslayer.createQuery();
             query.cacheHint=true;
             query.geometry = (geom);  // the point location of the pointer
@@ -240,8 +249,8 @@ var feature = response2.features[0].graphic;
        
               
 
-              //Test de la bonne réponse
-              if(reponse===country_table[randValue]){ //bonne réponse
+              //si bonne réponse
+              if(reponse===country_table[randValue] && j!==0){ //bonne réponse
                 pts=pts+1;
                 ptsElement.innerHTML=pts+"/"+ j+ " points";
                 //alert("Bonne réponse !");
@@ -267,18 +276,21 @@ view.goTo(feature2.geometry);
                 
               }
               else{ //mauvaise reponse
-
-                //view.goTo(response.features[0].geometry.extent);  
                 queryFeatureCountryTable();
-                ptsElement.innerHTML=pts+"/"+ j+ " points";
               }
+              if (j==1){
+                ptsElement.innerHTML=pts+"/"+ 0+ " points"
+              }
+              else{
+              ptsElement.innerHTML=pts+"/"+ String(j-1)+ " points";}
              randValue=getRandomInt(242); //nouveau pays au hasard pour le jeu
             questionElement.innerHTML = String(country_table[randValue]);
             });
           j=j+1;
       }
         else{ //fin du jeu
-          //alert("Votre score est de "+ pts+"/20. Le jeu est fini");
+          randValue=getRandomInt(242); //nouveau pays au hasard pour le jeu
+          questionElement.innerHTML = String(country_table[randValue]);
         }
       };   //fin de getPays
      
