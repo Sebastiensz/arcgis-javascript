@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 
 <head>
   <meta charset="utf-8" />
@@ -77,11 +78,9 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       "esri/widgets/Search",
       "esri/widgets/Zoom",
       "esri/widgets/Home",
-      "esri/widgets/Expand",
-      "esri/widgets/Legend",
       "esri/widgets/Bookmarks",
       "esri/webmap/Bookmark"
-    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Expand, Legend, Bookmarks, Bookmark) {
+    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Bookmarks, Bookmark) {
 
       const renderer = {
         type: "simple",
@@ -239,7 +238,6 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         mode: "instant",
         view: view
       });
-      view.ui.add(timeSlider, "manual");
       let timeLayerView;
       view.whenLayerView(layer).then(function (lv) {
         timeLayerView = lv;
