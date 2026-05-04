@@ -1,19 +1,5 @@
-<!--
-
-To run this demo, you need to replace 'YOUR-API-KEY' with an API key from the ArcGIS Developers dashboard.
-
-Sign up for a free account and get an API key.
-
-https://developers.arcgis.com/documentation/mapping-apis-and-location-services/get-started/
-      html,
-      body,
-      #viewDiv {
-        padding: 0;
-        margin: 0;
-        height: 100%;
-        width: 100%;
-      }
- --><html>
+<!DOCTYPE html>
+<html lang="fr">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
@@ -150,9 +136,9 @@ p.small a {
 
         const view = new MapView({
           map: map,
-          center: [-71.041,42.36], // Longitude, latitude
-          zoom: 15, // Zoom level
-          container: "viewDiv" // Div element
+          center: [32.35, 30.55], // Canal de Suez
+          zoom: 13,
+          container: "viewDiv"
         });
   	  let evergiven = document.getElementById("evergiven");
 	  let rotation = 0;
@@ -209,7 +195,7 @@ document.getElementById("scaler").addEventListener("click", e => {
   scaling ? turnScaleOff(true) : turnScaleOn();
 }); 
 
-map.on("zoom", () => {
+view.watch("zoom", () => {
   if (scaling) {
     warpScale();
   }
@@ -235,7 +221,6 @@ map.on("zoom", () => {
       <button id="scaler" class="notactive">
         <span id="scalecheck">🔲</span> Boat <span id="scaletext">isn't</span> to scale
       </button>
-    </div>
 	<div id="viewDiv">      <img
         id="evergiven"
         src="https://cdn.glitch.com/40d83f73-34cc-401e-90f3-d6b2f92f2b01%2Fevergiven.png?v=1616949352560"
