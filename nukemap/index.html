@@ -67,33 +67,10 @@ https://developers.arcgis.com/documentation/mapping-apis-and-services/get-starte
         };
         
         view.on("click", event => {
-          bufferPoint(event,view);
-        });
-        
-        view.on("click", event => {
           bufferPoint(event.mapPoint);
         });
- 
-        
-        function createBuffer(event, view) {
-          // prevent further propagation of the current event bubbling up the event chain.
-          // in this case, it will prevent default `drag` event behavior for the MapView
-          // which is to move around the view by dragging the pointer.
-          event.stopPropagation();
 
-          // convert screen coordinates to map coordinates
-          const point = view.toMap({
-            x: event.x,
-            y: event.y
-          });
-
-          if (point) {
-            bufferPoint(point);
-          }
-        }
-        
-        
-         function bufferPoint(point) {
+        function bufferPoint(point) {
 
           clearGraphics();
 
