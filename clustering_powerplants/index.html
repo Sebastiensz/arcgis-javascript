@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -74,8 +75,7 @@
           portalItem: {
             id: "26439088e1fc43078383c75bfbd7dbe6"
           },
-          featureReduction: clusterConfig,
-          //renderer: {type:"simple", symbol}
+          featureReduction: clusterConfig
         });
         
           var renderer = {
@@ -155,7 +155,7 @@
   }]
 };
           
-          //layer.renderer=renderer;
+          layer.renderer = renderer;
 
         const map = new Map({
           basemap: {
@@ -245,7 +245,7 @@
   <body>
     <div id="viewDiv"></div>
     <div id="infoDiv" class="esri-widget">
-      <button id="toggleCluster" class="esri-button">Disable Clustering</button>
+      <button id="toggleCluster" class="esri-button">Désactiver le Clustering</button>
       <div id="description">
         Montrer les centrales avec au moins
         <span id="sliderValue">0</span> megawatts de capacité
