@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 
 <head>
   <meta charset="utf-8" />
@@ -124,7 +124,7 @@
       display: none !important;
     }
   </style>
-
+</head>
 <body>
   <div id="viewDiv"></div>
   <div id="title">
@@ -143,20 +143,18 @@
       <label class="total" for="hat-color-total">Total</label>
     </div>
   </div>
-</body>
+
 <script>
   require([
     "esri/Map",
     "esri/layers/FeatureLayer",
     "esri/views/MapView",
     "esri/widgets/Home",
-    "esri/core/watchUtils",
     "esri/config"
-  ], function (Map, FeatureLayer, MapView, Home, watchUtils, esriConfig) {
+  ], function (Map, FeatureLayer, MapView, Home, esriConfig) {
     $(document).ready(function () {
-      //
-      esriConfig.apiKey =
-        "AAPK551c88f8d25e4cb6a6fa84e30ea07c240tXPQnH9X28B5uBat8NrS16NXKresOv90auUds7afDCcdpnlA4rLVheETm_yQlL_";
+      // Remplacer par votre clé API ArcGIS : https://developers.arcgis.com/
+      esriConfig.apiKey = "YOUR_API_KEY";
       //
       const orSym = {
         type: "simple-marker",
@@ -528,6 +526,5 @@
   });
 
 </script>
-</head>
-
+</body>
 </html>
