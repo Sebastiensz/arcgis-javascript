@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -36,17 +37,8 @@
         "esri/views/SceneView",
         "esri/layers/ElevationLayer",
         "esri/layers/TileLayer",
-        "esri/layers/FeatureLayer",
-        "esri/widgets/LayerList"
-      ], function (
-        Map,
-        SceneView,
-        ElevationLayer,
-        TileLayer,
-        FeatureLayer,
-        
-         
-      ) {
+        "esri/layers/FeatureLayer"
+      ], function (Map, SceneView, ElevationLayer, TileLayer, FeatureLayer) {
         const marsElevation = new ElevationLayer({
           url:
             "https://astro.arcgis.com/arcgis/rest/services/OnMars/MDEM200M/ImageServer",
@@ -148,7 +140,7 @@
           ]
         });
 
-       // map.add(cratersLayer);
+        map.add(cratersLayer);
 
         const shadedReliefLayer = new TileLayer({
           url:
