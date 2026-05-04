@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Animated Airplane</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.13/esri/themes/light/main.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.0.1/lib/anime.min.js"></script>
+    <script>
+      var dojoConfig = {
+        has: {
+          "esri-native-promise": true
+        }
+      };
+    </script>
+    <script src="https://js.arcgis.com/4.13/"></script>
+
+    <script>
+      require([
+        "esri/views/SceneView",
+        "esri/WebScene",
+        "esri/layers/GeoJSONLayer",
+        "esri/layers/GraphicsLayer",
+        "esri/Graphic",
+        "esri/symbols/WebStyleSymbol",
+        "esri/core/watchUtils"
+      ], function(
+        SceneView,
+        WebScene,
+        GeoJSONLayer,
+        GraphicsLayer,
+        Graphic,
+        WebStyleSymbol,
+        watchUtils
+      ) {
+
+        // Flight path
+        var pointA = {latitude: 52.55573101150287, longitude: 13.266720847998348};
+        var pointB = {latitude: 52.5572892898179, longitude: 13.28166875630727};
+        var pointC = {latitude: 52.55841014549657, longitude: 13.293069950833013};
+
+        var scale = 1.5;
+
+        var planes = [
+          {
+            category: "large",
+            name: "Airplane_Large_Passenger_With_Wheels"
+          }, {
+            category: "small",
+            name: "Airplane_Small_Passenger_With_Wheels"
+          }, {
+            category: "private",
+            name: "Airplane_Private_With_Wheels"
+          }, {
+            category: "sport",
+            name: "Airplane_Propeller_With_Wheels"
+          },
+        ];
+
+        var scene = new WebScene({
+          portalItem: {
+            id: "85a1d98e43f34ba5bcf8d9aa4d3a44be"
+          }
+        });
+
+        var view = new SceneView({
+          qualityProfile: "medium",
+          map: scene,
+          container: "viewDiv",
+        });
+        view.ui.add(["toggle-play", "toggle-pause"], "top-left");
+
+        var graphicsLayer = new GraphicsLayer({
+          elevationInfo: {
+            mode: "relative-to-ground",
+          }
+        });
+
+        var plane = new Graphic({
+          geometry: {...pointA, z: 100, type: "point"},
+        });
+
+        var geoJSONLayer = new GeoJSONLayer({
+          url: "./planes.geojson",
+        });
+
+        var symbolPromises = planes.map(plane => new WebStyleSymbol({
+            name: plane.name,
+            styleName: "EsriRealisticTransportationStyle",
+          })).map(symbol => symbol.fetchSymbol());
+
+        Promise.all(symbolPromises)
+          .then(planeSymbols => {
+            planeSymbols.forEach(symbol => {
+              symbol.symbolLayers.items[0].heading = 80;
+              symbol.symbolLayers.items[0].height *= scale;
+              symbol.symbolLayers.items[0].depth *= scale;
+              symbol.symbolLayers.items[0].width *= scale;
+            });
+
+            geoJSONLayer.renderer = {
+              type: "unique-value",
+              field: "CATEGORY",
+              uniqueValueInfos: planeSymbols.map((symbol, i) => { return {value: planes[i].category, symbol }}),
+              visualVariables:[{
+                type: "rotation",
+                field: "ROTATION"
+              }]
+            };
+
+            plane.symbol = planeSymbols[0];
+            graphicsLayer.add(plane);
+          });
+
+        view.when(function() {
+          view.map.basemap.referenceLayers = [];
+          view.map.add(graphicsLayer);
+          view.map.add(geoJSONLayer);
+          view.environment.atmosphere.quality = "high";
+          view.popup.defaultPopupTemplateEnabled = true;
+
+
+          var slideTitle = window.parent.Reveal.getCurrentSlide().getAttribute("data-title");
+          if (slideTitle === "add-3d-symbol") {
+            view.camera = {"position":{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":1479627.345887225,"y":6901226.375262387,"z":69.9963634153828},"heading":280.9096920855792,"tilt":71.86917409060048};
+            document.querySelector('#toggle-play').style.display = "none";
+          } else if (slideTitle === "animate-3d-symbol") {
+            view.camera = {"position":{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":1476555.3930814276,"y":6901059.134514972,"z":199.15840135607868},"heading":71.04069652949498,"tilt":74.768368423486};
+          }
+
+        });
+
+        var point = plane.geometry.clone();
+
+        var animation = anime.timeline({
+          autoplay: false,
+          targets: point,
+          loop: true,
+          duration: 5000,
+          update: function() {
+            plane.geometry = point.clone();
+          }
+        })
+        .add({
+          ...pointB,
+          easing: "linear",
+        })
+        .add({
+          z: 0,
+          easing: "easeOutSine",
+        }, 0)
+        .add({
+          ...pointC,
+          easing: "easeOutSine",
+        });
+
+        document.querySelector('#toggle-play').onclick = () => {
+          document.querySelector('#toggle-play').style.display = "none";
+          document.querySelector('#toggle-pause').style.display = "";
+          animation.play();
+        };
+        document.querySelector('#toggle-pause').onclick = () => {
+          document.querySelector('#toggle-pause').style.display = "none";
+          document.querySelector('#toggle-play').style.display = "";
+          animation.pause();
+        };
+
+        // Debugging
+        view.on("click", console.log);
+        window.view = view;
+      });
+    </script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #titleDiv {
+        background-color: lightgray;
+        color: black;
+        padding: 5px;
+        position: absolute;
+        z-index: 2;
+        top: 0;
+        right: 0;
+        font-size: 20pt;
+        font-weight: bolder;
+        width: 100%;
+        height: 30px;
+        text-align: center;
+        opacity: 0.75;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="viewDiv" class="esri-widget">
+      <div id="toggle-play" class="esri-widget esri-widget--button esri-interactive" title="Play Pause">
+        <span class="esri-icon-play" />
+      </div>
+      <div id="toggle-pause" class="esri-widget esri-widget--button esri-interactive" title="Play Pause" style="display: none;">
+        <span class="esri-icon-pause" />
+      </div>
+    </div>
+  </body>
+</html>

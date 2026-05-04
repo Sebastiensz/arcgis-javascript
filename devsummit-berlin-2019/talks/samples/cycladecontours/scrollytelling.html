@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta charset="UTF-8">
+  <title>Cyclades Contours</title>
+  <link rel="stylesheet" href="./scrollytelling.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.1.0/lib/anime.min.js"></script>
+
+  <script type="text/javascript">
+    var dojoConfig = {
+      packages: [{
+        name: "polyspline",
+        location: "https://jsapi.dev/polyspline/lib/",
+      },
+      {
+        name: "animations",
+        location: "https://jsapi.dev/animations/lib/",
+      }]
+    };
+  </script>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.12/esri/themes/light/main.css">
+  <script src="https://jsdev.arcgis.com/4.13/"></script>
+</head>
+
+<body>
+  <div class="header">
+    <div>Sailing the Cyclades</div>
+  </div>
+  <div id="viewDiv"></div>
+
+  <div id="content" class="content">
+
+      <section>
+        <div class="intro">
+          <h1>Day 4 - Antikeri to Amargos</h1>
+          <p>It was a windy night between the two small islands of Antikeri. Around 4am our skipper had to move the boat as we were drifting towards the shore.
+            As this requires turning on the engine, the whole crew had an early start into the day. As a reward for waking up early we got to see a nice sunrise right towards our next destination: the island of Amargos.
+          </p>
+          <div class="intro-img">
+            <img src="./images/antikeri.jpg" /><br />
+            <div class="caption">Abandoned house on Antikeri island</div>
+          </div>
+          <p>After a breakfast and swim we set sail for Katapola, one of the larger towns on Amargos. Luckily the wind and waves always came from the back, giving us a smooth ride.</p>
+        </div>
+      </section>
+
+      <section id="fadeInSection">
+
+      </section>
+
+      <div>
+          <div class="sticky">
+              <div class="box box-right">
+                  <img src="./images/sailing.jpg" />
+                  <p>Down wind to Amargos</p>
+              </div>
+          </div>
+          <section id="sailSection">
+          </section>
+
+          <div class="pause">
+          </div>
+      </div>
+
+      <div class="pause">
+      </div>
+
+      <section id="fadeOutSection" style="margin-bottom: -40vh;">
+      </section>
+
+      <div>
+        <div class="intro">
+          <h1>Katapola (Amargos)</h1>
+          <p>Thanks to our early start we reached Katapola right after lunch. Because of that there were still plenty of free spots in the marina.
+            As always our skipper and first officer on the anchor did a great job parking the boat.
+          </p>
+          <div class="intro-img">
+            <img src="./images/katapola.jpg" /><br />
+            <div class="caption">Our boat on anchor</div>
+          </div>
+          <p>Amorgos is the easternmost island of the Cyclades island group. It is mostly uninhabited and therefore only has a population of less than 2,000.
+            There is a monastery which is situated on the cliff side, dating from the year 812. The 3 main places of tourist accommodations are Katapola, Aegiali and Chora.
+            Hiking ways are relatively well maintained. Other activities are scuba diving, activities relating to wellness, and the beaches.
+          </p>
+          <div class="intro-img">
+            <img src="./images/harbor.jpg" /><br />
+            <div class="caption">Street in Katapola</div>
+          </div>
+          <p>After a tasty lunch near the marina we decided to rent some scooters and explore the island. There are a bunch of rental places
+            right next to the marina that have a range of scooters and quads.
+          </p>
+        </div>
+      </div>
+      <div class="pause">
+      </div>
+
+      <section id="fadeIn2Section" style="margin-bottom: -50vh;">
+
+      </section>
+
+      <div>
+        <div class="sticky vh-1">
+            <div class="box box-right">
+                <div class="overlay-container">
+                    <img src="./images/scooter.jpg" />
+                </div>
+                <p>Exploring the island on scooters</p>
+            </div>
+        </div>
+        <section id="cameraSection">
+
+        </section>
+        <div class="pause">
+        </div>
+      </div>
+
+      <section id="monasterySection" style="margin-bottom: -70vh;">
+      </section>
+
+      <div>
+        <div class="sticky vh-1">
+            <div class="box">
+                <div>
+                  <img src="./images/monastery.jpg"  />
+                  <p>The monastery of Panagia Hozoviotissa</p>
+                </div>
+            </div>
+        </div>
+        <div class="pause" style="height: 50vh;">
+        </div>
+      </div>
+
+      <section id="kambiBeachSection" style="margin-bottom: -50vh;">
+
+      </section>
+
+      <div>
+        <div class="sticky">
+            <div class="box">
+                <div>
+                  <img src="./images/kambi.jpg" />
+                </div>
+                <p>Kambi beach - a great way to cool off after the hike to the monastery</p>
+            </div>
+        </div>
+        <div class="pause" style="height: 150vh;">
+        </div>
+      </div>
+
+  </div>
+
+
+</body>
+
+</html>
+<!-- partial -->
+  <script  src="./scrollytelling.js"></script>
+
+</body>
+</html>

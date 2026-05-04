@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>3D Water</title>
+  <link rel="stylesheet" href="./local.css">
+  <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
+  <link rel="stylesheet" href="https://js.arcgis.com/4.13/esri/themes/light/main.css">
+  <link rel="stylesheet" href="./../../main.css">
+  <link href="./../../prism/prism.css" rel="stylesheet" />
+  <script src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/js/calcite-web.min.js"></script>
+  <script src="https://js.arcgis.com/4.13/"></script>
+  <script src="./../../prism/prism.js"></script>
+
+  <script src="./../../zip.js/zip.js"></script>
+  <script src="./../../zip.js/zip-ext.js"></script>
+  <script src="./../../zip.js/HttpProgressReader.js"></script>
+
+</head>
+<body>
+  <main>
+  <header class="top-nav fade-in" role="banner">
+    <div class="grid-container">
+      <div class="column-24">
+        <div class="tablet-hide">
+          <span class="header-title">ArcGIS API for JavaScript</span>
+          <nav class="top-nav-list right" role="navigation" aria-labelledby="topnav">
+              <span class="demo-name" href="#">3D Water</span>
+            </nav>
+        </div>
+
+        <div class="tablet-show top-nav-flex">
+          <header class="top-nav-flex-title">
+            <a href="/" class="top-nav-link">ArcGIS <span class="phone-hide">API for JavaScript</span></a>
+          </header>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div id="viewDiv">
+    <div
+      id="toggle-snippet"
+      class="esri-widget esri-widget--button esri-interactive hide"
+      title="Code Snippet"
+    >
+      <span class="icon-snippet"></span>
+    </div>
+    <div id="play-button"
+        class="esri-widget esri-widget--button esri-interactive"
+        title="Play">
+      <span class="esri-icon-play"></span>
+    </div>
+    <div id="water-button"
+        class="esri-widget esri-widget--button esri-interactive"
+        title="Water">
+      <span class="esri-icon-polygon"></span>
+    </div>
+    <div id="clock"></div>
+
+    <div id="menu" class="esri-widget hide">
+      <h4>Wave direction</h4>
+      <div id="waveSlider"></div>
+      <h4>Wave strength</h4>
+      <input
+        type="radio"
+        name="waveStrengthRadio"
+        value="calm"
+        id="calm"
+      /><label for="calm">Calm</label>
+
+      <input
+        type="radio"
+        name="waveStrengthRadio"
+        value="rippled"
+        id="rippled"
+      /><label for="rippled">Rippled</label>
+      <input
+        type="radio"
+        name="waveStrengthRadio"
+        value="slight"
+        id="slight"
+      /><label for="slight">Slight</label>
+      <input
+        type="radio"
+        name="waveStrengthRadio"
+        value="moderate"
+        id="moderate"
+        checked
+      /><label for="moderate">Moderate</label><br />
+      <h4>Dominant color</h4>
+      <button id="navy" class="color-btn"></button>
+      <button id="green" class="color-btn"></button>
+      <button id="turqoise" class="color-btn"></button>
+    </div>
+
+
+    <div id="code-snippet">
+      <pre><code class="language-js">
+// Updates the underlying data value driving the expression
+// based on the given year provided by the slider
+
+function updateRenderer(value) {
+  renderer = layer.renderer.clone();
+  const sizeVariable = renderer.visualVariables[0];
+  const colorVariable = renderer.visualVariables[1];
+  sizeVariable.valueExpression = getSizeValueExpression(value);
+  colorVariable.valueExpression = getColorValueExpression(value);
+  renderer.visualVariables = [sizeVariable, colorVariable];
+  layer.renderer = renderer;
+}
+      </code></pre>
+    </div>
+  </div>
+</main>
+  <script src="./../../utils/snippet.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>

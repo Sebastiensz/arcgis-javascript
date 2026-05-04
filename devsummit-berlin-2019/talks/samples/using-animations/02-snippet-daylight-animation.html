@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+
+  <style>
+    html, body, #viewDiv {
+      height: 100%;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+    }
+
+    #clock {
+      width: 220px;
+      height: 220px;
+      box-shadow: none;
+    }
+  </style>
+
+  <link rel="stylesheet" href="//js.arcgis.com/4.13/esri/css/main.css">
+  <script src="//js.arcgis.com/4.13/"></script>
+
+
+  <title>Change lighting</title>
+</head>
+<body>
+  <script>
+
+
+    require([
+      "esri/WebScene",
+      "esri/views/SceneView",
+      "../support/clock/Clock.js",
+      "dojo/domReady!"
+    ], function(WebScene, SceneView, Clock) {
+
+      var startDate = new Date("Fri Nov 08 2019 9:03:45 GMT+0100").getTime();
+      var startTime = null;
+      var elapsedTime = 0;
+      var animate = false;
+
+      var scene = new WebScene({
+        portalItem: {
+          portal: "http://zrh.mapsdevext.arcgis.com",
+          id: "6aec3ee02ca645278e5002cf5db3f82b"
+        }
+      });
+      var view = new SceneView({
+        qualityProfile: "high",
+        container: "viewDiv",
+        map: scene,
+        environment: {
+          lighting: {
+            date: new Date(startDate),
+            directShadowsEnabled: true
+          },
+          atmosphere: {
+            quality: "high"
+          }
+        }
+      });
+
+      // debug:
+      window["view"] = view;
+      window["velocity"] = 1500;
+
+      view.when(function() {
+        view.environment = {
+          lighting: {
+            date: new Date(startDate),
+            directShadowsEnabled: true
+          },
+          atmosphere: {
+            quality: "high"
+          }
+        };
+      });
+
+      var velocity = document.createElement("input");
+      velocity.type = "range";
+      velocity.min = 500;
+      velocity.max = 8500;
+      velocity.value = 1500;
+
+      velocity.onchange = function() {
+        resetAnimation();
+      };
+      
+      function nextStep(timestamp) {
+        if (animate) {
+          if (!startTime) {
+            startTime = timestamp;
+          }
+          elapsedTime = timestamp - startTime; 
+          view.environment.lighting.date = new Date(startDate + parseInt(velocity.value) * elapsedTime);
+          // TODO: don't update when changing velocity:
+          window.requestAnimationFrame(nextStep);
+        }
+      }
+
+      // Clock;
+      var clock = new Clock({
+        el: "clock",
+        skin:
+          "../support/clock/clock.svg",
+        time: view.environment.lighting.date.getTime(),
+        mode: "manual"
+      });
+      
+      clock.on("time-change", function(time) {
+        view.environment.lighting.date = time;
+      });
+
+      view.watch("environment.lighting.date", function(date) {
+        clock.time = view.environment.lighting.date.getTime();
+      });
+
+      view.ui.add(velocity, "bottom-leading");
+      view.ui.add("clock", "top-right");
+
+      function resetAnimation() {
+        startDate = new Date(startDate + parseInt(velocity.value) * elapsedTime).getTime();
+        startTime = null;
+        elapsedTime = 0;
+      }
+
+      window.addEventListener("message", function(m) {
+        if (m.data && m.data.play) {
+          resetAnimation();
+          window.requestAnimationFrame(nextStep);
+          animate = !animate;
+        }
+      }, false);
+    });
+
+
+  </script>
+  <div id="viewDiv"><div id="clock"></div></div>
+</body>
+</html>

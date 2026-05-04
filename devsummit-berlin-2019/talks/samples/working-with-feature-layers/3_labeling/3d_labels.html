@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>5. Labels in 3D</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.13/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.13/"></script>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/SceneView",
+      "esri/layers/FeatureLayer"
+    ], function (Map, SceneView, FeatureLayer) {
+
+      var map = new Map({
+        basemap: "topo-vector",
+        ground: "world-elevation"
+      });
+
+      // Create the SceneView
+      var view = new SceneView({
+        container: "viewDiv",
+        map: map,
+        camera: {
+          position: [7.654, 45.919, 5184],
+          tilt: 80
+        }
+      });
+
+      /////////////////////////////////
+        ////                         ////
+        //// temperature label class ////
+        ////                         ////
+        /////////////////////////////////
+
+        // Arcade expression that converts the temperature to a
+        // string and concatenates it with the degree symbol and units
+
+        const tempArcade = "Round($feature.TEMP) + '° F'";
+
+        const lowTempClass = {
+          labelExpressionInfo: {
+            expression: tempArcade
+          },
+          labelPlacement: "above-center",
+          where: "TEMP <= 32"
+        };
+        lowTempClass.symbol = create3DSymbol("blue");
+
+        const highTempClass = {
+          labelExpressionInfo: {
+            expression: tempArcade
+          },
+          labelPlacement: "above-center",
+          where: "TEMP > 32"
+        };
+        highTempClass.symbol = create3DSymbol("red");
+
+      // function for creating a text symbol to be used in a label class
+      function createTextSymbol(color) {
+        return {
+          type: "text", // autocasts as new TextSymbol()
+          font: {
+            size: 12,
+            weight: "bold"
+          },
+          color: "white",
+          haloColor: color,
+          haloSize: 1
+        };
+      }
+
+      function create3DSymbol(color) {
+        return {
+          type: "label-3d", // autocasts as new LabelSymbol3D()
+          symbolLayers: [
+            {
+              type: "text", // autocasts as new TextSymbol3DLayer()
+              material: {
+                color: color
+              },
+              halo: {
+                color: [255, 255, 255, 0.7],
+                size: 2
+              },
+              size: 10
+            }
+          ],
+          verticalOffset: {
+            screenLength: 150,
+            maxWorldLength: 2000,
+            minWorldLength: 30
+          },
+          callout: {
+            type: "line", // autocasts as new LineCallout3D()
+            size: 0.5,
+            color: [0, 0, 0],
+            border: {
+              color: [255, 255, 255]
+            }
+          }
+        };
+      }
+
+      // Create the layer and add it to the map
+
+      const serviceUrl =
+        "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/weather_stations_010417/FeatureServer/0";
+
+      const layer = new FeatureLayer({
+        url: serviceUrl,
+        elevationInfo: {
+          mode: "relative-to-ground"
+        },
+        renderer: {
+          type: "simple",
+          symbol: {
+            type: "simple-marker",
+            color: [255, 255, 255, 0.6],
+            size: 8,
+            outline: {
+              color: [0, 0, 0, 0.4],
+              width: 0.5
+            }
+          }
+        },
+        labelingInfo: [lowTempClass,highTempClass]
+      });
+
+      map.add(layer);
+
+    });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>

@@ -1,0 +1,151 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Visual Variables</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.13/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.13/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #viewDiv canvas {
+        filter: drop-shadow(0px 4px 4px darkgray);
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/intl",
+        "esri/Map",
+
+        "esri/views/SceneView",
+
+        "esri/layers/FeatureLayer",
+
+        "esri/widgets/Zoom",
+        "esri/widgets/Home",
+        "esri/widgets/Legend"
+      ], function(
+        intl,
+        Map,
+        SceneView,
+        FeatureLayer,
+        Zoom, Home, Legend
+      ) {
+        map = new Map({});
+
+        view = new SceneView({
+          qualityProfile: "high",
+          container: "viewDiv",
+          map: map,
+
+          viewingMode: "local",
+          camera: {
+            position: {
+              spatialReference: {
+                latestWkid: 3857,
+                wkid: 102100},
+              x: 426160.80190897814,
+              y: 3996221.668492711,
+              z: 1789566.662955039
+              },
+            heading: 360,
+            tilt: 45.758113020176985},
+          // extent: {
+          //   xmin: 60659.82391183183,
+          //   ymin: 5991474.660211295,
+          //   xmax: 1260705.520404459,
+          //   ymax: 7169379.292192988,
+          //   spatialReference: { wkid: 2154 }
+          // },
+          // spatialReference: { wkid: 2154 },
+
+          ui: { components: ["attribution" ] }
+        });
+
+        map.ground.surfaceColor = 'white';
+
+        var featureLayer = new FeatureLayer({
+          url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Median_Disposable_Income_2015/FeatureServer/0",
+          title: "Median Disposable Income 2015",
+          opacity: 1,
+          renderer: {
+            type: "simple",
+            symbol: {
+              type: "polygon-3d", // autocasts as new PolygonSymbol3D()
+              symbolLayers: [{ type: "extrude" }] // autocasts as new ExtrudeSymbol3DLayer()
+            },
+            visualVariables: [
+              {
+                type: "color", // opacity, size, rotation
+                valueExpression: "$feature.medianIncome2015",
+                stops: [
+                  {
+                    value: 17000,
+                    color: "white",
+                    label: `< ${intl.formatNumber(17000, {
+                      style: "currency",
+                      currency: "EUR",
+                      currencyDisplay: "symbol"
+                    })}`
+                  },
+                  {
+                    value: 28000,
+                    color: "red",
+                    label: `> ${intl.formatNumber(28000, {
+                      style: "currency",
+                      currency: "EUR",
+                      currencyDisplay: "symbol"
+                    })}`
+                  }
+                ]
+              },
+              {
+                type: "size", // opacity, size, rotation
+                valueExpression: "$feature.medianIncome2015",
+                stops: [
+                  {
+                    value: 17000,
+                    size: 10000,
+                  },
+                  {
+                    value: 28000,
+                    size: 50000,
+                  }
+                ]
+              }
+            ]
+          }
+        });
+
+        map.add(featureLayer);
+
+        // Setup UI elements
+        view.ui.add(new Home({ view }), "bottom-left");
+        view.ui.add(new Zoom({ view, layout: "horizontal" }), "bottom-left");
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

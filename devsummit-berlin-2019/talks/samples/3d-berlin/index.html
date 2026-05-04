@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1">
+  <title>Berlin in 3D</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.13/esri/css/main.css">
+  <script src="https://js.arcgis.com/4.13/"></script>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #slides {
+      position: absolute;
+      bottom: 30px;
+      left: 0;
+      right: 0;
+      text-align: center;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      display: inline-flex;
+      flex-wrap: wrap;
+    }
+
+    .slide {
+      padding: 0px 10px;
+      margin: 2px 2px;
+      cursor: pointer;
+      border-right: 1px solid black;
+    }
+
+    ul>li:last-of-type {
+      border-right: none;
+    }
+
+    #sketchPanel {
+      padding: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .esri-button {
+      margin: 2px;
+    }
+
+  </style>
+
+  <script>
+    require([
+  "esri/layers/FeatureLayer",
+  "esri/layers/SceneLayer",
+  "esri/Map",
+  "esri/views/SceneView",
+  "esri/core/promiseUtils",
+  "esri/Graphic",
+  "esri/core/watchUtils",
+  "./../support/widgets.js",
+  "esri/layers/GraphicsLayer",
+  "esri/widgets/Sketch/SketchViewModel",
+  "dojo/domReady!"
+], function (
+  FeatureLayer, SceneLayer,
+  Map, SceneView, promiseUtils, Graphic, watchUtils,
+  widgetsSupport, GraphicsLayer, SketchViewModel,
+) {
+
+  const osmBuildings = new FeatureLayer({
+    url: "https://services1.arcgis.com/wdMHWK8xfn32LjIy/arcgis/rest/services/osm_buildings_berlin/FeatureServer",
+  });
+
+  const osmRenderer = {
+    type: "simple",
+    symbol: {
+      type: "polygon-3d",
+      symbolLayers: [
+        {
+          type: "extrude",
+          material: {
+            color: "#FC921F"
+          },
+          edges: {
+            type: "solid",
+            color: "#AF6515"
+          },
+          size: 10,
+        }
+      ]
+    }
+  };
+
+  const buildingsRenderer = {
+    type: "simple",
+    symbol: {
+      type: "polygon-3d",
+      symbolLayers: [
+        {
+          type: "extrude",
+          material: {
+            color: "white"
+          },
+          edges: {
+            type: "solid",
+            color: "gray",
+            size: 0.3,
+          },
+          size: 10,
+        }
+      ]
+    },
+    visualVariables: [
+      {
+        type: "size",
+        valueExpression: "$feature.AnzahlDerO * 3",
+        valueUnit: "meters" // converts and extrudes all data values in feet
+      }
+    ]
+  };
+
+  const buildings = new FeatureLayer({
+    url: "https://services1.arcgis.com/wdMHWK8xfn32LjIy/arcgis/rest/services/open_data_buildings_berlin/FeatureServer",
+    renderer: buildingsRenderer,
+    definitionExpression: "FID NOT IN (528582, 528862, 528569, 106303, 106018, 104238, 105053, 105472, 105002)"
+  });
+
+  const trees = new FeatureLayer({
+    // url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/Baum_Berlin_Auswahl/FeatureServer",
+    url: "https://services1.arcgis.com/wdMHWK8xfn32LjIy/arcgis/rest/services/open_data_trees_berlin/FeatureServer"
+  });
+
+  const tempelhof = new SceneLayer({
+    url: "https://services1.arcgis.com/wdMHWK8xfn32LjIy/arcgis/rest/services/airport_tempelhof/SceneServer",
+    // renderer: {
+    //   type: "simple",
+    //   symbol: {
+    //     type: "mesh-3d",
+    //     symbolLayers: [
+    //       {
+    //         type: "fill",
+    //         material: {
+    //           color: "white"
+    //         },
+    //         edges: {
+    //           type: "solid",
+    //           color: "gray",
+    //           size: 0.3,
+    //         },
+    //       }
+    //     ]
+    //   }
+    // }
+  });
+
+  const treesRenderer = {
+    type: "simple", // autocasts as new SimpleRenderer()
+    symbol: {
+      type: "web-style", // autocasts as new WebStyleSymbol()
+      styleName: "esriRealisticTreesStyle",
+      name: "Acer",
+    },
+    visualVariables: [
+      {
+        type: "size",
+        axis: "height", // specify which axis to apply the data values to
+        // field: "BaumHoehe",
+        valueExpression: "$feature.BaumHoehe",
+        valueUnit: "meters"
+      }
+    ]
+  };
+
+  const tempelhofCamera = {"position":{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":1489966.7047925212,"y":6885760.567277861,"z":708.2160057434812},"heading":23.110747392181548,"tilt":55.90341072434484};
+
+  const gLayer = new GraphicsLayer();
+
+  const map = new Map({
+    // basemap: "topo-vector",
+    basemap: "satellite",
+    ground: "world-elevation",
+    layers: [gLayer]
+  });
+
+  const view = new SceneView({
+    map,
+    qualityProfile: "high",
+    container: "viewDiv",
+
+    // Kreuzberg
+    // camera: {"position":{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":1495358.9178025671,"y":6890507.341459881,"z":138.29424581490457},"heading":336.66368349177753,"tilt":67.39366243963812}
+
+    // Hilton
+    // camera: {"position":{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":1491423.6923479987,"y":6892383.902112094,"z":448.3844906128943},"heading":332.2212091407375,"tilt":56.39050499377012},
+
+    camera: {"position":{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":1491399.4866403823,"y":6890045.272574959,"z":385.22484107967466},"heading":321.3159213896279,"tilt":60.248358962946995}
+
+  });
+  widgetsSupport.createFullscreen(view);
+  view.popup.defaultPopupTemplateEnabled = true
+
+  view.when().then(() => {
+    view.environment = {
+      lighting: {
+        directShadowsEnabled: true,
+      },
+      atmosphereEnabled: true,
+      atmosphere: {
+        quality: "high"
+      },
+    };
+  });
+
+
+  const sketchVM = new SketchViewModel({
+    layer: gLayer,
+    view: view,
+    pointSymbol: {
+      type: "web-style",
+      name: "Airplane_Large_Passenger_With_Wheels",
+      styleName: "EsriRealisticTransportationStyle"
+    },
+    polygonSymbol: {
+      type: "polygon-3d",
+      symbolLayers: [
+        {
+          type: "extrude",
+          size: 25, // extrude by 10 meters
+          material: {
+            color: "lemonchiffon"
+          },
+          edges: {
+            type: "sketch",
+            size: "3px",
+            color: "gray"
+          }
+        }
+      ]
+    },
+  });
+
+  sketchVM.pointSymbol.fetchSymbol().then(symbol => {
+    sketchVM.pointSymbol = symbol;
+  });
+
+  // after drawing the geometry, enter the update mode to update the geometry
+  // and the deactivate the buttons
+  sketchVM.on("create", function(event) {
+    if (event.state === "complete") {
+      debugger;
+      sketchVM.update(event.graphic);
+      deactivateButtons();
+    }
+  });
+
+  const drawButtons = Array.prototype.slice.call(
+    document.getElementsByClassName("esri-button")
+  );
+
+  // set event listeners to activate sketching graphics
+  drawButtons.forEach(function(btn) {
+    btn.addEventListener("click", function(event) {
+      deactivateButtons();
+      event.target.classList.add("esri-button--secondary");
+      // to activate sketching the create method is called passing in the geometry type
+      // from the data-type attribute of the html element
+      sketchVM.create(event.target.getAttribute("data-type"));
+    });
+  });
+
+  function deactivateButtons() {
+    drawButtons.forEach(function(element) {
+      element.classList.remove("esri-button--secondary");
+    });
+  }
+
+
+
+  function add2DDataToScene() {
+    map.add(osmBuildings);
+    map.add(trees);
+  }
+
+  function extrudeOSMBuildings() {
+    osmBuildings.renderer = osmRenderer;
+  }
+
+  function addTrees() {
+    trees.renderer = treesRenderer;
+  }
+
+
+  var add2DData = window.parent.document.getElementById("add2DData");
+  if (add2DData) {
+    add2DData.addEventListener("click", () => {
+      add2DDataToScene();
+    });
+  }
+
+  var extrudeOSMBuildingsButton = window.parent.document.getElementById("extrudeOSMBuildings");
+  if (extrudeOSMBuildingsButton) {
+    extrudeOSMBuildingsButton.addEventListener("click", () => {
+      extrudeOSMBuildings();
+    });
+  }
+
+  var extrudeBuildingHeightsButton = window.parent.document.getElementById("extrudeBuildingHeights");
+  if (extrudeBuildingHeightsButton) {
+    extrudeBuildingHeightsButton.addEventListener("click", () => {
+      osmBuildings.visible = false;
+      map.add(buildings);
+    });
+  }
+
+  var placeTreesButton = window.parent.document.getElementById("placeTrees");
+  if (placeTreesButton) {
+    placeTreesButton.addEventListener("click", () => {
+      trees.renderer = treesRenderer;
+    });
+  }
+
+  var addTempelhofButton = window.parent.document.getElementById("addTempelhof");
+  if (addTempelhofButton) {
+    addTempelhofButton.addEventListener("click", () => {
+      map.add(tempelhof);
+    });
+  }
+
+  var slideTitle = window.parent.Reveal &&
+    window.parent.Reveal.getCurrentSlide().getAttribute("data-title");
+  if (slideTitle === "extrudeOSMBuildings") {
+    add2DDataToScene();
+  } else if (slideTitle === "extrudeBuildingHeights") {
+    add2DDataToScene();
+    extrudeOSMBuildings();
+  } else if (slideTitle === "placeTrees") {
+    map.add(buildings);
+    map.add(trees);
+  } else if (slideTitle === "tempelhof") {
+    map.add(buildings);
+    // map.add(trees);
+    trees.renderer = treesRenderer;
+    view.camera = tempelhofCamera;
+  } else if (slideTitle === "sketch") {
+    map.add(buildings);
+    map.add(tempelhof);
+    view.camera = tempelhofCamera;
+    view.ui.add("sketchPanel", "top-right");
+    document.getElementById("sketchPanel").style.display = "inherit";
+  }
+
+});
+
+
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+  <div id="sketchPanel" class="esri-widget hide">
+    <button id="extrudedPolygon" data-type="polygon" class="esri-button">
+      Building
+    </button>
+    <button id="point" data-type="point" class="esri-button">
+      Airplane
+    </button>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Highlight point features - 4.13</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.13/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.13/"></script>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #paneDiv {
+        position: absolute;
+        bottom: 40px;
+        width: 100%;
+        text-align: center;
+        background-color: transparent;
+        color: white;
+      }
+
+      .esri-button-overwrite {
+        width: auto;
+        display: table-cell;
+        margin: 4px;
+        background-color: white;
+        color: #0079c1;
+      }
+    </style>
+    <script>
+      require(["esri/Map", "esri/WebScene", "esri/views/SceneView"], function(
+        Map,
+        WebScene,
+        SceneView
+      ) {
+        // load webscene from portal item
+        var webScene = new WebScene({
+          portalItem: {
+            // autocasts as new PortalItem()
+            id: "475a7161ed194460b5b52654e29581a2"
+          }
+        });
+
+        var view = new SceneView({
+          map: webScene,
+          container: "viewDiv",
+          // set highlightOptions like color and fillOpacity
+          highlightOptions: {
+            color: [255, 241, 58],
+            fillOpacity: 0.4
+          },
+          environment: {
+            atmosphereEnabled: true,
+            atmosphere: {
+              quality: "high"
+            }
+          }
+        });
+
+        // these two highlight handlers are used for selection and hovering over features
+        var highlightSelect, highlightHover;
+
+        // initialize AbortController
+        const controller = new AbortController();
+        const signal = controller.signal;
+
+        webScene.when(function() {
+          // get layer from webScene
+          var stationLayer = webScene.layers.getItemAt(1);
+
+          // highlight is set on the layerView, so we need to detect when the layerView is ready
+          view.whenLayerView(stationLayer).then(function(layerView) {
+            // creates the query that will be used to obtain the features needed for the highlight
+            var queryStations = stationLayer.createQuery();
+            // features that are passed in the highlight function need to have an `objectID`
+            // if the query is built using `new Query()` then `queryStations.outFields = ["objectID"]` should be set
+
+            var buttons = document.querySelectorAll("button");
+            for (var i = 0, button = null; (button = buttons[i]); i++) {
+              button.addEventListener("click", onClick);
+              button.addEventListener("mouseover", onMouseOver);
+              button.addEventListener("mouseout", onMouseOut);
+            }
+
+            function onClick(event) {
+              queryStations.where = "nom='" + event.target.innerText + "'";
+              stationLayer.queryFeatures(queryStations).then(function(result) {
+                // if a feature is already highlighted, then remove the highlight
+                if (highlightSelect) {
+                  highlightSelect.remove();
+                }
+
+                // the feature to be highlighted
+                var feature = result.features[0];
+
+                // use the objectID to highlight the feature
+                highlightSelect = layerView.highlight(
+                  feature.attributes["OBJECTID"]
+                );
+
+                // center the feature
+                view.goTo(
+                  {
+                    target: feature.geometry,
+                    tilt: 70
+                  },
+                  {
+                    duration: 2000,
+                    easing: "in-out-expo"
+                  }
+                );
+              });
+            }
+
+            function onMouseOver(event) {
+              queryStations.where = "nom='" + event.target.innerText + "'";
+              // pass AbortController signal to call
+              stationLayer
+                .queryFeatures(queryStations, { signal })
+                .then(function(result) {
+                  if (highlightHover) {
+                    highlightHover.remove();
+                  }
+                  var feature = result.features[0];
+                  highlightHover = layerView.highlight(
+                    feature.attributes["OBJECTID"]
+                  );
+                });
+            }
+
+            function onMouseOut(event) {
+              // abort queryFeatures that retrieves the hovered feature
+              controller.abort();
+              if (highlightHover) {
+                highlightHover.remove();
+              }
+            }
+          });
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+    <div id="paneDiv" class="esri-widget">
+      <h3>Subway stations</h3>
+      <button class="esri-button esri-button-overwrite">Valmy</button>
+      <button class="esri-button esri-button-overwrite">
+        St-Jean Vieux Lyon
+      </button>
+      <button class="esri-button esri-button-overwrite">Charpennes</button>
+      <button class="esri-button esri-button-overwrite">Sans souci</button>
+      <button class="esri-button esri-button-overwrite">Hôtel de Ville</button>
+      <button class="esri-button esri-button-overwrite">Garibaldi</button>
+    </div>
+  </body>
+</html>

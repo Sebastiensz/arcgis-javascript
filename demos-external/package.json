@@ -1,0 +1,26 @@
+{
+  "name": "jsapi-demos",
+  "version": "1.0.0",
+  "description": "Simple demos for ArcGIS API for JavaScript",
+  "scripts": {
+    "jslint": "jshint ./**/*.js || true"
+  },
+  "devDependencies": {
+    "jshint": "^2.9.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RalucaNicola/JSAPI_demos.git"
+  },
+  "keywords": [
+    "esrijs",
+    "3D",
+    "demo"
+  ],
+  "author": "Raluca Nicola",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RalucaNicola/JSAPI_demos/issues"
+  },
+  "homepage": "https://github.com/RalucaNicola/JSAPI_demos#readme"
+}

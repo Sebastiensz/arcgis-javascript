@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>2. Label class with where</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.12/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/WebMap",
+        "esri/views/SceneView",
+        "esri/layers/FeatureLayer"
+      ], function(WebMap, MapView, FeatureLayer) {
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: new WebMap({
+            portalItem: {
+              id: "82b91a16ac654c5eafc8b871d81c9ae5"
+            }
+          })
+        });
+
+        /////////////////////////////////
+        ////                         ////
+        //// temperature label class ////
+        ////                         ////
+        /////////////////////////////////
+
+        // Arcade expression that converts the temperature to a
+        // string and concatenates it with the degree symbol and units
+
+        const tempArcade = "Round($feature.TEMP) + '° F'";
+
+        const lowTempClass = {
+          labelExpressionInfo: {
+            expression: tempArcade
+          },
+          labelPlacement: "below-right",
+          where: "TEMP <= 32"
+        };
+        lowTempClass.symbol = createTextSymbol("blue");
+
+        const highTempClass = {
+          labelExpressionInfo: {
+            expression: tempArcade
+          },
+          labelPlacement: "below-right",
+          where: "TEMP > 32"
+        };
+        highTempClass.symbol = createTextSymbol("red");
+
+        // function for creating a text symbol to be used in a label class
+
+        function createTextSymbol(color) {
+          return {
+            type: "text", // autocasts as new TextSymbol()
+            font: {
+              size: 12,
+              weight: "bold"
+            },
+            color: "white",
+            haloColor: color,
+            haloSize: 1
+          };
+        }
+
+        // Create the layer and add it to the map
+
+        const serviceUrl =
+          "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/weather_stations_010417/FeatureServer/0";
+
+        const layer = new FeatureLayer({
+          url: serviceUrl,
+          renderer: {
+            type: "simple",
+            symbol: {
+              type: "simple-marker",
+              color: [255, 255, 255, 0.6],
+              size: 8,
+              outline: {
+                color: [0, 0, 0, 0.4],
+                width: 0.5
+              }
+            }
+          },
+          labelingInfo: [lowTempClass, highTempClass]
+        });
+
+        view.map.add(layer);
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

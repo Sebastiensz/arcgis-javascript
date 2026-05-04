@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+
+  <style>
+    html, body, #viewDiv {
+      height: 100%;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+    }
+
+    .esri-ui-bottom-left.esri-ui-corner {
+      width: 100%;
+      text-align: center;
+    }
+
+    .esri-ui-bottom-left.esri-ui-corner button {
+      margin: auto;
+    }
+
+    #clock {
+      width: 220px;
+      height: 220px;
+      box-shadow: none;
+    }
+  </style>
+
+  <link rel="stylesheet" href="//js.arcgis.com/4.13/esri/css/main.css">
+  <script src="//js.arcgis.com/4.13/"></script>
+
+
+  <title>Change lighting</title>
+</head>
+<body>
+  <script>
+
+
+    require([
+      "esri/WebScene",
+      "esri/views/SceneView",
+      "../support/clock/Clock.js",
+      "dojo/domReady!"
+    ], function(WebScene, SceneView, Clock) {
+      var now = new Date("Fri Nov 8 2019 9:03:45 GMT+0100");
+      var scene = new WebScene({
+        portalItem: {
+          portal: "http://zrh.mapsdevext.arcgis.com",
+          id: "6aec3ee02ca645278e5002cf5db3f82b"
+        }
+      });
+      var view = new SceneView({
+        qualityProfile: "high",
+        container: "viewDiv",
+        map: scene,
+        environment: {
+          lighting: {
+            date: now,
+            directShadowsEnabled: true
+          },
+          atmosphere: {
+            quality: "high"
+          }
+        }
+      });
+
+      window["view"] = view;
+
+      var button = document.createElement("button");
+      button.appendChild(document.createTextNode("Phénakisticope me!"));
+      
+      function nextStep() {
+          now.setHours(now.getHours() + 1);
+          view.environment.lighting.date = now;
+      }
+
+      view.when(function() {
+        view.environment = {
+          lighting: {
+            date: now,
+            directShadowsEnabled: true
+          },
+          atmosphere: {
+            quality: "high"
+          }
+        };
+      });
+
+      button.onclick = nextStep;
+
+      var clock = new Clock({
+        el: "clock",
+        skin:
+          "../support/clock/clock.svg",
+        time: view.environment.lighting.date.getTime(),
+        mode: "manual"
+      });
+      
+      clock.on("time-change", function(time) {
+        view.environment.lighting.date = time;
+      });
+
+      view.watch("environment.lighting.date", function(date) {
+        clock.time = view.environment.lighting.date.getTime();
+      });
+
+      view.ui.add("clock", "top-right");
+      // view.ui.add(button, "bottom-leading");
+      window.addEventListener("message", function(m) {
+        if (m.data && m.data.play) {
+          nextStep();
+        }
+      }, false);
+    });
+
+
+  </script>
+  <div id="viewDiv"><div id="clock"></div></div>
+</body>
+</html>

@@ -1,0 +1,157 @@
+html, body {
+  padding: 0;
+  margin: 0;
+  font-family: "Source Sans Pro", Helvetica, sans-serif;
+  color: rgba(0, 0, 0, 0.84);
+}
+
+#viewDiv {
+  position: absolute;
+  top: 60px;
+  height: calc(100% - 60px);
+  width: 100%;
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+#slides {
+  width: 100%;
+  position: absolute;
+  bottom: 30px;
+  text-align: center;
+}
+
+#slides ul {
+  list-style:none;
+  padding: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+}
+
+.slide {
+  padding: 0px 10px;
+  border-width: 1px;
+  border-style: solid;
+  border-top: none;
+  border-left: none;
+  margin: 2px 2px;
+  cursor: pointer;
+}
+
+.esri-view-surface--inset-outline:focus::after {
+  outline: none !important;
+}
+
+.header {
+  position: sticky;
+  position: -webkit-sticky;
+  width: 100%;
+  height: 60px;
+  top: 0px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 5px 25px rgba(0,0,0,0.2);
+  background-color: #17252A;
+  color: rgba(255,255,255,0.9);
+  font-size: 30px;
+  text-align: left;
+}
+
+.header > div {
+  padding: 15px;
+}
+
+h1 {
+  font-size: 30px;
+  margin-top: 50px;
+}
+
+.content {
+  height: calc(100vh - 60px);
+  overflow: scroll;
+}
+
+.intro {
+  left: 50%;
+  transform: translate(-50% 0);
+  width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.caption {
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 0.9em;
+  margin: 10px;
+}
+
+.intro-img {
+  text-align: center;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.content img {
+  max-width: 500px;
+}
+
+section {
+  height: 100vh;
+}
+
+.sticky {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 70px;
+}
+
+.pause {
+  height: 40vh;
+}
+
+.vh-1 {
+  height: 100vh;
+}
+
+.vh-2 {
+  height: 200vh;
+}
+
+.box {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 5px 25px rgba(0,0,0,0.2);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: rgba(255,255,255,0.9);
+  width: 500px;
+  padding: 20px;
+  margin-left: 50px;
+}
+
+.box h2 {
+  text-align: left;
+  margin-top: 0px;
+}
+
+.box img {
+  max-width: 100%;
+}
+
+.box-right {
+  margin-left: auto;
+  margin-right: 50px;
+}
+
+.carousel {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
+.overlay-container {
+  position: relative;
+}
+
+.overlay {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  opacity: 0;
+}

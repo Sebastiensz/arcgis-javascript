@@ -1,0 +1,126 @@
+html {
+  height                   : 100%;
+  font-size                : 100%;
+  -webkit-text-size-adjust : 100%;
+  -moz-text-size-adjust    : 100%;
+  -ms-text-size-adjust     : 100%;
+  overflow                 : auto;
+}
+
+body {
+  min-height : 100%;
+  margin     : 0;
+}
+
+body * {
+  outline : none;
+}
+
+#viewDiv {
+  height     : calc(100vh - 20px) !important;
+  margin     : 0;
+  padding    : 0;
+  box-shadow : 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+#user-thumb-node {
+  height         : 36px;
+  border-radius  : 18px;
+  vertical-align : middle;
+}
+
+.esri-search__input {
+  height : 32px !important;
+}
+
+.esri-layer-list {
+  background-color : transparent;
+  width            : unset;
+  max-height       : unset;
+}
+
+.esri-layer-list li {
+  margin : 3px !important;
+}
+
+.esri-layer-list__item-action {
+  /*margin : 3px !important;*/
+  /*vertical-align : middle !important;*/
+}
+
+.esri-layer-list__item-action-icon {
+  height         : 100%;
+  vertical-align : middle !important;
+}
+
+#legend-node {
+  padding : 10px;
+}
+
+.esri-print__container {
+  max-height : unset;
+}
+
+.drawer-nav {
+  width : 350px;
+}
+
+.input-error-message.is-active {
+  position : absolute;
+}
+
+/* =========================================================== */
+
+.places-node {
+  cursor      : pointer;
+  margin      : 5px;
+  padding     : 10px;
+  text-align  : center;
+  border      : dashed 1px transparent;
+  border-left : solid 6px transparent;
+}
+
+.places-node:hover {
+  border-color : #999;
+}
+
+.places-node:active {
+  color        : #0079c1;
+  border-color : #0079c1;
+}
+
+.places-node.selected {
+  color        : #0079c1;
+  border-style : solid;
+  border-color : #0079c1;
+}
+
+.places-thumbnail {
+  box-shadow : 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* =========================================================== */
+
+.panel-toggle {
+  z-index    : 99;
+  position   : absolute;
+  cursor     : pointer;
+  left       : 0;
+  top        : calc(50% - 15px);
+  padding    : 4px 0;
+  color      : #666;
+  background : #fff;
+  box-shadow : 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.panel-toggle:hover {
+  color : #0079c1;
+}
+
+#loading-node {
+  box-shadow : none;
+}
+
+#loading-node .loader-text {
+  padding-top : 2.5rem;
+}

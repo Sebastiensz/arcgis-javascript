@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Smart Mapping APIs</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.12/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #viewDiv canvas {
+        filter: drop-shadow(0px 4px 4px darkgray);
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+
+        "esri/views/MapView",
+
+        "esri/layers/FeatureLayer",
+
+        "esri/renderers/smartMapping/creators/color",
+
+        "esri/widgets/Zoom",
+        "esri/widgets/Home",
+        "esri/widgets/Legend"
+      ], function(
+        Map,
+        MapView,
+        FeatureLayer,
+        colorRendererCreator,
+        Zoom, Home, Legend
+      ) {
+        map = new Map({});
+
+        view = new MapView({
+          container: "viewDiv",
+          map: map,
+
+          extent: {
+            xmin: 60659.82391183183,
+            ymin: 5991474.660211295,
+            xmax: 1260705.520404459,
+            ymax: 7169379.292192988,
+            spatialReference: { wkid: 2154 }
+          },
+          spatialReference: { wkid: 2154 },
+
+          ui: { components: ["attribution" ] }
+        });
+
+        var featureLayer = new FeatureLayer({
+          url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Median_Disposable_Income_2015/FeatureServer/0",
+          title: "Median Disposable Income 2015"
+        });
+
+        // using smart mapping APIs
+        // https://developers.arcgis.com/javascript/latest/guide/visualization-overview/index.html#smart-mapping-apis
+
+        colorRendererCreator.createContinuousRenderer({
+          layer: featureLayer,
+          field: "medianIncome2015",
+          theme: "above-and-below",
+
+          // Make the outline thinner for small scales
+          outlineOptimizationEnabled: true,
+          view: view
+        })
+        .then((response) => {
+          featureLayer.renderer = response.renderer;
+        })
+
+        map.add(featureLayer);
+
+        // Setup UI elements
+        view.ui.add(new Home({ view }), "bottom-left");
+        view.ui.add(new Zoom({ view, layout: "horizontal" }), "bottom-left");
+        view.ui.add(new Legend({ view }), "bottom-right");
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

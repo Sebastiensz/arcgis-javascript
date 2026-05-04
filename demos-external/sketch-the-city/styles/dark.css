@@ -1,0 +1,47 @@
+
+body {
+  color: white;
+}
+
+body {
+  background-image: url('./background-chalk.jpg');
+  background-size: cover;
+}
+
+#menu button {
+  background: #2C2C2C;
+  color: white;
+  border-bottom: 1px solid white;
+}
+
+.esri-attribution, #intro, #loading, #error {
+  color: white;
+}
+
+.esri-attribution, #attribution {
+  background-color: #2C2C2C;
+}
+
+#menu button:hover, #mode:hover, .slide:hover {
+  background: #555;
+}
+
+a:hover {
+  color: #f5d3bc;
+}
+
+#mode {
+  background: #2C2C2C;
+  color: white;
+  border-bottom: 1px solid white;
+}
+
+#loading>img {
+  filter: brightness(5);
+}
+
+.slide {
+  background: #2C2C2C;
+  color: white;
+  border-color: white;
+}

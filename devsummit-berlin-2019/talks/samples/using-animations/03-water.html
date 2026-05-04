@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+
+  <style>
+    html, body, #viewDiv {
+      height: 100%;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+    }
+
+    #clock {
+      width: 220px;
+      height: 220px;
+      box-shadow: none;
+    }
+    .esri-attribution {
+      display: none!important;
+    }
+  </style>
+
+  <link rel="stylesheet" href="//js.arcgis.com/4.13/esri/css/main.css">
+  <script src="//js.arcgis.com/4.13/"></script>
+
+
+  <title>Change lighting</title>
+</head>
+<body>
+  <script>
+
+
+    require([
+      "esri/WebScene",
+      "esri/views/SceneView",
+      "dojo/domReady!"
+    ], function(WebScene, SceneView) {
+
+      var scene = new WebScene({
+        portalItem: {
+          portal: "https://zurich.maps.arcgis.com",
+          id: "dce5e184f9814c9c80d72dfd9b9dc997"
+        }
+      });
+      var view = new SceneView({
+        qualityProfile: "high",
+        container: "viewDiv",
+        map: scene,
+        environment: {
+          lighting: {
+            directShadowsEnabled: true
+          },
+          atmosphere: {
+            quality: "high"
+          }
+        },
+        ui: {}
+      });
+
+      var waterLayer;
+      scene.when(() => {
+        waterLayer = scene.layers.find((l) => l.title === "Water bodies");
+      });
+
+      // debug:
+      window["view"] = view;
+
+      view.ui.empty("top-left");
+      view.ui.empty("bottom");
+
+      function setWaterColor(color) {
+        var renderer = waterLayer.renderer.clone();
+        renderer.symbol.symbolLayers.getItemAt(0).color = color;
+        waterLayer.renderer = renderer;
+      }
+
+      function setWaveDirection(direction) {
+        var value = parseInt(direction);
+        var renderer = waterLayer.renderer.clone();
+        renderer.symbol.symbolLayers.getItemAt(0).waveDirection = value;
+        waterLayer.renderer = renderer;
+      }
+
+      function setWaveStrength (strength) {
+        var renderer = waterLayer.renderer.clone();
+        renderer.symbol.symbolLayers.getItemAt(0).waveStrength = strength;
+        waterLayer.renderer = renderer;
+      }
+
+      function goToSlide(slideIndex) {
+        view.map.presentation.slides.getItemAt(slideIndex).applyTo(view);
+      }
+
+      var slideNum = 0;
+
+      window.addEventListener("message", function(m) {
+        if (m.data && m.data.color) {
+          setWaterColor(m.data.color);
+        }
+
+        if (m.data && m.data.direction) {
+          setWaveDirection(m.data.direction);
+        }
+
+        if (m.data && m.data.strength) {
+          setWaveStrength(m.data.strength);
+        }
+
+        if (m.data && m.data.slide) {
+          goToSlide(slideNum);
+          slideNum = slideNum > 0 ? 0 : 1;
+        }
+      }, false);
+    });
+
+
+  </script>
+  <div id="viewDiv"></div>
+</body>
+</html>

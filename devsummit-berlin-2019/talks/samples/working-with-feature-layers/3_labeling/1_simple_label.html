@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>1. Add label class to FeatureLayer</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.12/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/WebMap",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer"
+      ], function(WebMap, MapView, FeatureLayer) {
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: new WebMap({
+            portalItem: {
+              id: "82b91a16ac654c5eafc8b871d81c9ae5"
+            }
+          })
+        });
+
+        // Arcade expression that outputs the name of the station
+        // based on the TEMP (temperature) field
+        
+        const labelClass = {
+          labelPlacement: "below-right",
+          labelExpressionInfo: {
+            expression: "$feature.TEMP"
+          },
+        };
+        labelClass.symbol = createTextSymbol("black");
+
+        // function for creating a text symbol to be used in a label class
+
+        function createTextSymbol(color) {
+          return {
+            type: "text", // autocasts as new TextSymbol()
+            font: {
+              size: 12,
+              weight: "bold"
+            },
+            color: "white",
+            haloColor: color,
+            haloSize: 1
+          };
+        }
+
+        // Create the layer and add it to the map
+
+        const serviceUrl =
+          "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/weather_stations_010417/FeatureServer/0";
+
+        const layer = new FeatureLayer({
+          url: serviceUrl,
+          renderer: {
+            type: "simple",
+            symbol: {
+              type: "simple-marker",
+              color: [255, 255, 255, 0.6],
+              size: 8,
+              outline: {
+                color: [0, 0, 0, 0.4],
+                width: 0.5
+              }
+            }
+          },
+          labelingInfo: [labelClass]
+        });
+
+        view.map.add(layer);
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

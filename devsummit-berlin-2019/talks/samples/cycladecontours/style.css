@@ -1,0 +1,53 @@
+html, body, #viewDiv {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  font-family: "Source Sans Pro", Helvetica, sans-serif;
+  font-size: 42px;
+}
+
+#slides {
+  width: 100%;
+  position: absolute;
+  bottom: 30px;
+  text-align: center;
+}
+
+#slides ul {
+  list-style:none;
+  padding: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+}
+
+.slide{
+  padding: 0px 10px;
+  border-width: 1px;
+  border-style: solid;
+  border-top: none;
+  border-left: none;
+  margin: 2px 2px;
+  cursor: pointer;
+}
+
+.esri-view-surface--inset-outline:focus::after {
+  outline: none !important;
+}
+
+.header {
+  position: sticky;
+  position: -webkit-sticky;
+  width: 100%;
+  height: 60px;
+  top: 0px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5), 0 5px 25px rgba(0,0,0,0.2);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  font-size: 30px;
+  text-align: left;
+}
+
+.header > div {
+  padding: 10px;
+}

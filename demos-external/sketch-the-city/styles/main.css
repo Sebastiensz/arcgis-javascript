@@ -1,0 +1,135 @@
+html,
+body,
+#viewDiv {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  font-family: 'Roboto', sans-serif;
+}
+
+#intro {
+  font-family: 'Reenie Beanie', cursive;
+  font-size: 2.2em;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1em;
+}
+
+#intro>p:first-child {
+  font-size: 2em;
+}
+
+#intro>p:last-child {
+  transform: rotate(-5deg);
+}
+
+#menu {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+}
+
+#mode {
+  float: right;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 1em;
+  font-family: "Roboto", sans-serif;
+  margin: -1em 0;
+  padding: 0 1em;
+}
+
+#menu button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 1em;
+  font-family: "Roboto", sans-serif;
+  font-size: 1em;
+}
+
+.esri-attribution {
+  background: transparent;
+  font-family: "Roboto", sans-serif;
+  font-size: 0.8em;
+}
+
+a {
+  text-decoration: none;
+  color: #f49b42;
+}
+
+.hide {
+  display: none;
+}
+
+.show {
+  display: inherit;
+}
+
+#loading, #error {
+  position: absolute;
+  top: 50%;
+  margin-top: -25px;
+  text-align: center;
+  font-family: 'Reenie Beanie', cursive;
+  font-size: 2.5em;
+  width: 100%;
+}
+
+#loading>img {
+  height: 15px;
+  vertical-align: middle;
+}
+
+#slides {
+  position: absolute;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+ul {
+  list-style:none;
+  padding: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+}
+
+.slide{
+
+  padding: 0px 10px;
+  transform: skew(-45deg);
+  border-width: 1px;
+  border-style: solid;
+  border-top: none;
+  border-left: none;
+  margin: 2px 2px;
+  cursor: pointer;
+}
+
+.slide>div {
+  transform: skew(45deg);
+}
+
+#attribution {
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  right: 0;
+  font-size: 0.7em;
+  text-align: right;
+  padding-right: 2px;
+}
+
+

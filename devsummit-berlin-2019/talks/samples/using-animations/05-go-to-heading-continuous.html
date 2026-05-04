@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+
+  <style>
+    html, body, #viewDiv {
+      height: 100%;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+    }
+
+    .esri-ui-bottom-left.esri-ui-corner {
+      width: 100%;
+      text-align: center;
+    }
+
+    .esri-ui-bottom-left.esri-ui-corner button {
+      margin: auto;
+    }
+    #viewLog {
+
+      position: absolute;
+      bottom: 1.6em;
+      background: rgba(0, 0, 0, 0.5);
+      right: 0;
+      left: 0;
+      padding: 6px 6px 6px 6px;
+      color: white;
+      font-family: menlo, monospace;
+      font-size: 1em;
+      text-overflow: ellipsis;
+      white-space: pre;
+    }
+
+    #viewLog::before {
+      content: "> ";
+    }
+
+    .esri-ui-corner .esri-component.text-on-view {
+      box-shadow: none;
+      font-family: menlo, monospace;
+      padding: 6px 6px 6px 6px;
+      font-size: 1em;
+    }
+
+  </style>
+
+  <link rel="stylesheet" href="//js.arcgis.com/4.13/esri/css/main.css">
+  <script src="//js.arcgis.com/4.13/"></script>
+
+
+  <title>Change lighting</title>
+</head>
+<body>
+  <script>
+
+    require([
+      "esri/WebScene",
+      "esri/views/SceneView",
+      "../support/log.js",
+      "../support/widgets.js",
+      "dojo/domReady!"
+    ], function(WebScene, SceneView, log, widgets) {
+      // State
+      var isLookAround = false;
+      var isStableRotation = true;
+      var animationFrameHandler = 0;
+      // Center, scale and position to use for animation
+      var animationCenter;
+      var animationScale;
+      var animationPosition;
+
+      var view = new SceneView({
+        container: "viewDiv",
+        map: new WebScene({
+            basemap: "hybrid",
+            ground: "world-elevation"
+        }),
+        qualityProfile: "high",
+        environment: {
+            atmosphere: {
+                quality: "high"
+            },
+            lighting: {
+                directShadowsEnabled: true,
+                ambientOcclusionEnabled: true
+            }
+        },
+        camera: {
+          position: [8.632, 46.522, 7000],
+          heading: 25,
+          tilt: 75
+        },
+        ui: {
+            components: ["compass", "attribution"]
+        }
+      });
+
+      // Widget to turn on/off stable rotation
+      widgets.add(view, "<div><input type=\"checkbox\" checked> Stable rotation</div>", {
+          click: function (event) {
+              isStableRotation = !!event.target.checked;
+          }
+      });
+      // Widget to turn on/off look around
+      widgets.add(view, "<div><input type=\"checkbox\"> Enable look around</div>", {
+          click: function (event) {
+              // Update the animation origin when we switch to use the current viewpoint
+              updateAnimationOrigin();
+              isLookAround = !!event.target.checked;
+          }
+      });
+      
+      view.when(function () {
+          view.watch("camera", function (camera) {
+              // Show heading tilt in log
+              var heading = camera.heading.toFixed(1).toString();
+              var tilt = camera.tilt.toFixed(1).toString();
+              log.message("Heading: " + padLeft(heading, 5) + ", tilt: " + padLeft(tilt, 5));
+          });
+      });
+
+      function padLeft(s, n) {
+        if (s.length < n) {
+            return new Array(n - s.length + 1).join(" ") + s;
+        }
+        else {
+            return s;
+        }
+      }
+
+      function updateAnimationOrigin() {
+        animationScale = view.scale;
+        animationCenter = view.center.clone();
+        animationPosition = view.camera.position.clone();
+      }
+
+      function animateLookAroundStep() {
+          if (isStableRotation) {
+              view.goTo({
+                  position: animationPosition,
+                  heading: view.camera.heading - 0.1
+              }, { animate: false });
+          }
+          else {
+              view.goTo({
+                  heading: view.camera.heading - 0.1
+              }, { animate: false });
+          }
+      }
+      function animateRotateAroundStep() {
+          if (isStableRotation) {
+              view.goTo({
+                  center: animationCenter,
+                  scale: animationScale,
+                  heading: view.camera.heading + 0.1
+              }, { animate: false });
+          }
+          else {
+              view.goTo({
+                  center: view.center,
+                  heading: view.camera.heading + 0.1
+              }, { animate: false });
+          }
+      }
+      function animate() {
+          if (view.stationary) {
+              if (isLookAround) {
+                  animateLookAroundStep();
+              }
+              else {
+                  animateRotateAroundStep();
+              }
+          }
+          animationFrameHandler = requestAnimationFrame(animate);
+      }
+
+      window["view"] = view;
+
+      window.addEventListener("message", function(m) {
+        if (m.data && m.data.play) {
+          if (animationFrameHandler) {
+              cancelAnimationFrame(animationFrameHandler);
+              animationFrameHandler = 0;
+              return;
+          }
+          updateAnimationOrigin();
+          animate();
+        }
+      }, false);
+    });
+
+
+  </script>
+  <div id="viewDiv">
+    <div id="viewLog" class="text-on-view"></div>
+  </div>
+</body>
+</html>

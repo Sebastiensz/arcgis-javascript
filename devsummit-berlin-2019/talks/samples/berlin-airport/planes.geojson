@@ -1,0 +1,61 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "ROTATION": 40,
+        "CATEGORY": "sport"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.291783332824707,
+          52.55537675311456
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ROTATION": 40,
+        "CATEGORY": "large"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.290388584136963,
+          52.55572899758061
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ROTATION": 130,
+        "CATEGORY": "small"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.293381929397583,
+          52.5557355205996
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ROTATION": 130,
+        "CATEGORY": "private"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          13.293199539184569,
+          52.55531804542863
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+<title>Using the view's UI - 4.12</title>
+
+    <link
+      rel="stylesheet"    href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
+    />
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+      }
+      #logoDiv {
+        padding: 12px;
+        background-color: black;
+        color: pink;
+        text-align: center;
+        width: 100px;
+      }
+    </style>
+
+    <script src="https://js.arcgis.com/4.12/"></script>
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/SceneView",
+        "esri/widgets/Search"
+      ], function(Map, SceneView, Search) {
+        var map = new Map({
+          basemap: "dark-gray"
+        });
+
+        var view = new SceneView({
+          map: map,
+          container: "viewDiv",
+          center: [2.3488,48.85341],
+          zoom: 14
+        });
+
+        // use widgets which is not in the Default UI
+        var search = new Search({
+          view: view
+        });
+
+        //add widgets on the UI
+        view.ui.add("logoDiv", "bottom-right");
+        view.ui.add(search, "top-right"); 
+        
+        //
+        view.on("keypress", function(event){
+            
+          if (view.zoom >=16) {
+            view.ui.remove(["logoDiv",search]);
+          } 
+              }); 
+      });
+      
+      
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+    <div id="logoDiv" class="esri-widget">Logo</div>
+  </body>
+</html>

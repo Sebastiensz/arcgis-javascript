@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Conveyor Belt</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.0.0-rc.8/css/calcite-web.min.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.6/esri/css/main.css">
+    <link rel="stylesheet" href="./css/boilerplate.css">
+    <script type="text/javascript" src="./js/dojoConfig.js"></script>
+    <script type="text/javascript" src="https://js.arcgis.com/4.6/"></script>
+    <script type="text/javascript">
+      require([
+        "boilerplate",
+        "dojo/text!config/config.json",
+        "dojo/text!boilerplate/settings.json",
+        "application",
+        "dojo/domReady!"
+      ], function (Boilerplate, configSettings, boilerplateSettings, app) {
+
+        new Boilerplate(JSON.parse(configSettings), JSON.parse(boilerplateSettings)).then((boilerplateResponse) => {
+          try {
+            const exampleApp = new app();
+            exampleApp.init(boilerplateResponse);
+          } catch (error) {
+            alert(JSON.stringify(error));
+          }
+        });
+
+      });
+    </script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="grid-container">
+        <div id="center-panel" class="column-24 leader-quarter trailer-quarter">
+          <div id="viewDiv"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

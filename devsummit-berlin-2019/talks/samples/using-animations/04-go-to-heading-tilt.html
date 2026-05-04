@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+
+  <style>
+    html, body, #viewDiv {
+      height: 100%;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+    }
+
+    .esri-ui-bottom-left.esri-ui-corner {
+      width: 100%;
+      text-align: center;
+    }
+
+    .esri-ui-bottom-left.esri-ui-corner button {
+      margin: auto;
+    }
+    #viewLog {
+
+      position: absolute;
+      bottom: 1.6em;
+      background: rgba(0, 0, 0, 0.5);
+      right: 0;
+      left: 0;
+      padding: 6px 6px 6px 6px;
+      color: white;
+      font-family: menlo, monospace;
+      font-size: 1em;
+      text-overflow: ellipsis;
+      white-space: pre;
+    }
+
+    #viewLog::before {
+      content: "> ";
+    }
+
+  </style>
+
+  <link rel="stylesheet" href="//js.arcgis.com/4.13/esri/css/main.css">
+  <script src="//js.arcgis.com/4.13/"></script>
+
+
+  <title>GoTo - heading / tilt</title>
+</head>
+<body>
+  <script>
+
+    require([
+      "esri/WebScene",
+      "esri/views/SceneView",
+      "../support/log.js",
+      "dojo/domReady!"
+    ], function(WebScene, SceneView, log) {
+      var view = new SceneView({
+        container: "viewDiv",
+        map: new WebScene({
+            basemap: "hybrid",
+            ground: "world-elevation"
+        }),
+        qualityProfile: "high",
+        environment: {
+            atmosphere: {
+                quality: "high"
+            },
+            lighting: {
+                directShadowsEnabled: true,
+                ambientOcclusionEnabled: true
+            }
+        },
+        camera: {
+            position: [8.632, 46.522, 7000],
+            heading: 25,
+            tilt: 75
+        },
+        ui: {
+            components: ["compass", "attribution"]
+        }
+      });
+
+      function padLeft(s, n) {
+          if (s.length < n) {
+              return new Array(n - s.length + 1).join(" ") + s;
+          }
+          else {
+              return s;
+          }
+      }
+
+      view.watch("camera", function (camera) {
+          var heading = camera.heading.toFixed(1).toString();
+          var tilt = camera.tilt.toFixed(1).toString();
+          log.message("Heading: " + padLeft(heading, 5) + ", tilt: " + padLeft(tilt, 5));
+          // overview.view.rotation = 360 - camera.heading;
+      });
+
+      window["view"] = view;
+
+      var playHeading = function() {
+          var currentHeading = view.camera.heading;
+          var heading = Math.floor((currentHeading + 1) / 30) * 30 + 30;
+          view.goTo({ heading: heading });
+      };
+
+      var playTilt = function() {
+          var currentTilt = view.camera.tilt;
+          // Cycle tilt of the view
+          var tilt = (Math.floor((currentTilt + 1) / 15) * 15 + 15) % 90;
+          // go to tilt preserves view.center
+          view.goTo({ tilt: tilt });
+      };
+
+      window.addEventListener("message", function(m) {
+        if (m.data && m.data.play) {
+          switch (m.data.argument) {
+            case "heading":
+                playHeading();
+                break;
+            case "tilt":
+                playTilt();
+                break;
+          }
+        }
+      }, false);
+    });
+
+
+  </script>
+  <div id="viewDiv">
+    <div id="viewLog" class="text-on-view"></div>
+  </div>
+</body>
+</html>

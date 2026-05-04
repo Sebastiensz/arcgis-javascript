@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Smart Mapping sliders</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.12/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #viewDiv canvas {
+        filter: drop-shadow(0px 4px 4px darkgray);
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+
+        "esri/views/MapView",
+
+        "esri/layers/FeatureLayer",
+
+        "esri/renderers/smartMapping/statistics/histogram",
+        "esri/renderers/smartMapping/creators/color",
+
+        "esri/widgets/Zoom",
+        "esri/widgets/Home",
+        "esri/widgets/smartMapping/ColorSlider"
+      ], function(
+        Map,
+        MapView,
+        FeatureLayer,
+        histogram, colorRendererCreator,
+        Zoom, Home, ColorSlider
+      ) {
+        map = new Map({});
+
+        view = new MapView({
+          container: "viewDiv",
+          map: map,
+
+          extent: {
+            xmin: 60659.82391183183,
+            ymin: 5991474.660211295,
+            xmax: 1260705.520404459,
+            ymax: 7169379.292192988,
+            spatialReference: { wkid: 2154 }
+          },
+          spatialReference: { wkid: 2154 },
+
+          ui: { components: ["attribution" ] }
+        });
+
+        var featureLayer = new FeatureLayer({
+          url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Median_Disposable_Income_2015/FeatureServer/0",
+          title: "Median Disposable Income 2015"
+        });
+
+        Promise.all([
+          colorRendererCreator.createContinuousRenderer({
+            layer: featureLayer,
+            field: "medianIncome2015",
+            theme: "above-and-below",
+
+            // Make the outline thinner for small scales
+            outlineOptimizationEnabled: true,
+            view: view
+          }),
+
+          // Get information about the repartition of the income
+          histogram({
+            layer: featureLayer,
+            field: "medianIncome2015",
+            view: view,
+            numBins: 70
+          })
+        ])
+        .then(([rendererResult, histogramResult]) => {
+          featureLayer.renderer = rendererResult.renderer;
+          map.add(featureLayer);
+
+          // using color slider
+          // https://developers.arcgis.com/javascript/latest/api-reference/esri-widgets-smartMapping-ColorSlider.html
+          
+          // create a slider from the renderer and the histogram
+          const colorSlider = ColorSlider.fromRendererResult(rendererResult, histogramResult);
+          view.ui.add(colorSlider, "bottom-right");
+          colorSlider.primaryHandleEnabled = true;
+
+          colorSlider.on(["thumb-change", "thumb-drag"], function() {
+            const renderer = featureLayer.renderer.clone();
+            const colorVariable = renderer.visualVariables[0];
+            colorVariable.stops = colorSlider.stops;
+            featureLayer.renderer = renderer;
+          });
+        })
+        .catch((error) => {
+          console.error("there was an error: ", error);
+        });
+
+        // Setup UI elements
+        view.ui.add(new Home({ view }), "bottom-left");
+        view.ui.add(new Zoom({ view, layout: "horizontal" }), "bottom-left");
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

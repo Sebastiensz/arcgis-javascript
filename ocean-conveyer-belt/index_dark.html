@@ -1,0 +1,197 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.0.0-rc.7/css/calcite-web-dark.min.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.5/esri/themes/dark/main.css">
+    <link rel="stylesheet" href="./css/boilerplate.css">
+    <script type="text/javascript" src="./js/dojoConfig.js"></script>
+    <script type="text/javascript" src="https://js.arcgis.com/4.5/"></script>
+    <script type="text/javascript">
+      require([
+        "boilerplate",
+        "dojo/text!config/config.json",
+        "dojo/text!boilerplate/settings.json",
+        "application"
+      ], function (Boilerplate, configSettings, boilerplateSettings, app) {
+
+        new Boilerplate(JSON.parse(configSettings), JSON.parse(boilerplateSettings)).then(function (boilerplateResponse) {
+          const exampleApp = new app();
+          exampleApp.init(boilerplateResponse);
+        });
+
+      });
+    </script>
+  </head>
+  <body>
+
+    <!-- DETAILS -->
+    <div class="js-modal modal-overlay" data-modal="app-details-dialog">
+      <div class="modal-content column-12" role="dialog" aria-labelledby="modal" role="dialog">
+        <a class="js-modal-toggle right icon-ui-close" href="#" aria-label="close-modal"></a>
+        <h3 class='trailer-half'>Boilerplate Template and Calcite Web</h3>
+        <p>This application template loads a web map or web scene and provides basic mapping capabilities via the ArcGIS API for JavaScript 4.x.</p>
+        <div>This application is built using:
+          <ul>
+            <li>
+              <a href="https://developers.arcgis.com/javascript/" target="_blank">Esri ArcGIS API for Javascript 4.x</a>
+            </li>
+            <li>
+              <a href="https://github.com/Esri/application-boilerplate-js" target="_blank">Esri Application Boilerplate Template</a>
+            </li>
+            <li>
+              <a href="http://esri.github.io/calcite-web/" target="_blank">Esri Calcite Web framework</a>
+            </li>
+          </ul>
+        </div>
+        <div class="text-right">
+          <button class="btn js-modal-toggle">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP SIDE DRAWER -->
+    <div class="drawer drawer-left js-drawer" data-drawer="top-nav" tabindex="0">
+      <nav class="drawer-nav" role="navigation">
+        <div class="panel panel-white">
+          <div id="current-map-card" class="card block margin-left-quarter margin-right-quarter">
+            <figure class="card-image-wrap">
+              <img id="current-map-card-thumb" class="card-image" src="" alt="">
+              <div id="current-map-card-caption" class="card-image-caption text-right font-size--3"></div>
+            </figure>
+            <div class="card-content">
+              <h4><a id="current-map-card-title" href="" target="_blank"></a></h4>
+              <p id="current-map-card-description" class="card-last font-size--3"></p>
+            </div>
+          </div>
+        </div>
+        <h2 class="side-nav-title">Social</h2>
+        <div class="text-center padding-leader-half">
+          <span class="icon-social-contact" aria-label="Email"></span>
+          <span class="icon-social-geonet" aria-label="GeoNet"></span>
+          <span class="icon-social-facebook" aria-label="Facebook"></span>
+          <span class="icon-social-twitter" aria-label="Twitter"></span>
+        </div>
+      </nav>
+    </div>
+
+    <!-- BODY WRAPPER -->
+    <div class="wrapper">
+
+      <!-- TOP NAVIGATION -->
+      <header class="top-nav">
+        <div class="grid-container">
+          <div class="column-24">
+
+            <!-- APP TITLE -->
+            <span id="app-title-node" class="top-nav-title text-blue"></span>
+
+            <!-- MAP AND CONTENT -->
+            <nav class="top-nav-list" role="navigation" aria-labelledby="topnav">
+              <a href="#" class="top-nav-link js-drawer-toggle" data-drawer="top-nav">Map</a>
+              <!--<div class="dropdown js-dropdown">
+                <button class="btn btn-transparent dropdown-btn js-dropdown-toggle top-nav-link" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                  Actions
+                  <span class="icon-ui-down"></span>
+                </button>
+                <nav class="dropdown-menu" role="menu">
+                  <span class="dropdown-title">Map</span>
+                  <a href="#opt-1" class="dropdown-link" role="menu-item">Option 1</a>
+                  <a href="#opt-2" class="dropdown-link" role="menu-item">Option 2</a>
+                  <a href="#opt-3" class="dropdown-link" role="menu-item">Option 3</a>
+                  <span class="dropdown-title">Analysis</span>
+                  <a href="#opt-4" class="dropdown-link" role="menu-item">Option 4</a>
+                  <a href="#opt-5" class="dropdown-link" role="menu-item">Option 5</a>
+                </nav>
+              </div>-->
+            </nav>
+
+            <!-- APP DETAILS -->
+            <nav id="app-details-node" class="top-nav-list right" role="navigation">
+              <a class="top-nav-link icon-ui-description margin-left-1 js-modal-toggle" data-modal="app-details-dialog" href="#"></a>
+            </nav>
+
+            <!-- SIGN IN NODE -->
+            <nav id="sign-in-node" class="top-nav-list right" role="navigation" aria-labelledby="usernav">
+              <a class="top-nav-link icon-ui-user margin-left-1" href="#">Sign In</a>
+            </nav>
+
+            <!-- USER NODE -->
+            <div id="user-node" class="dropdown js-dropdown right hide">
+              <a class="top-nav-link icon-ui-user margin-left-1 js-dropdown-toggle" tabindex="0" aria-haspopup="true" aria-expanded="false" href="#">
+                <span id="user-firstname-node"></span>
+              </a>
+              <nav class="dropdown-menu dropdown-right" role="menu">
+                <span class="dropdown-title">
+                  <span id="user-fullname-node"></span>
+                  <br>
+                  <img id="user-thumb-node">
+                  <small><span id="username-node"></span></small>
+                </span>
+                <!--<a id="user-profile-link" href="#" target="_blank" class="dropdown-link icon-ui-user" role="menu-item">Profile</a>-->
+                <a href="https://developers.arcgis.com/community/#support" target="_blank" class="dropdown-link icon-ui-support" role="menu-item">Support</a>
+                <a href="https://developers.arcgis.com/feedback/" target="_blank" class="dropdown-link icon-ui-link-external" role="menu-item">Feedback</a>
+                <a id="sign-out-node" href="#" class="dropdown-link icon-ui-sign-out" role="menu-item">Sign Out</a>
+              </nav>
+            </div>
+
+          </div>
+        </div>
+      </header>
+
+      <!-- REST OF BODY -->
+      <div class="grid-container leader-half trailer-half">
+
+        <!-- LEFT PANEL -->
+        <div class="column-6 padding-right-quarter ui-layout ui-layout-left">
+          <div class="panel panel-white panel-no-border panel-no-padding">
+
+            <div class="tabs-transparent js-tab-group trailer-half">
+              <nav class="tab-nav">
+                <a class="tab-title is-active js-tab">Layers</a>
+                <a class="tab-title js-tab">Places</a>
+                <a class="tab-title js-tab">Print</a>
+              </nav>
+              <section class="tab-contents">
+                <article class="tab-section js-tab-section is-active">
+                  <div class="panel panel-white panel-no-padding panel-no-border">
+                    <div id="layer-list-node"></div>
+                  </div>
+                  <label class="panel leader-half">
+                    <span class="text-blue">Legend</span>
+                    <div id="legend-node"></div>
+                  </label>
+                </article>
+                <article class="tab-section js-tab-section">
+                  <div id="places-node" class="panel panel-white panel-no-border"></div>
+                </article>
+                <article class="tab-section js-tab-section">
+                  <div id="print-node"></div>
+                </article>
+              </section>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER PANEL -->
+        <div class="column-18 padding-left-quarter ui-layout ui-layout-center">
+          <div id="viewDiv"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div id="notifications-node"></div>
+
+    <!-- LOADING -->
+    <div id="loading-node" class="loader padding-leader-0 padding-trailer-0 animate-fade-in animate-fade-out">
+      <div class="loader-bars"></div>
+      <div class="loader-text text-white font-size--3">Updating...</div>
+    </div>
+
+  </body>
+</html>

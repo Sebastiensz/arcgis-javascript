@@ -1,0 +1,40 @@
+
+#viewDiv {
+  filter: drop-shadow(1px 1px 3px rgba(0, 0, 0, 0.3));
+}
+
+body {
+  background-image: url('./background-pencil.jpg');
+  background-size: cover;
+}
+
+#menu button {
+  background: #F1EFE6;
+  border-bottom: 1px solid black;
+}
+
+#menu button:hover, #mode:hover, .slide:hover {
+  background: #ddd;
+}
+
+a {
+  color: #d62273;
+}
+
+a:hover {
+  color: #96154f;
+}
+
+#mode {
+  background: #F1EFE6;
+  border-bottom: 1px solid black;
+}
+
+.slide {
+  background: #F1EFE6;
+  border-color: black;
+}
+
+.esri-attribution, #attribution {
+  background-color: #F1EFE6;
+}

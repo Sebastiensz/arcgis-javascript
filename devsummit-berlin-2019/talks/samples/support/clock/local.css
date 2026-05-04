@@ -1,0 +1,66 @@
+main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.labels {
+  padding: 5px;
+}
+
+/* override calcite stuff */
+
+.esri-widget > h4 {
+  display: block;
+  font-size: 1.17em;
+  margin-block-start: 0em;
+  margin-block-end: 1em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+  font-weight: bold;
+}
+
+#clock {
+  width: 220px;
+  height: 220px;
+}
+
+#menu {
+  padding: 1em;
+}
+
+#waveSlider {
+  height: 50px;
+  margin-top: 2em;
+}
+
+.color-btn {
+  border: 1px solid rgb(173, 172, 172);
+  width: 40px;
+  height: 20px;
+  cursor: pointer;
+}
+
+#navy {
+  background-color: #00c5ff;
+}
+
+#green {
+  background-color: #039962;
+}
+
+#turqoise {
+  background-color: #ccb58a;
+}
+
+.esri-ui-corner #clock.esri-component {
+  box-shadow: inherit;
+}
+
+#menu > label {
+  margin-top: 1rem;
+  margin-right: 0px;
+  margin-bottom: 1rem;
+  margin-left: 0px;
+}

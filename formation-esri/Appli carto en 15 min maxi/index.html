@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="description" content="Living Atlas Devlab" />
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="initial-scale=1,maximum-scale=1,user-scalable=no"
+        />
+        <title>Faire une application JavaScript en 15 minutes</title>
+        <style>
+            html,
+            body,
+            #viewDiv {
+                padding: 0;
+                margin: 0;
+                height: 100%;
+                width: 100%;
+            }
+        </style>
+        <link
+            rel="stylesheet"
+            href="https://js.arcgis.com/4.14/esri/css/main.css"
+        />
+        <script src="https://js.arcgis.com/4.14/"></script>
+        <script>
+            require([
+                "esri/Map",
+                "esri/views/MapView",
+                "esri/layers/GeoJSONLayer",
+                "esri/widgets/Search"
+            ], function(Map, MapView, GeoJSONLayer, Search) {
+                var map = new Map({
+                    basemap: "topo-vector"
+                });
+
+                var view = new MapView({
+                    container: "viewDiv",
+                    map: map,
+                    center: [2.4, 48.85],
+                    zoom: 11
+                });
+
+                // Symbol for Total
+                var total = {
+                    type: "simple-marker",
+                    color: "#C63010"
+                };
+
+                // Symbol for Esso
+                var esso = {
+                    type: "simple-marker",
+                    color: "#2C4AC4"
+                };
+
+                var auchan = {
+                    type: "simple-marker",
+                    color: "#DC0000 "
+                };
+
+                var avia = {
+                    type: "simple-marker",
+                    color: "#D89D09 "
+                };
+
+                var BP = {
+                    type: "simple-marker",
+                    color: "#1FD809"
+                };
+
+                var carrefour = {
+                    type: "simple-marker",
+                    color: "#09B0D8"
+                };
+
+                var elan = {
+                    type: "simple-marker",
+                    color: "#295E1F "
+                };
+
+                // Symbol for Other
+                var other = {
+                    type: "simple-marker",
+                    color: "#919191"
+                };
+                var esso_market = {
+                    type: "simple-marker",
+                    color: "#2C4AC4"
+                };
+                 var leclerc = {
+                    type: "simple-marker",
+                    color: "#1740F8 "
+                };
+              
+                // Define a unique value renderer
+                var stationserviceRenderer = {
+                    type: "unique-value",
+                    field: "enseigne_2018",
+                    defaultSymbol: other,
+                    uniqueValueInfos: [
+                        {
+                            value: "Total",
+                            symbol: total
+                        },
+                        {
+                            value: "BP",
+                            symbol: BP
+                        },
+                        {
+                            value: "Leclerc",
+                            symbol: leclerc
+                        },
+                        {
+                            value: "Elan",
+                            symbol: elan
+                        },
+                        {
+                            value: "Carrefour",
+                            symbol: carrefour
+                        },
+                        {
+                            value: "Avia",
+                            symbol: avia
+                        },
+                        {
+                            value: "Auchan",
+                            symbol: auchan
+                        },
+                        {
+                            value: "Esso Express",
+                            symbol: esso_market
+                        }                     
+                    ]
+                };
+
+                //Create pop-ups
+                var popup = {
+                    title: "{enseigne_2018}",
+                    content: "{nom_station_zagaz}<br>{adresse}<br>"
+                };
+
+                // Create the supermarkets layer
+                var station_essence = new GeoJSONLayer({
+                    url:
+                        "https://opendata.arcgis.com/datasets/5946f692a55a4c9c88d6ff6d1d194d59_2.geojson",
+                    renderer: stationserviceRenderer,
+                    opacity: 0.75,
+                    popupTemplate: popup
+                });
+
+                // Add the layer
+                map.add(station_essence, 0);
+
+                // Search widget
+                var search = new Search({
+                    view: view
+                });
+
+                view.ui.add(search, "top-right");
+            });
+        </script>
+    </head>
+    <body>
+        <div id="viewDiv"></div>
+    </body>
+</html>

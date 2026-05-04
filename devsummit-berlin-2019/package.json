@@ -1,0 +1,11 @@
+{
+  "name": "presentation",
+  "private": true,
+  "dependencies": {
+    "reveal-md": "^3.1.0"
+  },
+  "scripts": {
+    "start": "reveal-md talks/ -w",
+    "dist": "reveal-md talks/ --static dist --port 1949 --absolute-url https://jsapi.dev/2019-11-devsummit-eu-presentations && cp README.md dist/README.md && rm dist/index.html"
+  }
+}

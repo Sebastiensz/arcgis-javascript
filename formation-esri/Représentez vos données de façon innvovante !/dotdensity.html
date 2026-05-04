@@ -1,0 +1,98 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Dot Density Renderer</title>
+  <style>
+    html, body, #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  
+  <link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/css/main.css">
+  <script src="https://js.arcgis.com/4.11/"></script>
+  
+  <script>  
+      require([
+        "esri/WebMap",
+        "esri/views/MapView","esri/layers/FeatureLayer","esri/renderers/DotDensityRenderer","esri/widgets/Legend"
+      ], function(WebMap, MapView,FeatureLayer,DotDensityRenderer,Legend) {
+        
+const map = new WebMap({ //we load directly a webmap that contains only a basemap, we will enrich this webmap with a layer, a layer
+          portalItem: {
+            id: "56b5bd522c52409c90d902285732e9f1"
+          }
+        });
+      
+      var view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [3,46],
+        //zoom: 10,
+        scale:8000000,
+        constraints: { //prevents zooming too much
+            maxScale: 100000
+          }
+      });
+   
+     var PortalItem = new FeatureLayer({
+        portalItem: {
+          id: "a256c9833cc2465fbfb707959f1d82b4"
+        },
+       outline:false,
+      });
+        
+        PortalItem.renderer = {
+  type: "dot-density",  // autocasts as new DotDensityRenderer()
+  referenceDotValue: 100,  // 1 dot = 1,000 people when the view.scale is 1:1,000,000
+  referenceScale: 3000000,  // view.scale
+    legendOptions: {
+    unit: "personnes"
+  },
+  outline:null,
+          attributes: [{
+    field: "CSP_PopActive_Cadres_Actifs",
+    label: "Cadres actifs",
+    color: "#f23c3f" //blue
+  }, {
+    field: "CSP_PopActive_Ouvriers_Actifs",
+    label: "Ouvriers actifs",
+    color: "#96f7ef" //red #00b6f1 
+  },{
+    field: "CSP_PopActive_Artisans_commerça",
+    label: "Artisants, commerçants et chefs d'entreprises actifs",
+    color: "#ff50dd"
+  },{
+    field: "CSP_PopActive_Employés_Actifs",
+    label: "Employés Actifs",
+    color: "#ffff00" //pink #ff7fe9
+  },
+              {
+    field: "CSP_PopActive_Professions_inter",
+    label: "Professions intermédiaires Actifs",
+    color: "#00FF00" //orange
+  },]
+}
+      map.add(PortalItem, 1);
+     
+        
+var legend = new Legend({
+  view: view,
+  layerInfos: [{
+    layer: PortalItem,
+    title: "Légende"
+  }]
+});
+
+view.ui.add(legend, "bottom-right");
+     
+    });
+  </script>
+</head>
+<body>
+  <div id="viewDiv"></div>
+</body>
+</html>

@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Popup Actions</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.12/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #viewDiv canvas {
+        filter: drop-shadow(0px 4px 4px darkgray);
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/PopupTemplate",
+
+        "esri/views/MapView",
+
+        "esri/layers/FeatureLayer",
+
+        "esri/widgets/Zoom",
+        "esri/widgets/Home"
+      ], function(
+        Map, PopupTemplate,
+        MapView,
+        FeatureLayer,
+        Zoom, Home
+      ) {
+        map = new Map({});
+
+        view = new MapView({
+          container: "viewDiv",
+          map: map,
+
+          extent: {
+            xmin: 60659.82391183183,
+            ymin: 5991474.660211295,
+            xmax: 1260705.520404459,
+            ymax: 7169379.292192988,
+            spatialReference: { wkid: 2154 }
+          },
+          spatialReference: { wkid: 2154 },
+
+          ui: { components: ["attribution" ] }
+        });
+
+        // portal item: https://jsapi.maps.arcgis.com/home/item.html?id=811dc250274741bab8cdcf0386724054
+
+        var featureLayer = new FeatureLayer({
+          portalItem: {
+            id: "811dc250274741bab8cdcf0386724054"
+          }
+        });
+
+        map.add(featureLayer);
+
+        // Setup UI elements
+        view.ui.add(new Home({ view }), "bottom-left");
+        view.ui.add(new Zoom({ view, layout: "horizontal" }), "bottom-left");
+
+        // Actions!
+        var inseeAction = {
+          // This text is displayed as a tooltip
+          title: "Insee",
+          // The ID by which to reference the action in the event handler
+          id: "insee",
+          // Sets the icon font used to style the action button
+          className: "esri-icon-link-external"
+        };
+
+        // create a popup template
+        featureLayer.popupEnabled = true;
+        featureLayer.popupTemplate = new PopupTemplate({
+          title: "{nom} - {insee}",
+          content: "Median Disposible Income: {medianIncome2015}",
+          actions: [inseeAction]
+        });
+
+        view.popup.on("trigger-action", (event) => {
+          if(event.action.id === inseeAction.id){
+            const feature = view.popup.selectedFeature;
+            const inseeCode = feature.attributes.insee;
+            window.open("https://www.insee.fr/fr/statistiques/1405599?geo=COM-" + inseeCode, "_blank");
+          }
+        });
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>

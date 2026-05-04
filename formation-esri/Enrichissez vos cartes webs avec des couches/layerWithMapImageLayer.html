@@ -1,0 +1,45 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ArcGIS JavaScript Tutorials: Create a Starter App</title>
+  <style>
+    html, body, #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+  
+  <link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/css/main.css">
+  <script src="https://js.arcgis.com/4.11/"></script>
+  
+  <script>  
+      require([
+        "esri/Map",
+        "esri/views/MapView","esri/layers/MapImageLayer"
+      ], function(Map, MapView,MapImageLayer) {
+      var map = new Map({
+        basemap: "topo-vector"
+      });
+      
+      var view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [-118.80543,34.02700],
+        zoom: 13
+      });
+        
+  // points to the states layer in a service storing U.S. census data
+  var layer = new MapImageLayer({
+    url: "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Energy/Geology/MapServer"
+  });
+  map.add(layer);  // adds the layer to the map
+    });
+  </script>
+</head>
+<body>
+  <div id="viewDiv"></div>
+</body>
+</html>

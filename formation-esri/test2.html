@@ -1,0 +1,106 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1,user-scalable=no"
+    />
+
+<title>Expand widget - 4.12</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.12/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.12/"></script>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/SceneView",
+        "esri/widgets/Expand",
+        "esri/widgets/BasemapGallery","esri/layers/FeatureLayer"
+      ], function(Map, SceneView, Expand, BasemapGallery,FeatureLayer) {
+        var map = new Map({
+          basemap: "osm"
+        });
+
+ var Layerenderer = {
+type: "simple",
+   symbol: {
+  type: "simple-fill",  // autocasts as new SimpleFillSymbol()
+  color: [ 51,51, 204, 1 ],
+  style: "solid",
+  outline: {  // autocasts as new SimpleLineSymbol()
+    color: "white",
+    width: 1
+  }
+   }
+};
+        
+var Layer = new FeatureLayer({
+        url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/REGION_2018/FeatureServer/0",
+      //renderer:Layerenderer
+      });
+        
+
+      map.add(Layer);
+        
+        var view = new SceneView({
+          container: "viewDiv",
+          map: map
+        });
+
+        var basemapGallery = new BasemapGallery({
+          view: view,
+        });
+
+        // Create an Expand instance and set the content
+        // property to the DOM node of the basemap gallery widget
+        // Use an Esri icon font to represent the content inside
+        // of the Expand widget
+
+        var widgetExpand = new Expand({
+          view: view,
+          content: basemapGallery
+        });
+
+        // close the expand when click outside
+       // view.on("click", function(event){
+//widgetExpand.collapse();
+//});
+        view.watch("map.basemap.title",function(){
+          widgetExpand.collapse();           Layer.renderer = {
+type: "simple",
+   symbol: {
+  type: "simple-fill",  // autocasts as new SimpleFillSymbol()
+  color: [ 51,51, 204, 0.4 ],
+  style: "solid",
+  outline: {  // autocasts as new SimpleLineSymbol()
+    color: "white",
+    width:1
+  }
+   }
+};               
+                                                 });
+        // Add the expand instance to the ui
+        view.ui.add(widgetExpand, "top-right");
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
