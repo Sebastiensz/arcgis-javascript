@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -125,18 +126,18 @@
      
      
       function retrieveData(){
-       
-        for (let i = 1; i < 242; i++) {
-         var query2 = countrieslayer.createQuery();
-            query2.cacheHint=true;
-            query2.returnGeometry = false;
-            query2.outFields = [ "*" ];
-            query2.where = "OBJECTID = " + i;
-            countrieslayer.queryFeatures(query2)
-            .then(function(response){
-               country_table.push(response.features[0].attributes.NAME_FR);
-            })
-        }
+        var query2 = countrieslayer.createQuery();
+        query2.cacheHint = true;
+        query2.returnGeometry = false;
+        query2.outFields = ["NAME_FR"];
+        query2.where = "1=1";
+        query2.num = 300;
+        query2.orderByFields = ["OBJECTID"];
+        countrieslayer.queryFeatures(query2).then(function(response){
+          country_table = response.features.map(function(f){ return f.attributes.NAME_FR; });
+          randValue = getRandomInt(country_table.length);
+          questionElement.innerHTML = String(country_table[randValue]);
+        });
       }
      
      
@@ -231,8 +232,9 @@ var feature = response2.features[0].graphic;
       
       function getPays(geom){
      if(j>20){
-       alert("Jeu terminé votre score est de "+String(pts)+"/20");
-     }   
+       questionElement.innerHTML = "Jeu terminé ! Score final : " + pts + "/20";
+       return;
+     }
      if(j<=20){
         var query = countrieslayer.createQuery();
             query.cacheHint=true;
