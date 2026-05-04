@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -44,7 +45,6 @@
       href="https://js.arcgis.com/4.21/esri/themes/dark/main.css"
     />
     <script src="https://js.arcgis.com/4.21/"></script>
-<select id="séisme"></select>
     <script>
       require([
         "esri/Map",
@@ -152,24 +152,24 @@
       let séisme=document.getElementById("séisme");
       
         let option1=document.createElement("option");
-     option1.textContent="all_month.geojson";
-      séisme.appendChild(option1);
-   //   option1.textContent="Séismes dans le dernier mois";
-        
-     let option2=document.createElement("option");
-     option2.textContent="all_week.geojson";
-      séisme.appendChild(option2);
-    //  option2.textContent="Séismes dans la dernière semaine";  
-        
-      let option3=document.createElement("option");
-      option3.textContent="all_day.geojson";
-      séisme.appendChild(option3);
-    //  option3.textContent="Séismes dans le dernier jour";  
-        
-      let option4=document.createElement("option");
-      option4.textContent="all_hour.geojson";
-      séisme.appendChild(option4);
-    //  option4.textContent="Séismes dans la dernière heure";  
+        option1.value="all_month.geojson";
+        option1.textContent="Séismes du dernier mois";
+        séisme.appendChild(option1);
+
+        let option2=document.createElement("option");
+        option2.value="all_week.geojson";
+        option2.textContent="Séismes de la dernière semaine";
+        séisme.appendChild(option2);
+
+        let option3=document.createElement("option");
+        option3.value="all_day.geojson";
+        option3.textContent="Séismes du dernier jour";
+        séisme.appendChild(option3);
+
+        let option4=document.createElement("option");
+        option4.value="all_hour.geojson";
+        option4.textContent="Séismes de la dernière heure";
+        séisme.appendChild(option4);
         
  view.ui.add(séisme, "top-right"); //position the dropdown list at the top-right       
     // define the event when we change the earthquake in the dropdown list, the map is updated with the new layer
@@ -206,7 +206,7 @@
       view.ui.add(legendExpand, "top-left");   
         
 séisme.addEventListener("change",function(){
-  let selectedService=séisme.options[séisme.selectedIndex].textContent;
+  let selectedService=séisme.value;
         let layer = new GeoJSONLayer({
           url:"https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/" +selectedService,
           renderer:renderer,
@@ -224,6 +224,7 @@ séisme.addEventListener("change",function(){
 
   <body>
     <div id="viewDiv"></div>
+    <select id="séisme" class="esri-widget"></select>
       <div id="titleDiv" class="esri-widget">
     <div id="titleText">Last earthquakes over the world</div>
   </div>
