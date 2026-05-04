@@ -5,11 +5,11 @@ require([
     "esri/layers/FeatureLayer",
     "esri/widgets/Popup",
     "esri/tasks/support/Query",
-    "https://cdn.jsdelivr.net/npm/chart.js@2.8.0","esri/widgets/Search",
-    "dojo/domReady!"
+    "https://cdn.jsdelivr.net/npm/chart.js@2.8.0","esri/widgets/Search"
   ],
   function (esriConfig,Map, MapView, PopupTemplate, FeatureLayer, Popup, Query, Chart,Search) {
-esriConfig.apiKey= "AAPK2ac310e1478f41ed8ac738dafc1e969d5t9-FFWs7QnAgAXnbQDXseVcq-d0wMWQxYF-gQKSwywK3noEj2_rkuQAmsCXNWdu";
+  // Remplacer par votre clé API ArcGIS : https://developers.arcgis.com/
+  esriConfig.apiKey = "YOUR_API_KEY";
     var featureLayerRenderer = {
       type: "simple",  
       symbol: {
