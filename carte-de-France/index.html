@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -154,9 +155,11 @@ ymax: -2359801.2525520697,
           .then(disablePopupOnClick)
           .then(enableHighlightOnPointerMove);
         akView
+          .then(disableNavigation)
           .then(disablePopupOnClick)
           .then(enableHighlightOnPointerMove);
         hiView
+          .then(disableNavigation)
           .then(disablePopupOnClick)
           .then(enableHighlightOnPointerMove);
 
@@ -267,10 +270,6 @@ ymax: -2359801.2525520697,
         function disablePopupOnClick(view) {
           view.on("click", function (event) {
             event.stopPropagation();
-            //alert(mainView.extent.xmin)
-           // alert(mainView.extent.ymin)
-            //alert(mainView.extent.xmax)
-            //alert(mainView.extent.ymax)
           });
           return view;
         }
