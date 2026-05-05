@@ -386,7 +386,7 @@ Company : Esri France
 			autoNavigate:false
         });
 
-        var localBasemapsSource = LocalBasemapsSource({
+        var localBasemapsSource = new LocalBasemapsSource({
             basemaps: [
                 basemapTopographie,
                 basemapRues,
@@ -486,7 +486,7 @@ Company : Esri France
                 index: 1
             });
 
-            printExpand.watch("expanded ", function(value){
+            printExpand.watch("expanded", function(value){
                 var select = document.querySelectorAll("[data-target-property='layout']")[0];
                 select.value = "a4-portrait";
 				var select2 = document.querySelectorAll("[data-target-property='format']")[0];
@@ -766,7 +766,7 @@ Company : Esri France
             //view.center([event.result.feature.geometry.latitude,event.result.feature.geometry.longitude]);
 
             //verify intersection between resultsLayer and the city got from the searchWidget2
-            isContains=GeometryEngine.contains(resultsLayer2.graphics.items[0].geometry,event.result.feature.geometry);
+            isContains=resultsLayer2.graphics.items[0] && GeometryEngine.contains(resultsLayer2.graphics.items[0].geometry,event.result.feature.geometry);
             if(isContains){
                 locationGraphic.symbol.color="rgb(0,212,0)";
 				console.log(resultsLayer2);
@@ -926,7 +926,7 @@ Company : Esri France
             <h1 style="font-size:22px">Périmètre de 5 km</h1>
             <div id="show-intro">
                 <p class="intro-p-desktop">Bienvenue ! Les déplacements sont limités à 5km autour de chez vous à Dunkerque et Nice le week-end pour une durée maximale d'une heure. Pour connaître le périmètre autour de chez vous, vous pouvez:​​</p>
-                <p class="intro-p-desktop"><span class="highlightFont">Recherchez votre adresse</span>, ou<span class="highlightFont"> utilisez votre localisation actuelle​</span>, ou <span class="highlightFont">zoomez​</span> et naviguez librement dans la carte, puis <span class="highlightFont">cliquez sur le lieu de votre choix.</span> Vous verrez alors le périmètre de 20 km à vol d'oiseau autour de votre domicile.</p>
+                <p class="intro-p-desktop"><span class="highlightFont">Recherchez votre adresse</span>, ou<span class="highlightFont"> utilisez votre localisation actuelle​</span>, ou <span class="highlightFont">zoomez​</span> et naviguez librement dans la carte, puis <span class="highlightFont">cliquez sur le lieu de votre choix.</span> Vous verrez alors le périmètre de 5 km à vol d'oiseau autour de votre domicile.</p>
 				<p class="intro-p-desktop">Puis ensuite,  avec la seconde zone de recherche, vous pourrez vérifier si une adresse est dans la zone de 5 kms autour de votre domicile (point vert) ou en dehors de celle-ci (point rouge).</p>
                 <button id="start-appli">Commencer</button><br>
 				<p class="intro-p-desktop">Une application <span class="highlightFont"><a href="https://www.esrifrance.fr/">Esri France</a></span></p>
@@ -934,7 +934,7 @@ Company : Esri France
             <div id="show-about" class="hidden">
                 <button id="close-about" class="esri-icon-close"></button>
                 <p class="intro-p-desktop">Les déplacements sont limités à 5km autour de chez vous à Dunkerque et Nice le week-end pour une durée maximale d'une heure. Pour connaître le périmètre autour de chez vous, vous pouvez:</p>
-                <p class="intro-p-desktop"><span class="highlightFont">Recherchez votre adresse​</span>, ou<span class="highlightFont"> utilisez votre localisation actuelle​</span>, ou <span class="highlightFont">zoomez​</span> et naviguez librement dans la carte, puis <span class="highlightFont">cliquez sur le lieu de votre choix.</span> Vous verrez alors le périmètre de 20 km à vol d'oiseau autour de votre domicile.</p>
+                <p class="intro-p-desktop"><span class="highlightFont">Recherchez votre adresse​</span>, ou<span class="highlightFont"> utilisez votre localisation actuelle​</span>, ou <span class="highlightFont">zoomez​</span> et naviguez librement dans la carte, puis <span class="highlightFont">cliquez sur le lieu de votre choix.</span> Vous verrez alors le périmètre de 5 km à vol d'oiseau autour de votre domicile.</p>
 				<p class="intro-p-desktop">Puis ensuite,  avec la seconde zone de recherche, vous pourrez vérifier si une adresse est dans la zone de 5 kms autour de votre domicile (point vert) ou en dehors de celle-ci (point rouge).</p>
 				<p class="intro-p-desktop">Une application <span class="highlightFont"><a href="https://www.esrifrance.fr/">Esri France</a></span><p>
             </div>

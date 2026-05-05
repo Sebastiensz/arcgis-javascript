@@ -128,7 +128,7 @@ require([
     });
 
     var agregationdep = new FeatureLayer({
-      url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/carburatns_dep/FeatureServer/0",
+      url: "https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/carburants_dep/FeatureServer/0",
       outFields: ["POINT_COUNT"],
       title: '',
       visible: true,
@@ -284,7 +284,7 @@ require([
         featureLayer.definitionExpression = "ObjectId IS NOT NULL"
       }
       else {
-        champsFl = event.value
+        let champsFl = event.value
         featureLayer.definitionExpression = champsFl + " != 99999"
       }
 

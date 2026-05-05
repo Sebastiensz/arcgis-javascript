@@ -333,7 +333,7 @@
 		autoNavigate:false
         });
 
-        var localBasemapsSource = LocalBasemapsSource({
+        var localBasemapsSource = new LocalBasemapsSource({
             basemaps: [
                 basemapTopographie,
                 basemapRues,
@@ -464,7 +464,7 @@ var track = new Track({
                 index: 1
             });
 
-            printExpand.watch("expanded ", function(value){
+            printExpand.watch("expanded", function(value){
                 var select = document.querySelectorAll("[data-target-property='layout']")[0];
                 select.value = "a4-portrait";
 				var select2 = document.querySelectorAll("[data-target-property='format']")[0];
@@ -716,9 +716,9 @@ var track = new Track({
             popupContentClick(event.mapPoint);
         });
         view.when(function() {
-            popup.watch("collapsed", function(value){
-                if(value && popup.currentDockPosition === 'bottom-center'){
-                    popup.collapsed = false;
+            view.popup.watch("collapsed", function(value){
+                if(value && view.popup.currentDockPosition === 'bottom-center'){
+                    view.popup.collapsed = false;
                 }
             });
         });

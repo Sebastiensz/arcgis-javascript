@@ -212,7 +212,7 @@ séisme.addEventListener("change",function(){
           renderer:renderer,
           popupTemplate:template,
         })
-        map.removeAll(); //don't have too much layers loaded
+        map.layers.removeAll(); //don't have too much layers loaded
         map.add(layer);
 
       })

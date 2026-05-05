@@ -6,8 +6,7 @@ require([
   "esri/symbols/PointSymbol3D",
   "esri/symbols/ObjectSymbol3DLayer",
   "utils",
-  "esri/smartMapping/statistics/summaryStatistics",
-  "dojo/domReady!"
+  "esri/smartMapping/statistics/summaryStatistics"
 ], function (
   FeatureLayer,
   Map, SceneView,
@@ -37,7 +36,7 @@ require([
     });
 
     const populationLayer = new FeatureLayer({
-      url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/World_population_count_2020/FeatureServer",
+      url: "https://services2.arcgis.com/cFEFS0EWrhfDeVw9/arcgis/rest/services/World_population_count_2020/FeatureServer/0",
       definitionExpression: "population_count > 10",
       renderer: renderer
     })
@@ -60,7 +59,7 @@ require([
     });
 
     const countryBoundaries = new FeatureLayer({
-      url: "http://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/World_Countries_(Generalized)/FeatureServer",
+      url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/World_Countries_(Generalized)/FeatureServer/0",
       title: "World Countries",
       renderer: {
         type: "simple",

@@ -23,10 +23,11 @@
         "esri/Map",
         "esri/views/MapView",
         "esri/layers/TileLayer",
+        "esri/layers/VectorTileLayer",
         "esri/widgets/LayerList",
         "esri/widgets/Swipe",
         "esri/widgets/Expand","esri/layers/FeatureLayer"
-      ], (Map, MapView, TileLayer, LayerList, Swipe, Expand,FeatureLayer) => {
+      ], (Map, MapView, TileLayer, VectorTileLayer, LayerList, Swipe, Expand,FeatureLayer) => {
 
         const map = new Map({
           basemap: "hybrid"
@@ -51,7 +52,7 @@
         map.add(zone_interet);
         
         
-        const French_hybrid_referenceLayer=new TileLayer({ url:"https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+        const French_hybrid_referenceLayer=new VectorTileLayer({ url:"https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
         });
         map.add(French_hybrid_referenceLayer);
         

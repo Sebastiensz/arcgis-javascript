@@ -101,6 +101,7 @@ view.popup.autoOpenEnabled = true;
       // set an attribute filter on flood warnings layer view
       // to display the warnings issued in that season
       function filterBySeason(event) {
+        if (!floodLayerView) return;
         const selectedSeason = event.target.getAttribute("data-season");
         floodLayerView.filter = {
           where: "Dossard = " + selectedSeason
@@ -163,7 +164,7 @@ view.popup.autoOpenEnabled = true;
     <div>Edition 2019</div>
   </div>
     <div id="classementDiv" class="esri-widget">
-    <div id="titleText">Course de Madeire</div>
+    <div>Course de Madeire</div>
       <div>1er Marco Silva</div>
       <div>2ème Yann Alarcon</div>
       <div>3ème Oscar Arza</div>

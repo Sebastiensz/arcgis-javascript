@@ -63,6 +63,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       var fieldValues = [ $feature.total_cases, $feature.total_deaths ];
       var cases = fieldValues[0];
       var deaths = fieldValues[1];
+      if (!cases || cases == 0) return 'N/A';
        var result=Round((deaths/cases) * 100,2)
       return result + ' %';
     </script>
@@ -262,7 +263,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       view.ui.add(timeSlider, "manual");
       
       timeSlider.watch("timeExtent", function(value){
-        // update layer view filter to reflect current timeExtent
+        if (!timeLayerView) return;
         timeLayerView.filter = {
           timeExtent: value
         };

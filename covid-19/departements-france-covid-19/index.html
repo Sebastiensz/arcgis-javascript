@@ -64,7 +64,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       var cases = fieldValues[0];
       var deaths = fieldValues[1];
        var result=Round((deaths/cases) * 100,2)
-      return deaths;
+      return result + ' %';
     </script>
 
   <script>
@@ -77,10 +77,8 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       "esri/widgets/Legend",
       "esri/widgets/Search",
       "esri/widgets/Zoom",
-      "esri/widgets/Home",
-      "esri/widgets/Expand",
-      "esri/widgets/Legend"
-    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Expand, Legend) {
+      "esri/widgets/Home"
+    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home) {
 
       const renderer = {
         type: "simple",
@@ -270,10 +268,8 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         
       });
 
-      view.ui.add(timeSlider, "manual");
-      
       timeSlider.watch("timeExtent", function(value){
-        // update layer view filter to reflect current timeExtent
+        if (!timeLayerView) return;
         timeLayerView.filter = {
           timeExtent: value
         };

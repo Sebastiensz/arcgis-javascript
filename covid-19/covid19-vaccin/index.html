@@ -67,12 +67,9 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       "esri/widgets/Search",
       "esri/widgets/Zoom",
       "esri/widgets/Home",
-      "esri/widgets/Expand",
-      "esri/widgets/Legend",
       "esri/widgets/Bookmarks",
-      "esri/webmap/Bookmark",
-	  "esri/widgets/Popup"
-    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Expand, Legend, Bookmarks, Bookmark,Popup) {
+      "esri/webmap/Bookmark"
+    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Bookmarks, Bookmark) {
 
       var renderer = {
         type: "simple",
@@ -236,10 +233,8 @@ view.popup.collapseEnabled= false;
         
       });
 
-      view.ui.add(timeSlider, "manual");
-      
       timeSlider.watch("timeExtent", function(value){
-        // update layer view filter to reflect current timeExtent
+        if (!timeLayerView) return;
         timeLayerView.filter = {
           timeExtent: value
         };

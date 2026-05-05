@@ -245,7 +245,7 @@ var feature = response2.features[0].graphic;
 
             countrieslayer.queryFeatures(query)
             .then(function(response){
-             
+              if (!response.features.length) return;
                 // returns a feature set with features containing the
                 reponse=response.features[0].attributes.NAME_FR;
        
@@ -287,8 +287,8 @@ view.goTo(feature2.geometry);
               ptsElement.innerHTML=pts+"/"+ String(j-1)+ " points";}
              randValue=getRandomInt(242); //nouveau pays au hasard pour le jeu
             questionElement.innerHTML = String(country_table[randValue]);
+            j=j+1;
             });
-          j=j+1;
       }
         else{ //fin du jeu
           randValue=getRandomInt(242); //nouveau pays au hasard pour le jeu

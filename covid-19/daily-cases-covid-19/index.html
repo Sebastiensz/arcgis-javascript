@@ -78,11 +78,9 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       "esri/widgets/Search",
       "esri/widgets/Zoom",
       "esri/widgets/Home",
-      "esri/widgets/Expand",
-      "esri/widgets/Legend",
       "esri/widgets/Bookmarks",
       "esri/webmap/Bookmark"
-    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Expand, Legend, Bookmarks, Bookmark) {
+    ], function (Map, MapView, FeatureLayer, TimeSlider, Expand, Legend, Search, Zoom, Home, Bookmarks, Bookmark) {
 
       const renderer = {
         type: "simple",
@@ -132,7 +130,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
             stops: [
               {
                 value: 200000,
-                size: "170x"
+                size: "170px"
               },{
                 value: 125000,
                 size: "156px"
@@ -182,7 +180,7 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
       const map = new Map({
         //basemap: "satellite",
         basemap: "dark-gray",
-        layers: [layer]
+        layers: [layer, layerPop]
       });
 
       const view = new MapView({
@@ -279,10 +277,8 @@ css : https://developers.arcgis.com/javascript/latest/guide/styling/
         
       });
 
-      view.ui.add(timeSlider, "manual");
-      
       timeSlider.watch("timeExtent", function(value){
-        // update layer view filter to reflect current timeExtent
+        if (!timeLayerView) return;
         timeLayerView.filter = {
           timeExtent: value
         };

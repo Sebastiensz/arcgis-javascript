@@ -9,8 +9,8 @@
 
 <body>
   <script>
-    require(["esri/Map", "esri/views/MapView", "esri/widgets/Locate", "esri/Graphic", "esri/layers/GeoJSONLayer", "esri/views/SceneView", "esri/widgets/Search"],
-      function(Map, MapView, Locate, Graphic, GeoJSONLayer, SceneView, Search) {
+    require(["esri/Map", "esri/views/MapView", "esri/widgets/Locate", "esri/Graphic", "esri/layers/GeoJSONLayer", "esri/widgets/Search"],
+      function(Map, MapView, Locate, Graphic, GeoJSONLayer, Search) {
         // Map creation
         let map1 = new Map({
           basemap: "satellite",
@@ -60,8 +60,8 @@
         });
         // Add geoJSONLayer to the map
         map1.add(geoJSONLayer);
-        // Creation of the SceneView
-        let mapview = new SceneView({
+        // Creation of the MapView
+        let mapview = new MapView({
           container: "carte",
           map: map1,
           center: [-104.910886, 39.701752],
