@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 
 <head>
   <meta charset="utf-8" />
@@ -130,13 +131,12 @@
           title: "Sea surface temperature"
         }]
       });
-     // view.ui.add(legend, "top-right");
+      view.ui.add(legend, "top-right");
 
-      // add fullscreen widget
-      fullscreen = new Fullscreen({
+      const fullscreen = new Fullscreen({
         view: view
       });
-    //  view.ui.add(fullscreen, "top-left");
+      view.ui.add(fullscreen, "top-left");
     });
     </script>
   </head>
