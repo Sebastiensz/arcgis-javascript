@@ -1,9 +1,6 @@
-console.log("Success")
-    // 2D map
 require([
     "esri/Map",
     "esri/views/MapView",
-    "esri/views/SceneView",
     "esri/layers/GeoJSONLayer",
     "esri/widgets/Legend",
     "esri/widgets/Expand",
@@ -11,7 +8,7 @@ require([
     "esri/widgets/Fullscreen",
     "esri/widgets/BasemapToggle",
     "esri/widgets/BasemapGallery",
-], function(Map, MapView, SceneView, GeoJSONLayer, Legend, Expand, Home, Fullscreen, BasemapToggle, BasemapGallery) {
+], function(Map, MapView, GeoJSONLayer, Legend, Expand, Home, Fullscreen, BasemapToggle, BasemapGallery) {
 
     var map = new Map({
         basemap: "topo-vector",
