@@ -1,111 +1,388 @@
-﻿<!DOCTYPE html>
-<!--
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>NukeMap — Simulation nucléaire</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/dark/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
+  <style>
+    html, body, #viewDiv { padding:0; margin:0; height:100%; width:100%; }
 
-To run this demo, you need to replace 'YOUR_API_KEY' with an API key from the ArcGIS Developer dashboard.
+    /* ── Panel top-left ── */
+    #panel {
+      position: absolute; top: 15px; left: 60px; z-index: 10;
+      background: rgba(10,8,18,.93);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #e8e0d5; min-width: 270px;
+      backdrop-filter: blur(8px);
+    }
+    #panel h2 { font-size: 15px; font-weight: 700; color: white; margin: 0 0 2px; }
+    #panel .sub { font-size: 11px; color: #7a6f8a; margin-bottom: 12px; }
 
-Sign up for a free account and get an API key.
+    .kpis { display: flex; gap: 7px; margin-bottom: 8px; }
+    .kpi { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); border-radius: 7px; padding: 8px 12px; flex: 1; min-width: 0; }
+    .kpi .kv { font-size: 18px; font-weight: 700; color: white; font-family: monospace; line-height: 1; }
+    .kpi .kl { font-size: 9px; color: #7a6f8a; text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
+    .kpi.red    .kv { color: #ef4444; }
+    .kpi.orange .kv { color: #f97316; }
+    .kpi.yellow .kv { color: #eab308; }
 
-https://developers.arcgis.com/documentation/mapping-apis-and-services/get-started/
+    #zones-section { display: none; }
+    #zones-section.visible { display: block; }
+    .zone-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; font-size: 11px; color: #c0b8cc;
+      border-top: 1px solid rgba(255,255,255,.05);
+    }
+    .zone-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .zone-name { flex: 1; }
+    .zone-deaths { font-family: monospace; font-size: 10px; color: #ef4444; font-weight: 700; }
+    .zone-r { font-family: monospace; font-size: 10px; color: #7a6f8a; }
 
- --><html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>ArcGIS API for JavaScript Tutorials: Display a map</title>
+    #reset-btn {
+      width: 100%; margin-top: 10px; padding: 7px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04); color: #e8e0d5;
+      border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit;
+    }
+    #reset-btn:hover { background: rgba(255,255,255,.1); }
 
-    <style>
-      html,
-      body,
-      #viewDiv {
-        padding: 0;
-        margin: 0;
-        height: 100%;
-        width: 100%;
+    /* ── Controls top-right ── */
+    #controls {
+      position: absolute; top: 60px; right: 15px; z-index: 10;
+      background: rgba(10,8,18,.93);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      backdrop-filter: blur(8px);
+      min-width: 250px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .ctrl-label { font-size: 10px; color: #7a6f8a; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 5px; }
+    select.ctrl-select {
+      width: 100%; font-size: 12px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.15);
+      color: white; padding: 7px 10px; border-radius: 5px; cursor: pointer; outline: none;
+    }
+    select.ctrl-select option { background: #12101a; }
+
+    /* ── Hint ── */
+    #hint {
+      position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(10,8,18,.88);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 20px; padding: 9px 20px;
+      font-family: sans-serif; font-size: 12px; color: #a89aaa;
+      pointer-events: none; transition: opacity .4s; white-space: nowrap;
+    }
+    #hint.hidden { opacity: 0; }
+
+    /* ── Legend bottom-left ── */
+    #legend {
+      position: absolute; bottom: 30px; left: 15px; z-index: 10;
+      background: rgba(10,8,18,.88);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px; padding: 10px 14px;
+      font-family: sans-serif; font-size: 11px; color: #a89aaa;
+    }
+    #legend .leg-title { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: #7a6f8a; margin-bottom: 6px; }
+    .leg-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+    .leg-swatch { width: 28px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ── Source bottom-right ── */
+    #source {
+      position: absolute; bottom: 30px; right: 15px; z-index: 10;
+      background: rgba(10,8,18,.85);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 6px; padding: 7px 12px;
+      font-size: 10px; color: #7a6f8a; font-family: sans-serif; text-align: center; line-height: 1.6;
+    }
+    #source a { color: #d4a017; text-decoration: none; }
+  </style>
+</head>
+<body>
+<div id="viewDiv"></div>
+
+<!-- Panel top-left -->
+<div id="panel">
+  <h2>💥 Simulation nucléaire</h2>
+  <div class="sub">Estimation des dégâts — modèle Glasstone & Dolan</div>
+  <div class="kpis">
+    <div class="kpi orange">
+      <div class="kv" id="kv-area">–</div>
+      <div class="kl">Surface (km²)</div>
+    </div>
+    <div class="kpi red">
+      <div class="kv" id="kv-deaths">–</div>
+      <div class="kl">Morts estimés</div>
+    </div>
+    <div class="kpi yellow">
+      <div class="kv" id="kv-injured">–</div>
+      <div class="kl">Blessés estimés</div>
+    </div>
+  </div>
+  <div id="zones-section"></div>
+  <button id="reset-btn">🗑 Effacer la simulation</button>
+</div>
+
+<!-- Controls top-right -->
+<div id="controls">
+  <div>
+    <div class="ctrl-label">Type de bombe</div>
+    <select class="ctrl-select" id="bombSelect">
+      <option value="little_boy">Little Boy — 15 kt (Hiroshima, 1945)</option>
+      <option value="b61">B61-12 — 50 kt (OTAN / Europe)</option>
+      <option value="w88">W88 — 475 kt (Trident II, USA)</option>
+      <option value="b83">B83 — 1,2 Mt (USA, la + puissante active)</option>
+      <option value="tsar">Tsar Bomba — 50 Mt (URSS, 1961)</option>
+    </select>
+  </div>
+  <div>
+    <div class="ctrl-label">Densité de population</div>
+    <select class="ctrl-select" id="densitySelect">
+      <option value="1">Désert / Mer — 1 hab/km²</option>
+      <option value="20">Zone rurale — 20 hab/km²</option>
+      <option value="500">Banlieue — 500 hab/km²</option>
+      <option value="2000" selected>Ville moyenne — 2 000 hab/km²</option>
+      <option value="8000">Métropole (Paris) — 8 000 hab/km²</option>
+      <option value="16000">Mégapole (Tokyo) — 16 000 hab/km²</option>
+    </select>
+  </div>
+</div>
+
+<!-- Hint -->
+<div id="hint">💣 Cliquez sur la carte pour simuler une détonation</div>
+
+<!-- Legend -->
+<div id="legend">
+  <div class="leg-title">Zones d'effet</div>
+  <div class="leg-row"><div class="leg-swatch" style="background:rgba(255,20,0,.85)"></div> Boule de feu</div>
+  <div class="leg-row"><div class="leg-swatch" style="background:rgba(255,100,0,.70)"></div> Souffle intense (20 psi)</div>
+  <div class="leg-row"><div class="leg-swatch" style="background:rgba(255,190,0,.55)"></div> Souffle modéré (5 psi)</div>
+  <div class="leg-row"><div class="leg-swatch" style="background:rgba(255,80,150,.40)"></div> Rayonnement thermique</div>
+  <div class="leg-row"><div class="leg-swatch" style="background:rgba(100,160,255,.25)"></div> Souffle léger (1 psi)</div>
+</div>
+
+<!-- Source -->
+<div id="source">
+  Modèle : <a href="https://en.wikipedia.org/wiki/Effects_of_nuclear_explosions" target="_blank">Glasstone & Dolan</a>
+  · <a href="https://nuclearsecrecy.com/nukemap/" target="_blank">NUKEMAP ref.</a><br>
+  <em>Estimation éducative — densité uniforme supposée</em>
+</div>
+
+<script>
+require([
+  "esri/Map",
+  "esri/views/MapView",
+  "esri/layers/GraphicsLayer",
+  "esri/Graphic",
+  "esri/geometry/geometryEngine",
+  "esri/widgets/Home",
+  "esri/widgets/Search",
+  "esri/widgets/Zoom"
+], function(Map, MapView, GraphicsLayer, Graphic, geometryEngine, Home, Search, Zoom) {
+
+  /* ══ Données bombes (rayons en km, source: Glasstone / NUKEMAP) ══ */
+  const BOMBS = {
+    little_boy: {
+      name: "Little Boy — 15 kt (Hiroshima)",
+      zones: [
+        { label: "Boule de feu",           radius: 0.20,  color:[255,20,0],    alpha:.88, fatality:1.00, injury:0.00 },
+        { label: "Souffle intense (20 psi)",radius: 0.80,  color:[255,100,0],   alpha:.70, fatality:0.80, injury:0.15 },
+        { label: "Souffle modéré (5 psi)", radius: 1.90,  color:[255,190,0],   alpha:.55, fatality:0.40, injury:0.40 },
+        { label: "Rayonnement thermique",  radius: 2.50,  color:[255,80,150],  alpha:.38, fatality:0.08, injury:0.40 },
+        { label: "Souffle léger (1 psi)",  radius: 5.10,  color:[100,160,255], alpha:.22, fatality:0.02, injury:0.15 }
+      ]
+    },
+    b61: {
+      name: "B61-12 — 50 kt (OTAN)",
+      zones: [
+        { label: "Boule de feu",           radius: 0.38,  color:[255,20,0],    alpha:.88, fatality:1.00, injury:0.00 },
+        { label: "Souffle intense (20 psi)",radius: 1.40,  color:[255,100,0],   alpha:.70, fatality:0.80, injury:0.15 },
+        { label: "Souffle modéré (5 psi)", radius: 3.40,  color:[255,190,0],   alpha:.55, fatality:0.40, injury:0.40 },
+        { label: "Rayonnement thermique",  radius: 6.00,  color:[255,80,150],  alpha:.38, fatality:0.08, injury:0.40 },
+        { label: "Souffle léger (1 psi)",  radius: 9.50,  color:[100,160,255], alpha:.22, fatality:0.02, injury:0.15 }
+      ]
+    },
+    w88: {
+      name: "W88 — 475 kt (Trident II, USA)",
+      zones: [
+        { label: "Boule de feu",           radius: 1.10,  color:[255,20,0],    alpha:.88, fatality:1.00, injury:0.00 },
+        { label: "Souffle intense (20 psi)",radius: 4.20,  color:[255,100,0],   alpha:.70, fatality:0.80, injury:0.15 },
+        { label: "Souffle modéré (5 psi)", radius: 10.20, color:[255,190,0],   alpha:.55, fatality:0.40, injury:0.40 },
+        { label: "Rayonnement thermique",  radius: 22.00, color:[255,80,150],  alpha:.38, fatality:0.08, injury:0.40 },
+        { label: "Souffle léger (1 psi)",  radius: 28.00, color:[100,160,255], alpha:.22, fatality:0.02, injury:0.15 }
+      ]
+    },
+    b83: {
+      name: "B83 — 1,2 Mt (USA)",
+      zones: [
+        { label: "Boule de feu",           radius: 2.00,  color:[255,20,0],    alpha:.88, fatality:1.00, injury:0.00 },
+        { label: "Souffle intense (20 psi)",radius: 7.40,  color:[255,100,0],   alpha:.70, fatality:0.80, injury:0.15 },
+        { label: "Souffle modéré (5 psi)", radius: 17.80, color:[255,190,0],   alpha:.55, fatality:0.40, injury:0.40 },
+        { label: "Rayonnement thermique",  radius: 42.00, color:[255,80,150],  alpha:.38, fatality:0.08, injury:0.40 },
+        { label: "Souffle léger (1 psi)",  radius: 48.50, color:[100,160,255], alpha:.22, fatality:0.02, injury:0.15 }
+      ]
+    },
+    tsar: {
+      name: "Tsar Bomba — 50 Mt (URSS, 1961)",
+      zones: [
+        { label: "Boule de feu",           radius: 8.50,  color:[255,20,0],    alpha:.88, fatality:1.00, injury:0.00 },
+        { label: "Souffle intense (20 psi)",radius: 47.00, color:[255,100,0],   alpha:.70, fatality:0.80, injury:0.15 },
+        { label: "Souffle modéré (5 psi)", radius: 113.0, color:[255,190,0],   alpha:.55, fatality:0.40, injury:0.40 },
+        { label: "Rayonnement thermique",  radius: 200.0, color:[255,80,150],  alpha:.38, fatality:0.08, injury:0.40 },
+        { label: "Souffle léger (1 psi)",  radius: 310.0, color:[100,160,255], alpha:.22, fatality:0.02, injury:0.15 }
+      ]
+    }
+  };
+
+  /* ══ Map ══ */
+  const map = new Map({ basemap: "dark-gray-vector" });
+
+  const view = new MapView({
+    map: map,
+    center: [10, 30],
+    zoom: 4,
+    container: "viewDiv",
+    constraints: { rotationEnabled: false }
+  });
+
+  const bufferLayer = new GraphicsLayer();
+  const pointLayer  = new GraphicsLayer();
+  map.addMany([bufferLayer, pointLayer]);
+
+  /* ══ Détonation ══ */
+  function explode(point) {
+    bufferLayer.removeAll();
+    pointLayer.removeAll();
+
+    const bomb    = BOMBS[document.getElementById("bombSelect").value];
+    const density = parseFloat(document.getElementById("densitySelect").value);
+
+    // Marqueur épicentre
+    pointLayer.add(new Graphic({
+      geometry: point,
+      symbol: {
+        type: "simple-marker",
+        color: [255,255,255],
+        outline: { color:[255,60,0], width: 2.5 },
+        size: 10
       }
-    </style>
+    }));
 
-    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
-    <script src="https://js.arcgis.com/4.22/"></script>
-
-    <script>
-      require(["esri/config","esri/Map", "esri/views/MapView",
-        "esri/layers/GraphicsLayer",
-        "esri/Graphic",
-        "esri/geometry/geometryEngine"], function (esriConfig,Map, MapView, GraphicsLayer, Graphic, geometryEngine) {
-        
-        const map = new Map({
-          basemap: "dark-gray-vector" // Basemap layer service
-        });
-
-        const view = new MapView({
-          map: map,
-          center: [-2,42], // Longitude, latitude
-          zoom: 4, // Zoom level
-          container: "viewDiv" // Div element
-        });
-        
-        const bufferLayer = new GraphicsLayer();
-        const pointLayer = new GraphicsLayer();
-        map.addMany([bufferLayer, pointLayer]);
-        
-        const polySym = {
-          type: "simple-fill", // autocasts as new SimpleFillSymbol()
-          color: [140, 140, 222, 0.5],
-          outline: {
-            color: [0, 0, 0, 0.5],
-            width: 2
-          }
-        };
-        
-        const pointSym = {
-          type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
-          color: [255, 0, 0],
-          outline: {
-            color: [255, 255, 255],
-            width: 1
-          },
-          size: 7
-        };
-        
-        view.on("click", event => {
-          bufferPoint(event.mapPoint);
-        });
-
-        function bufferPoint(point) {
-
-          clearGraphics();
-
-          // removes z-values from the point when taken from a SceneView.
-          // GeometryEngine does not support 3D geometries.
-          point.hasZ = false;
-          point.z = undefined;
-
-          pointLayer.add(
-            new Graphic({
-              geometry: point,
-              symbol: pointSym
-            })
-          );
-
-          const buffer = geometryEngine.geodesicBuffer(point, 560, "kilometers");
-          bufferLayer.add(
-            new Graphic({
-              geometry: buffer,
-              symbol: polySym
-            })
-          );
+    // Zones — du plus grand au plus petit (superposition correcte)
+    bomb.zones.slice().reverse().forEach(function(z) {
+      const buf = geometryEngine.geodesicBuffer(point, z.radius, "kilometers");
+      bufferLayer.add(new Graphic({
+        geometry: buf,
+        symbol: {
+          type: "simple-fill",
+          color: [z.color[0], z.color[1], z.color[2], z.alpha],
+          outline: { color: [z.color[0], z.color[1], z.color[2], Math.min(z.alpha + 0.2, 1)], width: 1.5 }
         }
-        
-        function clearGraphics() {
-          pointLayer.removeAll();
-          bufferLayer.removeAll();
-        }
+      }));
+    });
 
-      });
-    </script>
+    updatePanel(bomb, density);
+    document.getElementById("hint").classList.add("hidden");
+  }
 
-  </head>
-  <body>
-    <div id="viewDiv"></div>
-  </body>
+  /* ══ Statistiques ══ */
+  function fmt(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(2).replace('.', ',') + ' M';
+    if (n >= 1e3) return (n / 1e3).toFixed(0) + ' k';
+    return n.toLocaleString("fr-FR");
+  }
+
+  function updatePanel(bomb, density) {
+    var totalDeaths  = 0;
+    var totalInjured = 0;
+    var prevArea = 0;
+    var html = '';
+
+    bomb.zones.forEach(function(z) {
+      var area    = Math.PI * z.radius * z.radius;
+      var ring    = area - prevArea;
+      var pop     = ring * density;
+      var deaths  = Math.round(pop * z.fatality);
+      var injured = Math.round(pop * z.injury);
+      totalDeaths  += deaths;
+      totalInjured += injured;
+      prevArea = area;
+
+      var dot = 'rgb(' + z.color.join(',') + ')';
+      var rStr = z.radius < 10 ? z.radius.toFixed(1) : Math.round(z.radius).toLocaleString("fr-FR");
+      html += '<div class="zone-row">' +
+        '<div class="zone-dot" style="background:' + dot + '"></div>' +
+        '<span class="zone-name">' + z.label + '</span>' +
+        '<span class="zone-r">r=' + rStr + ' km</span>' +
+        '<span class="zone-deaths">~' + fmt(deaths) + '</span>' +
+        '</div>';
+    });
+
+    var maxR   = bomb.zones[bomb.zones.length - 1].radius;
+    var totArea = Math.round(Math.PI * maxR * maxR);
+
+    document.getElementById("kv-area").textContent    = totArea.toLocaleString("fr-FR");
+    document.getElementById("kv-deaths").textContent  = fmt(totalDeaths);
+    document.getElementById("kv-injured").textContent = fmt(totalInjured);
+
+    var sec = document.getElementById("zones-section");
+    sec.innerHTML = html;
+    sec.classList.add("visible");
+  }
+
+  /* ══ Événements ══ */
+  view.on("click", function(evt) {
+    var pt = evt.mapPoint;
+    pt.hasZ = false;
+    pt.z = undefined;
+    explode(pt);
+  });
+
+  document.getElementById("bombSelect").addEventListener("change", function() {
+    if (bufferLayer.graphics.length > 0) {
+      var pt = pointLayer.graphics.getItemAt(0);
+      if (pt) explode(pt.geometry);
+    }
+  });
+
+  document.getElementById("densitySelect").addEventListener("change", function() {
+    if (pointLayer.graphics.length > 0) {
+      var pt = pointLayer.graphics.getItemAt(0);
+      if (pt) {
+        var bomb = BOMBS[document.getElementById("bombSelect").value];
+        updatePanel(bomb, parseFloat(this.value));
+      }
+    }
+  });
+
+  document.getElementById("reset-btn").addEventListener("click", function() {
+    bufferLayer.removeAll();
+    pointLayer.removeAll();
+    document.getElementById("kv-area").textContent    = "–";
+    document.getElementById("kv-deaths").textContent  = "–";
+    document.getElementById("kv-injured").textContent = "–";
+    document.getElementById("zones-section").classList.remove("visible");
+    document.getElementById("hint").classList.remove("hidden");
+  });
+
+  /* ══ Widgets ══ */
+  view.when(function() {
+    view.ui.remove("zoom");
+    view.ui.add(new Zoom({ view: view }), { position: "top-left", index: 0 });
+    view.ui.add(new Home({ view: view }), { position: "top-left", index: 1 });
+    view.ui.add(new Search({ view: view }), { position: "top-right", index: 0 });
+  });
+
+});
+</script>
+</body>
 </html>
