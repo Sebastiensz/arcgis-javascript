@@ -175,6 +175,31 @@
     #dataTab { display: none; flex-direction: column; flex: 1; overflow: hidden; }
     #dataTab.active { display: flex; }
 
+    /* Data tab filter bar */
+    #dataFiltersBar {
+      padding: 8px 14px; border-bottom: 1px solid var(--border); background: var(--panel);
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex-shrink: 0;
+    }
+    #dataFiltersBar h3 { font-size: 13px; font-weight: 700; white-space: nowrap; }
+    #dataFiltersBar select, #dataFiltersBar input[type=text],
+    #dataFiltersBar input[type=number] {
+      background: var(--card); border: 1px solid var(--border); color: var(--text);
+      padding: 4px 8px; border-radius: 4px; font-size: 11px;
+    }
+    #dataFiltersBar input[type=number] { width: 62px; }
+    #dataFiltersBar input[type=text]   { width: 160px; }
+    #dataFiltersBar select             { width: 140px; }
+    #dfReset {
+      padding: 4px 10px; border-radius: 4px; cursor: pointer; background: var(--card);
+      border: 1px solid var(--border); color: var(--muted); font-size: 11px;
+      transition: all 0.15s;
+    }
+    #dfReset:hover { border-color: var(--danger); color: var(--danger); }
+    #dfCount { margin-left: 6px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+    th[data-dcol] { cursor: pointer; }
+    th[data-dcol]:hover { color: var(--text); }
+    th[data-dcol].dsorted { color: var(--accent); }
+
     /* Charts tab */
     #chartsTab { display: none; flex-direction: column; flex: 1; overflow: hidden; background: var(--bg); }
     #chartsTab.active { display: flex; }
@@ -320,6 +345,52 @@
 
   var layerView, blobUrl;
   var chartBar = null, chartPie = null, pieMetric = "eco";
+  var dataFilters = { peril: "all", country: "", yearMin: 1556, yearMax: 2024 };
+  var dataSortCol = "date", dataSortDir = -1;
+
+  function renderDataTable() {
+    var search = (document.getElementById("tableSearch2")||{}).value || "";
+    var filtered = EVENTS.filter(function(e) {
+      if (dataFilters.peril !== "all" && e.type !== dataFilters.peril) return false;
+      if (dataFilters.country) {
+        if (e.country.toLowerCase().indexOf(dataFilters.country.toLowerCase()) < 0 &&
+            e.name.toLowerCase().indexOf(dataFilters.country.toLowerCase()) < 0) return false;
+      }
+      var y = +e.date.substring(0,4);
+      if (y < dataFilters.yearMin || y > dataFilters.yearMax) return false;
+      if (search) {
+        var s = search.toLowerCase();
+        if (e.name.toLowerCase().indexOf(s) < 0 && e.country.toLowerCase().indexOf(s) < 0 &&
+            e.desc.toLowerCase().indexOf(s) < 0) return false;
+      }
+      return true;
+    });
+    filtered.sort(function(a, b) {
+      var va = a[dataSortCol] !== undefined ? a[dataSortCol] : a.date;
+      var vb = b[dataSortCol] !== undefined ? b[dataSortCol] : b.date;
+      if (va < vb) return dataSortDir;
+      if (va > vb) return -dataSortDir;
+      return 0;
+    });
+    var cnt = document.getElementById("dfCount");
+    if (cnt) cnt.textContent = filtered.length + " événement" + (filtered.length !== 1 ? "s" : "");
+    var b2 = document.getElementById("evtBody2");
+    if (!b2) return;
+    b2.innerHTML = filtered.map(function(e) {
+      var col = COLORS[e.type] || "#888";
+      return '<tr>'
+        + '<td>' + fmtDate(e.date) + '</td>'
+        + '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">' + e.name + '</td>'
+        + '<td>' + e.country + '</td>'
+        + '<td><span class="type-badge" style="background:' + col + '20;color:' + col + ';border:1px solid ' + col + '40">' + (LABELS[e.type]||e.type) + '</span></td>'
+        + '<td class="num">' + (e.deaths ? e.deaths.toLocaleString("fr") : "–") + '</td>'
+        + '<td class="num">' + (e.injured ? e.injured.toLocaleString("fr") : "–") + '</td>'
+        + '<td class="num">' + fmtEco(e.eco) + '</td>'
+        + '<td class="num">' + fmtEco(e.ins) + '</td>'
+        + '<td style="max-width:300px;white-space:normal;color:var(--muted);font-size:10px">' + e.desc + '</td>'
+        + '</tr>';
+    }).join("");
+  }
 
   // ── Graphiques ────────────────────────────────────────
   function renderCharts(events) {
@@ -564,7 +635,8 @@
         return 0;
       });
 
-      var rowsShort = filtered.map(function(e) {
+      var b1 = document.getElementById("evtBody");
+      if (b1) b1.innerHTML = filtered.map(function(e) {
         var col = COLORS[e.type] || "#888";
         return '<tr onclick="highlightEvent(' + e.id + ')">'
           + '<td>' + fmtDate(e.date) + '</td>'
@@ -577,26 +649,6 @@
           + '<td class="num">' + fmtEco(e.ins) + '</td>'
           + '</tr>';
       }).join("");
-
-      var rowsFull = filtered.map(function(e) {
-        var col = COLORS[e.type] || "#888";
-        return '<tr>'
-          + '<td>' + fmtDate(e.date) + '</td>'
-          + '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">' + e.name + '</td>'
-          + '<td>' + e.country + '</td>'
-          + '<td><span class="type-badge" style="background:' + col + '20;color:' + col + ';border:1px solid ' + col + '40">' + (LABELS[e.type]||e.type) + '</span></td>'
-          + '<td class="num">' + (e.deaths ? e.deaths.toLocaleString("fr") : "–") + '</td>'
-          + '<td class="num">' + (e.injured ? e.injured.toLocaleString("fr") : "–") + '</td>'
-          + '<td class="num">' + fmtEco(e.eco) + '</td>'
-          + '<td class="num">' + fmtEco(e.ins) + '</td>'
-          + '<td style="max-width:300px;white-space:normal;color:var(--muted);font-size:10px">' + e.desc + '</td>'
-          + '</tr>';
-      }).join("");
-
-      var b1 = document.getElementById("evtBody");
-      if (b1) b1.innerHTML = rowsShort;
-      var b2 = document.getElementById("evtBody2");
-      if (b2) b2.innerHTML = rowsFull;
     }
 
     window.highlightEvent = function(id) {
@@ -620,8 +672,41 @@
     document.getElementById("tableSearch").addEventListener("input", function() {
       renderTable(getFiltered());
     });
-    document.getElementById("tableSearch2").addEventListener("input", function() {
-      renderTable(getFiltered());
+    document.getElementById("tableSearch2").addEventListener("input", renderDataTable);
+
+    // ── Filtres onglet Données ────────────────────────────
+    document.getElementById("dfPeril").addEventListener("change", function() {
+      dataFilters.peril = this.value; renderDataTable();
+    });
+    document.getElementById("dfCountry").addEventListener("input", function() {
+      dataFilters.country = this.value; renderDataTable();
+    });
+    document.getElementById("dfYearMin").addEventListener("change", function() {
+      dataFilters.yearMin = +this.value; renderDataTable();
+    });
+    document.getElementById("dfYearMax").addEventListener("change", function() {
+      dataFilters.yearMax = +this.value; renderDataTable();
+    });
+    document.getElementById("dfReset").addEventListener("click", function() {
+      dataFilters = { peril: "all", country: "", yearMin: 1556, yearMax: 2024 };
+      document.getElementById("dfPeril").value   = "all";
+      document.getElementById("dfCountry").value = "";
+      document.getElementById("dfYearMin").value = 1556;
+      document.getElementById("dfYearMax").value = 2024;
+      document.getElementById("tableSearch2").value = "";
+      renderDataTable();
+    });
+
+    // ── Tri colonnes onglet Données ───────────────────────
+    document.querySelectorAll("th[data-dcol]").forEach(function(th) {
+      th.addEventListener("click", function() {
+        var col = this.getAttribute("data-dcol");
+        if (dataSortCol === col) dataSortDir *= -1;
+        else { dataSortCol = col; dataSortDir = -1; }
+        document.querySelectorAll("th[data-dcol]").forEach(function(t) { t.classList.remove("dsorted"); });
+        this.classList.add("dsorted");
+        renderDataTable();
+      });
     });
 
     // ── Tabs ──────────────────────────────────────────────
@@ -637,6 +722,7 @@
         document.getElementById("main").style.display = mapVisible ? "flex" : "none";
         document.getElementById("dataTab").classList.toggle("active", state.tab === "data");
         document.getElementById("chartsTab").classList.toggle("active", state.tab === "charts");
+        if (state.tab === "data")   renderDataTable();
         if (state.tab === "charts") renderCharts(getFiltered());
 
         if (isFrance) view.goTo({ center: [2, 46], zoom: 5 });
@@ -878,22 +964,42 @@
 
   <!-- Tab Données (plein écran) -->
   <div id="dataTab">
-    <div id="tablePanelHeader" style="padding:10px 16px">
-      <h3>📊 Données complètes — tous les événements</h3>
-      <input id="tableSearch2" style="width:220px" type="text" placeholder="🔍 Rechercher…">
+    <div id="dataFiltersBar">
+      <h3>📊 Données</h3>
+      <select id="dfPeril">
+        <option value="all">🎯 Tous les périls</option>
+        <option value="earthquake">Séisme</option>
+        <option value="cyclone">Cyclone</option>
+        <option value="flood">Inondation</option>
+        <option value="tsunami">Tsunami</option>
+        <option value="heatwave">Canicule</option>
+        <option value="drought">Sécheresse</option>
+        <option value="volcano">Volcan</option>
+        <option value="wildfire">Feux de forêt</option>
+        <option value="storm">Tempête</option>
+        <option value="landslide">Glissement</option>
+      </select>
+      <input id="dfCountry" type="text" placeholder="🌍 Pays / zone…">
+      <span style="color:var(--muted);font-size:11px">Années :</span>
+      <input id="dfYearMin" type="number" min="1556" max="2024" value="1556">
+      <span style="color:var(--muted)">–</span>
+      <input id="dfYearMax" type="number" min="1556" max="2024" value="2024">
+      <input id="tableSearch2" type="text" placeholder="🔍 Recherche libre…">
+      <button id="dfReset">✖ Réinitialiser</button>
+      <span id="dfCount">60 événements</span>
     </div>
     <div style="flex:1;overflow:auto">
       <table>
         <thead>
           <tr>
-            <th data-col="date">Date</th>
-            <th data-col="name">Événement</th>
-            <th data-col="country">Pays / Zone</th>
-            <th data-col="type">Péril</th>
-            <th data-col="deaths" class="num">Morts</th>
-            <th data-col="injured" class="num">Blessés</th>
-            <th data-col="eco" class="num">Pertes éco. (Md$)</th>
-            <th data-col="ins" class="num">Pertes assurées (Md$)</th>
+            <th data-dcol="date">Date ↕</th>
+            <th data-dcol="name">Événement ↕</th>
+            <th data-dcol="country">Pays / Zone ↕</th>
+            <th data-dcol="type">Péril ↕</th>
+            <th data-dcol="deaths" class="num">Morts ↕</th>
+            <th data-dcol="injured" class="num">Blessés ↕</th>
+            <th data-dcol="eco" class="num">Pertes éco. (Md$) ↕</th>
+            <th data-dcol="ins" class="num">Pertes assurées (Md$) ↕</th>
             <th>Description</th>
           </tr>
         </thead>
