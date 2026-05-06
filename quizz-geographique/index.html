@@ -10,185 +10,245 @@
 
   <style>
     html, body, #viewDiv {
-      padding: 0;
-      margin: 0;
-      height: 100%;
-      width: 100%;
+      padding: 0; margin: 0;
+      height: 100%; width: 100%;
       font-family: "Avenir Next", Avenir, Helvetica, Arial, sans-serif;
     }
 
     #progressBar {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 5px;
-      width: 0%;
+      position: absolute; top: 0; left: 0;
+      height: 5px; width: 0%;
       background: linear-gradient(90deg, #27AE60, #2ECC71);
       transition: width 0.4s ease;
       z-index: 20;
     }
 
     #questionPanel {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 10;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      position: absolute; top: 0; left: 0; right: 0;
+      z-index: 10; pointer-events: none;
+      display: flex; flex-direction: column; align-items: center;
     }
 
     #titleDiv {
-      width: 100%;
-      padding: 7px 16px;
-      font-size: 15px;
-      font-weight: bold;
-      text-align: center;
-      color: white;
+      width: 100%; padding: 7px 16px;
+      font-size: 15px; font-weight: bold;
+      text-align: center; color: white;
       background-color: #007AC2;
       box-sizing: border-box;
-      letter-spacing: 0.5px;
     }
 
     #questionDiv {
-      margin-top: 6px;
-      padding: 10px 24px;
+      margin-top: 6px; padding: 10px 24px;
       background: rgba(0, 60, 100, 0.88);
-      border-radius: 8px;
-      text-align: center;
-      color: white;
-      backdrop-filter: blur(4px);
+      border-radius: 8px; text-align: center; color: white;
     }
 
-    #questionLabel {
-      font-size: 13px;
-      opacity: 0.8;
-      margin-bottom: 4px;
-    }
-
-    #questionText {
-      font-size: 24px;
-      font-weight: bold;
-      display: block;
-    }
-
-    #questionNum {
-      font-size: 12px;
-      opacity: 0.75;
-      margin-top: 4px;
-    }
+    #questionLabel { font-size: 13px; opacity: 0.8; margin-bottom: 4px; }
+    #questionText  { font-size: 24px; font-weight: bold; display: block; }
+    #questionNum   { font-size: 12px; opacity: 0.75; margin-top: 4px; }
 
     #scoreDiv {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
+      position: absolute; bottom: 24px; left: 50%;
       transform: translateX(-50%);
       padding: 8px 20px;
-      background: rgba(0, 0, 0, 0.72);
-      border-radius: 20px;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      z-index: 10;
-      text-align: center;
-      pointer-events: none;
-      white-space: nowrap;
+      background: rgba(0,0,0,0.72); border-radius: 20px;
+      color: white; font-size: 16px; font-weight: bold;
+      z-index: 10; text-align: center; pointer-events: none; white-space: nowrap;
     }
 
     #feedbackDiv {
-      position: absolute;
-      top: 45%;
-      left: 50%;
+      position: absolute; top: 45%; left: 50%;
       transform: translate(-50%, -50%);
-      padding: 14px 32px;
-      border-radius: 10px;
-      font-size: 22px;
-      font-weight: bold;
-      color: white;
-      z-index: 30;
-      text-align: center;
-      display: none;
+      padding: 14px 32px; border-radius: 10px;
+      font-size: 22px; font-weight: bold; color: white;
+      z-index: 30; text-align: center; display: none;
       pointer-events: none;
       box-shadow: 0 4px 16px rgba(0,0,0,0.35);
       animation: popIn 0.2s ease;
     }
-
     @keyframes popIn {
       from { transform: translate(-50%, -50%) scale(0.85); opacity: 0; }
       to   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
     }
-
     #feedbackDiv.correct { background-color: rgba(39, 174, 96, 0.95); }
     #feedbackDiv.wrong   { background-color: rgba(192, 57, 43, 0.95); }
 
-    #gameOverDiv {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 36px 52px;
-      background: white;
-      border-radius: 14px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-      text-align: center;
-      z-index: 40;
-      display: none;
-      min-width: 280px;
+    #hintDiv {
+      position: absolute; bottom: 65px; left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 16px; background: rgba(255,255,255,0.82);
+      border-radius: 16px; font-size: 13px; color: #333;
+      z-index: 10; pointer-events: none; white-space: nowrap;
     }
 
-    #gameOverDiv h2 {
-      margin: 0 0 6px 0;
-      color: #007AC2;
-      font-size: 26px;
+    /* ── Écran de fin ───────────────────────────────────── */
+    #gameOverDiv {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 28px 40px;
+      background: white; border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+      text-align: center; z-index: 40; display: none;
+      width: 340px; max-height: 85vh; overflow-y: auto;
     }
+
+    #gameOverDiv h2 { margin: 0 0 4px 0; color: #007AC2; font-size: 22px; }
 
     #finalScore {
-      font-size: 56px;
-      font-weight: bold;
-      color: #222;
-      margin: 10px 0 6px 0;
-      line-height: 1;
+      font-size: 52px; font-weight: bold; color: #222;
+      margin: 6px 0 2px 0; line-height: 1;
     }
 
-    #gradeText {
-      font-size: 17px;
-      color: #555;
-      margin-bottom: 22px;
+    #gradeText { font-size: 16px; color: #555; margin-bottom: 14px; }
+
+    /* Stats globales */
+    #statsSection {
+      background: #f0f7ff; border-radius: 8px;
+      padding: 12px 16px; margin: 12px 0;
+      font-size: 14px; color: #333; display: none;
     }
 
-    #restartBtn {
-      padding: 11px 28px;
-      background-color: #007AC2;
-      color: white;
-      border: none;
-      border-radius: 7px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
+    #percentileBar {
+      width: 100%; height: 10px;
+      background: #dde; border-radius: 5px; margin: 8px 0;
+      overflow: hidden;
     }
 
-    #restartBtn:hover { background-color: #005f99; }
+    #percentileFill {
+      height: 100%; border-radius: 5px;
+      background: linear-gradient(90deg, #007AC2, #27AE60);
+      transition: width 1s ease;
+      width: 0%;
+    }
 
-    #hintDiv {
-      position: absolute;
-      bottom: 65px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 6px 16px;
-      background: rgba(255,255,255,0.82);
-      border-radius: 16px;
-      font-size: 13px;
-      color: #333;
-      z-index: 10;
-      pointer-events: none;
-      white-space: nowrap;
+    .stat-line { margin: 4px 0; font-size: 13px; }
+    .stat-line strong { color: #007AC2; }
+
+    .badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 12px; font-size: 12px; font-weight: bold;
+      margin: 4px 2px;
+    }
+    .badge-gold   { background: #FEF9E7; color: #B7950B; border: 1px solid #F1C40F; }
+    .badge-silver { background: #F2F3F4; color: #555; border: 1px solid #BDC3C7; }
+    .badge-blue   { background: #EBF5FB; color: #1A5276; border: 1px solid #85C1E9; }
+
+    /* Enregistrement top 10 */
+    #registerSection {
+      background: #FEF9E7; border: 1px solid #F1C40F;
+      border-radius: 8px; padding: 12px 16px;
+      margin: 12px 0; display: none;
+    }
+
+    #topRankText { font-size: 15px; font-weight: bold; color: #7D6608; margin-bottom: 8px; }
+
+    #registerForm { display: flex; gap: 6px; margin-top: 6px; }
+
+    #nameInput {
+      flex: 1; padding: 7px 10px; border: 1px solid #ccc;
+      border-radius: 6px; font-size: 14px;
+    }
+
+    #saveBtn {
+      padding: 7px 14px; background: #27AE60; color: white;
+      border: none; border-radius: 6px; font-size: 14px;
+      font-weight: bold; cursor: pointer; white-space: nowrap;
+    }
+    #saveBtn:hover { background: #1E8449; }
+    #saveBtn:disabled { background: #95a5a6; cursor: default; }
+
+    #savedConfirm { color: #27AE60; font-size: 13px; margin-top: 6px; display: none; }
+
+    /* Leaderboard */
+    #leaderboardSection {
+      margin-top: 14px; display: none; text-align: left;
+    }
+
+    #leaderboardSection h3 {
+      margin: 0 0 8px 0; font-size: 15px;
+      color: #333; text-align: center;
+    }
+
+    #leaderboardTable {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+
+    #leaderboardTable th {
+      padding: 5px 8px; border-bottom: 2px solid #e0e0e0;
+      color: #666; font-size: 12px; text-align: left;
+    }
+
+    #leaderboardTable td { padding: 5px 8px; }
+    #leaderboardTable tr:nth-child(even) { background: #fafafa; }
+    #leaderboardTable tr.my-row { background: rgba(39,174,96,0.12); font-weight: bold; }
+
+    #statsLoading { font-size: 13px; color: #888; margin: 8px 0; display: none; }
+
+    /* Boutons du bas */
+    .end-buttons { margin-top: 16px; display: flex; gap: 8px; justify-content: center; }
+
+    .btn-primary {
+      padding: 10px 22px; background: #007AC2; color: white;
+      border: none; border-radius: 7px; font-size: 14px;
+      font-weight: bold; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #005f99; }
+
+    .btn-secondary {
+      padding: 10px 22px; background: white; color: #007AC2;
+      border: 2px solid #007AC2; border-radius: 7px; font-size: 14px;
+      font-weight: bold; cursor: pointer;
+    }
+    .btn-secondary:hover { background: #f0f7ff; }
+
+    #firebaseNote {
+      font-size: 11px; color: #aaa; margin-top: 10px;
     }
   </style>
 
   <script>
+    // ╔══════════════════════════════════════════════════════╗
+    // ║              CONFIGURATION FIREBASE                  ║
+    // ║                                                      ║
+    // ║  1. Allez sur https://console.firebase.google.com/  ║
+    // ║  2. Créez un projet → Realtime Database (mode test) ║
+    // ║  3. Copiez l'URL de votre base (format ci-dessous)  ║
+    // ║  4. Régles de sécurité recommandées :               ║
+    // ║     {                                               ║
+    // ║       "rules": {                                    ║
+    // ║         "scores": {                                 ║
+    // ║           ".read": true,                           ║
+    // ║           "$id": { ".write": "!data.exists()" }    ║
+    // ║         }                                           ║
+    // ║       }                                             ║
+    // ║     }                                               ║
+    // ╚══════════════════════════════════════════════════════╝
+    var FIREBASE_URL = "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com";
+
+    var FIREBASE_ON = FIREBASE_URL.indexOf("YOUR_PROJECT_ID") === -1;
+
+    function dbFetch() {
+      if (!FIREBASE_ON) return Promise.resolve([]);
+      return fetch(FIREBASE_URL + "/scores.json")
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data) return [];
+          return Object.values(data).filter(function(e) {
+            return e && typeof e.score === "number" && e.name;
+          });
+        })
+        .catch(function() { return []; });
+    }
+
+    function dbSave(name, score) {
+      if (!FIREBASE_ON) return Promise.resolve();
+      return fetch(FIREBASE_URL + "/scores.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name, score: score, date: Date.now() })
+      }).catch(function() {});
+    }
+
     require([
       "esri/Map",
       "esri/views/MapView",
@@ -199,13 +259,15 @@
       var TOTAL_QUESTIONS = 20;
       var FEEDBACK_DURATION = 1800;
 
-      var country_table = [];  // noms français des pays
+      var country_table = [];
       var pts = 0;
       var question = 0;
       var randValue = 0;
       var prevRandValue = -1;
       var clickLocked = true;
+      var mySavedName = null; // nom enregistré dans le leaderboard
 
+      // ── Carte ────────────────────────────────────────────
       var map = new Map({ basemap: "satellite" });
 
       var view = new MapView({
@@ -215,7 +277,6 @@
         constraints: { maxZoom: 14, minZoom: 2 }
       });
 
-      // Natural Earth 110m — données publiques avec champ NAME_FR
       var countrieslayer = new GeoJSONLayer({
         url: "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson",
         copyright: "Natural Earth",
@@ -234,17 +295,34 @@
       map.add(countrieslayer);
       view.ui.add(new Home({ view: view }), "bottom-left");
 
-      var questionTextEl = document.getElementById("questionText");
-      var questionNumEl  = document.getElementById("questionNum");
-      var scoreEl        = document.getElementById("scoreDiv");
-      var feedbackEl     = document.getElementById("feedbackDiv");
-      var gameOverEl     = document.getElementById("gameOverDiv");
-      var finalScoreEl   = document.getElementById("finalScore");
-      var gradeEl        = document.getElementById("gradeText");
-      var progressEl     = document.getElementById("progressBar");
-      var hintEl         = document.getElementById("hintDiv");
+      // ── Refs UI ──────────────────────────────────────────
+      var questionTextEl  = document.getElementById("questionText");
+      var questionNumEl   = document.getElementById("questionNum");
+      var scoreEl         = document.getElementById("scoreDiv");
+      var feedbackEl      = document.getElementById("feedbackDiv");
+      var hintEl          = document.getElementById("hintDiv");
+      var progressEl      = document.getElementById("progressBar");
 
-      // Charger la liste des pays après que la couche soit prête
+      var gameOverEl      = document.getElementById("gameOverDiv");
+      var finalScoreEl    = document.getElementById("finalScore");
+      var gradeEl         = document.getElementById("gradeText");
+      var statsSection    = document.getElementById("statsSection");
+      var statsLoading    = document.getElementById("statsLoading");
+      var percentileBar   = document.getElementById("percentileFill");
+      var percentileEl    = document.getElementById("percentileText");
+      var avgEl           = document.getElementById("avgText");
+      var totalEl         = document.getElementById("totalText");
+      var badgeEl         = document.getElementById("badgeEl");
+      var registerSection = document.getElementById("registerSection");
+      var topRankText     = document.getElementById("topRankText");
+      var nameInput       = document.getElementById("nameInput");
+      var saveBtn         = document.getElementById("saveBtn");
+      var savedConfirm    = document.getElementById("savedConfirm");
+      var leaderboardSection = document.getElementById("leaderboardSection");
+      var leaderboardTable   = document.getElementById("leaderboardTable");
+      var firebaseNote    = document.getElementById("firebaseNote");
+
+      // ── Chargement des pays ──────────────────────────────
       countrieslayer.load().then(function() {
         return countrieslayer.queryFeatures({
           where: "NAME_FR IS NOT NULL",
@@ -253,7 +331,6 @@
           num: 300
         });
       }).then(function(result) {
-        // Dédoublonnage (certains features peuvent avoir le même nom)
         var seen = {};
         country_table = result.features
           .map(function(f) { return f.attributes.NAME_FR; })
@@ -265,28 +342,28 @@
         startGame();
       }).catch(function(err) {
         questionTextEl.innerHTML = "Erreur de chargement";
-        console.error("Erreur chargement GeoJSONLayer :", err);
+        console.error(err);
       });
 
       // ── Logique du jeu ────────────────────────────────────
 
       function startGame() {
-        pts = 0;
-        question = 0;
-        prevRandValue = -1;
+        pts = 0; question = 0;
+        prevRandValue = -1; mySavedName = null;
         clickLocked = false;
         view.graphics.removeAll();
         gameOverEl.style.display = "none";
+        statsSection.style.display = "none";
+        registerSection.style.display = "none";
+        leaderboardSection.style.display = "none";
+        savedConfirm.style.display = "none";
         progressEl.style.width = "0%";
         nextQuestion();
       }
 
       function nextQuestion() {
         question++;
-        if (question > TOTAL_QUESTIONS) {
-          endGame();
-          return;
-        }
+        if (question > TOTAL_QUESTIONS) { endGame(); return; }
         view.graphics.removeAll();
         do {
           randValue = Math.floor(Math.random() * country_table.length);
@@ -319,25 +396,132 @@
         finalScoreEl.innerHTML = pts + " / " + TOTAL_QUESTIONS;
         gradeEl.innerHTML = grade;
         gameOverEl.style.display = "block";
+
+        if (!FIREBASE_ON) {
+          firebaseNote.innerHTML = "⚙️ Configurez Firebase pour accéder au classement global.";
+          return;
+        }
+        firebaseNote.innerHTML = "";
+
+        statsLoading.style.display = "block";
+        dbFetch().then(function(scores) {
+          statsLoading.style.display = "none";
+          renderStats(scores);
+        });
       }
 
-      function showFeedback(correct, correctName) {
-        feedbackEl.className   = correct ? "correct" : "wrong";
-        feedbackEl.innerHTML   = correct
-          ? "✓ Bonne réponse !"
-          : "✗ C'était : <em>" + correctName + "</em>";
-        feedbackEl.style.display = "block";
-        hintEl.style.display = "none";
-        setTimeout(function() {
-          feedbackEl.style.display = "none";
-          nextQuestion();
-        }, FEEDBACK_DURATION);
+      function renderStats(scores) {
+        var n = scores.length;
+
+        // ── Calcul du percentile ──
+        var beaten = scores.filter(function(e) { return e.score < pts; }).length;
+        var tied   = scores.filter(function(e) { return e.score === pts; }).length;
+        // percentile = proportion de joueurs battus (stricts)
+        var percentile = n > 0 ? Math.round(beaten / n * 100) : 100;
+
+        var topPct = 100 - percentile; // top X%
+
+        // ── Calcul de la moyenne ──
+        var avg = n > 0
+          ? (scores.reduce(function(s, e) { return s + e.score; }, 0) / n).toFixed(1)
+          : "-";
+
+        // ── Badge de rang ──
+        var badgeHtml = "";
+        if (n === 0) {
+          badgeHtml = '<span class="badge badge-gold">1er joueur !</span>';
+        } else if (topPct <= 5) {
+          badgeHtml = '<span class="badge badge-gold">🏆 Top 5%</span>';
+        } else if (topPct <= 10) {
+          badgeHtml = '<span class="badge badge-gold">🥇 Top 10%</span>';
+        } else if (topPct <= 25) {
+          badgeHtml = '<span class="badge badge-silver">🥈 Top 25%</span>';
+        } else if (topPct <= 50) {
+          badgeHtml = '<span class="badge badge-blue">Top 50%</span>';
+        }
+
+        percentileEl.innerHTML = n > 0
+          ? "Vous avez fait mieux que <strong>" + percentile + "%</strong> des joueurs"
+          : "Vous êtes le premier joueur !";
+        avgEl.innerHTML   = "Moyenne globale : <strong>" + avg + " / " + TOTAL_QUESTIONS + "</strong>";
+        totalEl.innerHTML = n + " partie" + (n !== 1 ? "s" : "") + " jouée" + (n !== 1 ? "s" : "");
+        badgeEl.innerHTML = badgeHtml;
+        percentileBar.style.width = percentile + "%";
+        statsSection.style.display = "block";
+
+        // ── Leaderboard ──
+        var sorted = scores.slice().sort(function(a, b) { return b.score - a.score; });
+        var top10  = sorted.slice(0, 10);
+        renderLeaderboard(top10);
+        leaderboardSection.style.display = "block";
+
+        // ── Entrée dans le top 10 ? ──
+        var inTop10 = n < 10 || pts > (top10[top10.length - 1] || {score: -1}).score;
+        if (inTop10) {
+          var rank = 1;
+          for (var i = 0; i < sorted.length; i++) {
+            if (sorted[i].score > pts) rank++;
+            else break;
+          }
+          topRankText.innerHTML = "🏆 Vous entrez dans le Top " + Math.min(rank, 10) + " !";
+          registerSection.style.display = "block";
+          nameInput.focus();
+        }
       }
+
+      function renderLeaderboard(top10) {
+        var html = '<thead><tr>'
+          + '<th>#</th><th>Joueur</th><th style="text-align:right">Score</th>'
+          + '</tr></thead><tbody>';
+        if (!top10.length) {
+          html += '<tr><td colspan="3" style="text-align:center;color:#999;padding:8px">Aucun score enregistré</td></tr>';
+        }
+        top10.forEach(function(entry, i) {
+          var medals = ["🥇","🥈","🥉"];
+          var rank   = medals[i] || (i + 1);
+          var isMe   = mySavedName && entry.name === mySavedName && entry.score === pts;
+          html += '<tr class="' + (isMe ? "my-row" : "") + '">'
+            + '<td>' + rank + '</td>'
+            + '<td>' + escHtml(entry.name) + (isMe ? " 👈" : "") + '</td>'
+            + '<td style="text-align:right;font-weight:bold">'
+            + entry.score + '/' + TOTAL_QUESTIONS + '</td>'
+            + '</tr>';
+        });
+        html += '</tbody>';
+        leaderboardTable.innerHTML = html;
+      }
+
+      function escHtml(s) {
+        return String(s)
+          .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+          .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+      }
+
+      // ── Enregistrement du score ───────────────────────────
+      saveBtn.addEventListener("click", function() {
+        var name = nameInput.value.trim();
+        if (!name) { nameInput.focus(); return; }
+        saveBtn.disabled = true;
+        mySavedName = name;
+        dbSave(name, pts).then(function() {
+          savedConfirm.style.display = "block";
+          nameInput.style.display = "none";
+          saveBtn.style.display = "none";
+          // Rafraîchir le leaderboard avec le nouveau score
+          dbFetch().then(function(scores) {
+            var sorted = scores.slice().sort(function(a,b){ return b.score - a.score; });
+            renderLeaderboard(sorted.slice(0, 10));
+          });
+        });
+      });
+
+      nameInput.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") saveBtn.click();
+      });
 
       // ── Clic sur la carte ─────────────────────────────────
-
       view.on("click", function(event) {
-        if (clickLocked || country_table.length === 0 || question < 1 || question > TOTAL_QUESTIONS) return;
+        if (clickLocked || !country_table.length || question < 1 || question > TOTAL_QUESTIONS) return;
         clickLocked = true;
 
         countrieslayer.queryFeatures({
@@ -346,10 +530,7 @@
           returnGeometry: true,
           outFields: ["NAME_FR"]
         }).then(function(response) {
-          if (!response.features.length) {
-            clickLocked = false; // clic sur l'océan → réessai
-            return;
-          }
+          if (!response.features.length) { clickLocked = false; return; }
 
           var clickedName = response.features[0].attributes.NAME_FR;
           var correct = clickedName === country_table[randValue];
@@ -357,7 +538,7 @@
           var clickedFeature = response.features[0].clone();
           clickedFeature.symbol = {
             type: "simple-fill",
-            color: correct ? [39, 174, 96, 0.45] : [192, 57, 43, 0.45],
+            color: correct ? [39,174,96,0.45] : [192,57,43,0.45],
             outline: { color: correct ? "#27AE60" : "#C0392B", width: "3px" }
           };
           view.graphics.add(clickedFeature);
@@ -371,9 +552,7 @@
               showFeedback(false, country_table[randValue]);
             });
           }
-        }).catch(function() {
-          clickLocked = false;
-        });
+        }).catch(function() { clickLocked = false; });
       });
 
       function highlightCorrectCountry(callback) {
@@ -387,7 +566,7 @@
             var f = r.features[0].clone();
             f.symbol = {
               type: "simple-fill",
-              color: [39, 174, 96, 0.25],
+              color: [39,174,96,0.25],
               outline: { color: "#27AE60", width: "3px" }
             };
             view.graphics.add(f);
@@ -397,7 +576,31 @@
         }).catch(callback);
       }
 
+      function showFeedback(correct, correctName) {
+        feedbackEl.className  = correct ? "correct" : "wrong";
+        feedbackEl.innerHTML  = correct
+          ? "✓ Bonne réponse !"
+          : "✗ C'était : <em>" + correctName + "</em>";
+        feedbackEl.style.display = "block";
+        hintEl.style.display = "none";
+        setTimeout(function() {
+          feedbackEl.style.display = "none";
+          nextQuestion();
+        }, FEEDBACK_DURATION);
+      }
+
       document.getElementById("restartBtn").addEventListener("click", startGame);
+      document.getElementById("showLeaderBtn").addEventListener("click", function() {
+        if (!FIREBASE_ON) {
+          alert("Configurez Firebase pour accéder au classement global.");
+          return;
+        }
+        dbFetch().then(function(scores) {
+          var sorted = scores.slice().sort(function(a,b){ return b.score-a.score; });
+          renderLeaderboard(sorted.slice(0,10));
+          leaderboardSection.style.display = "block";
+        });
+      });
     });
   </script>
 </head>
@@ -418,11 +621,45 @@
   <div id="hintDiv">👆 Cliquez sur le pays indiqué</div>
   <div id="feedbackDiv"></div>
 
+  <!-- ── Écran de fin ────────────────────────────────── -->
   <div id="gameOverDiv">
     <h2>Partie terminée !</h2>
     <div id="finalScore">0 / 20</div>
     <div id="gradeText"></div>
-    <button id="restartBtn">↺ Rejouer</button>
+
+    <div id="statsLoading">⏳ Chargement des statistiques…</div>
+
+    <!-- Métriques globales -->
+    <div id="statsSection">
+      <div id="badgeEl"></div>
+      <div id="percentileText"></div>
+      <div id="percentileBar"><div id="percentileFill"></div></div>
+      <div class="stat-line" id="avgText"></div>
+      <div class="stat-line" id="totalText"></div>
+    </div>
+
+    <!-- Enregistrement top 10 -->
+    <div id="registerSection">
+      <div id="topRankText"></div>
+      <div id="registerForm">
+        <input id="nameInput" type="text" placeholder="Votre prénom" maxlength="20" autocomplete="off">
+        <button id="saveBtn">Enregistrer</button>
+      </div>
+      <div id="savedConfirm">✅ Score enregistré !</div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboardSection">
+      <h3>🏆 Top 10 mondial</h3>
+      <table id="leaderboardTable"></table>
+    </div>
+
+    <div id="firebaseNote"></div>
+
+    <div class="end-buttons">
+      <button id="showLeaderBtn" class="btn-secondary">📊 Classement</button>
+      <button id="restartBtn" class="btn-primary">↺ Rejouer</button>
+    </div>
   </div>
 </body>
 </html>
