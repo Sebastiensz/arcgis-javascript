@@ -292,13 +292,15 @@
         document.getElementById("loadMsg").style.display = "none";
 
         geojson.features.forEach(function(f) {
+          // Natural Earth has ISO_A2 = "-99" for France and a few others; use ISO_A2_EH as fallback
           var iso = f.properties.ISO_A2;
+          if (!iso || iso === "-99") iso = f.properties.ISO_A2_EH || f.properties.ADM0_A3 || "";
+          f.properties.iso = iso;
           var d   = GAP[iso];
           f.properties.gap      = d ? d.gap  : -1;
           f.properties.pen      = d ? d.pen  : null;
           f.properties.region   = d ? d.region : "–";
           f.properties.fr_name  = d ? d.name : (f.properties.NAME_FR || f.properties.NAME || iso);
-          f.properties.iso      = iso;
           f.properties.gap_cat  = d ? gapCat(d.gap) : "N/D";
           f.properties.has_data = d ? 1 : 0;
           if (d) allCountries.push({ iso: iso, name: d.name, gap: d.gap, pen: d.pen, region: d.region });
