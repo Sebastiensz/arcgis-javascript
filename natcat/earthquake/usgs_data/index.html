@@ -9,18 +9,23 @@
   <style>
     html, body, #viewDiv { padding:0; margin:0; height:100%; width:100%; }
 
-    /* ── Info panel (top-left) ── */
+    /* ── Panneaux custom positionnés en absolu ── */
     #panel {
+      position: absolute;
+      top: 15px;
+      left: 60px;
+      z-index: 10;
       background: rgba(13,12,20,.92);
       border: 1px solid rgba(255,255,255,.1);
       border-radius: 10px;
       padding: 14px 18px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: #e8e0d5;
-      min-width: 230px;
+      min-width: 240px;
       backdrop-filter: blur(8px);
+      pointer-events: auto;
     }
-    #panel h2 { font-size: 15px; font-weight: 700; color: white; margin-bottom: 2px; }
+    #panel h2 { font-size: 15px; font-weight: 700; color: white; margin: 0 0 2px; }
     #panel .sub { font-size: 11px; color: #7a6f8a; margin-bottom: 12px; }
     .kpis { display: flex; gap: 7px; }
     .kpi { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); border-radius: 7px; padding: 8px 12px; flex: 1; min-width: 0; }
@@ -29,8 +34,11 @@
     .kpi.red    .kv { color: #ef4444; }
     .kpi.orange .kv { color: #f97316; }
 
-    /* ── Controls (top-right) ── */
     #controls {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 10;
       background: rgba(13,12,20,.92);
       border: 1px solid rgba(255,255,255,.1);
       border-radius: 10px;
@@ -41,6 +49,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      pointer-events: auto;
     }
     .ctrl-label {
       font-size: 10px; color: #7a6f8a; text-transform: uppercase;
@@ -48,21 +57,25 @@
     }
     .ctrl-label span { color: white; font-size: 12px; font-family: monospace; font-weight: 700; }
 
-    select.esri-select {
+    select.ctrl-select {
       width: 100%; font-size: 12px;
       background: rgba(255,255,255,.07);
       border: 1px solid rgba(255,255,255,.15);
       color: white; padding: 6px 10px; border-radius: 5px; cursor: pointer;
+      outline: none;
     }
-    select.esri-select option { background: #17151f; }
+    select.ctrl-select option { background: #17151f; }
 
     input[type=range] {
       width: 100%; accent-color: #ef4444; cursor: pointer; margin-top: 3px;
       height: 4px;
     }
 
-    /* ── Source ── */
     #source {
+      position: absolute;
+      bottom: 25px;
+      right: 15px;
+      z-index: 10;
       background: rgba(13,12,20,.85);
       border: 1px solid rgba(255,255,255,.08);
       border-radius: 6px;
@@ -71,6 +84,7 @@
       color: #7a6f8a;
       font-family: sans-serif;
       text-align: center;
+      pointer-events: auto;
     }
     #source a { color: #d4a017; text-decoration: none; }
 
@@ -79,17 +93,17 @@
       position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
       background: rgba(13,12,20,.93); border-radius: 10px; padding: 18px 28px;
       text-align: center; font-family: sans-serif; color: #e8e0d5; font-size: 13px;
-      z-index: 100; pointer-events: none; transition: opacity .3s;
+      z-index: 100; pointer-events: none; transition: opacity .4s;
     }
-    #loading.hidden { opacity: 0; }
+    #loading.hidden { opacity: 0; pointer-events: none; }
   </style>
 </head>
 <body>
 <div id="viewDiv"></div>
 <div id="loading">⏳ Chargement des données USGS…</div>
 
-<!-- Info panel — will be injected via view.ui.add -->
-<div id="panel" class="esri-component esri-widget">
+<!-- Info panel — top-left -->
+<div id="panel">
   <h2>🌍 Séismes en temps réel</h2>
   <div class="sub">USGS Earthquake Hazards Program</div>
   <div class="kpis">
@@ -99,7 +113,7 @@
     </div>
     <div class="kpi red">
       <div class="kv" id="kv-max">–</div>
-      <div class="kl">Magnitude max</div>
+      <div class="kl">Mag. max</div>
     </div>
     <div class="kpi orange">
       <div class="kv" id="kv-sig">–</div>
@@ -109,10 +123,10 @@
 </div>
 
 <!-- Controls — top-right -->
-<div id="controls" class="esri-component esri-widget">
+<div id="controls">
   <div>
     <div class="ctrl-label">Période de temps</div>
-    <select class="esri-select" id="periodSelect">
+    <select class="ctrl-select" id="periodSelect">
       <option value="all_month">Dernier mois — Tous</option>
       <option value="all_week">Dernière semaine — Tous</option>
       <option value="all_day">Dernier jour — Tous</option>
@@ -131,8 +145,8 @@
   </div>
 </div>
 
-<!-- Source credit -->
-<div id="source" class="esri-component esri-widget">
+<!-- Source credit — bottom-right -->
+<div id="source">
   Données : <a href="https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php" target="_blank">USGS Real-time Feeds</a> · Actualisé en temps réel
 </div>
 
@@ -150,7 +164,7 @@ require([
 
   const BASE = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/";
 
-  /* ── Renderer : couleur par classe de magnitude + taille continue ── */
+  /* ── Renderer ── */
   const renderer = {
     type: "class-breaks",
     field: "mag",
@@ -239,7 +253,7 @@ require([
     });
   }
 
-  let currentLayer = makeLayer("all_month");
+  var currentLayer = makeLayer("all_month");
 
   const map = new Map({
     basemap: "dark-gray-vector",
@@ -266,10 +280,14 @@ require([
     }
   });
 
+  /* ── Loading fallback ── */
+  var loadingTimeout = setTimeout(function() {
+    document.getElementById("loading").classList.add("hidden");
+  }, 12000);
+
   /* ── Stats ── */
-  function updateStats(layer) {
-    document.getElementById("kv-count").textContent = "…";
-    layer.queryFeatures({
+  function updateStats(lv) {
+    lv.queryFeatures({
       where: "1=1",
       outFields: ["mag"],
       returnGeometry: false
@@ -281,25 +299,33 @@ require([
       document.getElementById("kv-count").textContent = count.toLocaleString("fr-FR");
       document.getElementById("kv-max").textContent   = maxMag;
       document.getElementById("kv-sig").textContent   = sig.toLocaleString("fr-FR");
+      clearTimeout(loadingTimeout);
       document.getElementById("loading").classList.add("hidden");
     }).catch(function() {
+      clearTimeout(loadingTimeout);
       document.getElementById("loading").classList.add("hidden");
     });
   }
 
-  /* ── Magnitude slider ── */
+  /* ── LayerView hook ── */
   var layerView = null;
+  var statsReady = false;
 
   function hookLayerView(layer) {
     view.whenLayerView(layer).then(function(lv) {
       layerView = lv;
+      statsReady = false;
       lv.watch("updating", function(val) {
-        if (!val) updateStats(layer);
+        if (!val && !statsReady) {
+          statsReady = true;
+          updateStats(lv);
+        }
       });
     });
   }
   hookLayerView(currentLayer);
 
+  /* ── Magnitude slider ── */
   document.getElementById("magSlider").addEventListener("input", function() {
     var v = parseFloat(this.value);
     document.getElementById("magVal").textContent = v.toFixed(1);
@@ -317,6 +343,11 @@ require([
     document.getElementById("kv-max").textContent   = "–";
     document.getElementById("kv-sig").textContent   = "–";
     layerView = null;
+    statsReady = false;
+
+    loadingTimeout = setTimeout(function() {
+      document.getElementById("loading").classList.add("hidden");
+    }, 12000);
 
     var newLayer = makeLayer(this.value);
     map.layers.removeAll();
@@ -325,31 +356,22 @@ require([
     hookLayerView(newLayer);
   });
 
-  /* ── Widgets ── */
+  /* ── Widgets ArcGIS (zoom, home, légende, recherche) ── */
   view.when(function() {
     view.ui.remove("zoom");
 
-    var zoom = new Zoom({ view: view });
-    view.ui.add(zoom, { position: "top-left", index: 0 });
-
-    var home = new Home({ view: view });
-    view.ui.add(home, { position: "top-left", index: 1 });
-
-    view.ui.add(document.getElementById("panel"),    { position: "top-left",    index: 2 });
+    view.ui.add(new Zoom({ view: view }),  { position: "top-left", index: 0 });
+    view.ui.add(new Home({ view: view }),  { position: "top-left", index: 1 });
 
     var legend = new Legend({ view: view, style: { type: "card", layout: "stack" } });
-    var legendExpand = new Expand({
-      view: view, content: legend,
-      expanded: false, expandTooltip: "Légende"
-    });
-    view.ui.add(legendExpand, "bottom-left");
+    view.ui.add(
+      new Expand({ view: view, content: legend, expanded: false, expandTooltip: "Légende" }),
+      "bottom-left"
+    );
 
-    var search = new Search({ view: view });
-    view.ui.add(search, { position: "top-right", index: 0 });
-
-    view.ui.add(document.getElementById("controls"), { position: "top-right",   index: 1 });
-    view.ui.add(document.getElementById("source"),   { position: "bottom-right", index: 0 });
+    view.ui.add(new Search({ view: view }), { position: "top-right", index: 0 });
   });
+
 });
 </script>
 </body>
