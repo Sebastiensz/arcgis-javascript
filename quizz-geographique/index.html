@@ -252,7 +252,9 @@
       var hintEl         = document.getElementById("hintDiv");
 
       // ── Chargement des pays ──────────────────────────────
-      countrieslayer.when(function() {
+      // countrieslayer.when() résout avec la couche elle-même (pas le retour du callback)
+      // on utilise load() pour un chaînage standard de Promises
+      countrieslayer.load().then(function() {
         var q = countrieslayer.createQuery();
         q.cacheHint = true;
         q.returnGeometry = false;
