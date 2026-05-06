@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hub Lecture & Apprentissage – Bibliothèque personnelle</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #09080e;
+      --panel:   #100f18;
+      --card:    #17151f;
+      --border:  #2a2535;
+      --text:    #e8e0d5;
+      --muted:   #7a6f8a;
+      --gold:    #d4a017;
+      --gold2:   #f0c040;
+      --politique:  #c0392b;
+      --societal:   #8e44ad;
+      --economique: #27ae60;
+      --romans:     #d4a017;
+      --sciences:   #2980b9;
+      --futur:      #16a085;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: Georgia, "Times New Roman", serif; font-size: 14px; min-height: 100%; }
+
+    /* ── Header ───────────────── */
+    header {
+      background: linear-gradient(135deg, #12091a 0%, #0a0d1a 60%, #0d1209 100%);
+      padding: 28px 32px 22px; border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 28px; font-weight: 700; color: var(--gold); letter-spacing: .5px; }
+    header h1 em { font-style: italic; color: var(--gold2); }
+    header p { color: var(--muted); font-size: 13px; margin-top: 6px; font-family: sans-serif; }
+    #statsRow { display:flex; gap:24px; margin-top:18px; flex-wrap:wrap; }
+    .st { text-align:center; padding:8px 16px; background:rgba(212,160,23,.08); border:1px solid rgba(212,160,23,.2); border-radius:8px; }
+    .st .v { font-size:22px; font-weight:700; color:var(--gold2); font-family:sans-serif; }
+    .st .l { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; font-family:sans-serif; }
+
+    /* ── Toolbar ──────────────── */
+    #toolbar {
+      background: var(--panel); border-bottom: 1px solid var(--border);
+      padding: 10px 24px; display:flex; flex-wrap:wrap; align-items:center;
+      gap:10px; position:sticky; top:0; z-index:100;
+    }
+    #searchWrap { display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--border); border-radius:6px; padding:5px 12px; flex:0 0 210px; }
+    #searchWrap input { background:none; border:none; outline:none; color:var(--text); font-size:13px; width:100%; font-family:sans-serif; }
+    .tabs { display:flex; gap:3px; flex-wrap:wrap; }
+    .tab {
+      padding:5px 14px; border-radius:5px; border:1px solid var(--border);
+      background:var(--card); color:var(--muted); font-size:12px; font-weight:600;
+      cursor:pointer; transition:all .15s; white-space:nowrap; font-family:sans-serif;
+    }
+    .tab:hover { color:var(--text); }
+    .tab.on { background:var(--gold); border-color:var(--gold); color:#09080e; }
+    .themes { display:flex; gap:4px; flex-wrap:wrap; margin-left:auto; }
+    .tchip {
+      padding:3px 10px; border-radius:12px; border:1px solid transparent;
+      font-size:11px; font-weight:700; cursor:pointer; opacity:.45;
+      transition:opacity .15s; font-family:sans-serif;
+    }
+    .tchip.on { opacity:1; }
+
+    /* ── Grid ─────────────────── */
+    #grid { padding:20px 24px; }
+
+    /* ── Week layout ──────────── */
+    .weeks-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:18px; }
+    .week-card {
+      background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden;
+    }
+    .week-header { padding:14px 18px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
+    .week-header .wnum { font-size:28px; font-weight:700; color:var(--gold); font-family:sans-serif; line-height:1; }
+    .week-header .winfo h3 { font-size:15px; color:white; }
+    .week-header .winfo p  { font-size:11px; color:var(--muted); margin-top:2px; font-family:sans-serif; }
+    .week-items { padding:10px 0; }
+    .wi {
+      display:flex; align-items:flex-start; gap:10px; padding:9px 16px;
+      border-bottom:1px solid rgba(42,37,53,.7); cursor:pointer; transition:background .1s;
+    }
+    .wi:last-child { border-bottom:none; }
+    .wi:hover { background:rgba(212,160,23,.06); }
+    .wi-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+    .wi-info { flex:1; min-width:0; }
+    .wi-title { font-size:13px; color:var(--text); line-height:1.3; }
+    .wi-meta  { font-size:11px; color:var(--muted); margin-top:3px; font-family:sans-serif; }
+    .wi-time  { font-size:10px; color:var(--gold); font-family:sans-serif; font-weight:700; white-space:nowrap; }
+
+    /* ── Cards grid ───────────── */
+    .cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:16px; }
+
+    /* ── Section header ───────── */
+    .shdr { display:flex; align-items:center; gap:10px; padding:6px 0 10px; border-bottom:1px solid var(--border); margin-bottom:14px; margin-top:20px; }
+    .shdr:first-child { margin-top:0; }
+    .shdr h2 { font-size:17px; }
+    .shdr .cnt { font-size:11px; color:var(--muted); font-family:sans-serif; }
+
+    /* ── Item card ────────────── */
+    .card {
+      background:var(--card); border:1px solid var(--border); border-radius:10px;
+      padding:18px; display:flex; flex-direction:column; gap:9px;
+      transition:transform .15s, box-shadow .15s; position:relative; overflow:hidden;
+    }
+    .card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.5); }
+    .stripe { position:absolute; top:0; left:0; right:0; height:3px; border-radius:10px 10px 0 0; }
+    .ctop  { display:flex; align-items:flex-start; gap:10px; }
+    .cicon { font-size:30px; flex-shrink:0; line-height:1; }
+    .ctitles { flex:1; min-width:0; }
+    .ctitle  { font-size:14px; font-weight:700; color:white; line-height:1.3; }
+    .cauthor { font-size:11px; color:var(--muted); margin-top:2px; font-family:sans-serif; }
+    .badges  { display:flex; gap:5px; flex-wrap:wrap; }
+    .badge   { font-size:10px; font-weight:700; padding:2px 7px; border-radius:8px; font-family:sans-serif; }
+    .b-article { background:#1a1030; color:#c084fc; border:1px solid #3a2060; }
+    .b-free    { background:#0f2010; color:#4ade80; border:1px solid #1d4020; }
+    .b-cours   { background:#0a1a30; color:#60a5fa; border:1px solid #1a2a50; }
+    .b-payant  { background:#2a1a08; color:#fbbf24; border:1px solid #4a2a08; }
+    .b-time    { background:#1a1209; color:var(--gold); border:1px solid #3a2a09; }
+    .cdesc { font-size:12px; color:var(--muted); line-height:1.6; font-family:sans-serif; }
+    .cskill { font-size:11px; font-family:sans-serif; }
+    .cskill strong { color:var(--gold2); }
+    .csource { font-size:11px; color:var(--muted); font-family:sans-serif; }
+    .csource span { color:var(--text); }
+    .clink {
+      display:block; text-align:center; padding:7px; border-radius:6px;
+      border:1px solid var(--border); color:var(--muted); text-decoration:none;
+      font-size:12px; font-weight:600; transition:all .15s; margin-top:auto;
+      font-family:sans-serif;
+    }
+    .clink:hover { color:var(--gold); border-color:var(--gold); background:rgba(212,160,23,.08); }
+
+    /* ── Prix badge ───────────── */
+    .prix { font-size:11px; font-family:sans-serif; color:var(--muted); }
+    .prix strong { color:#fbbf24; }
+
+    #empty { text-align:center; padding:60px 20px; color:var(--muted); font-family:sans-serif; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📖 Hub <em>Lecture</em> & Apprentissage</h1>
+  <p style="font-family:sans-serif">Votre bibliothèque et professeur personnel — 365 jours de lecture sur 7 grandes thématiques</p>
+  <div id="statsRow">
+    <div class="st"><div class="v">12</div><div class="l">Articles</div></div>
+    <div class="st"><div class="v">8</div><div class="l">Livres gratuits</div></div>
+    <div class="st"><div class="v">5</div><div class="l">Cours</div></div>
+    <div class="st"><div class="v">30</div><div class="l">Livres payants</div></div>
+    <div class="st"><div class="v" id="sRead">0</div><div class="l">✓ Lus</div></div>
+  </div>
+</header>
+
+<div id="toolbar">
+  <div id="searchWrap"><span>🔍</span><input type="text" id="srch" placeholder="Titre, auteur, thème…"></div>
+  <div class="tabs">
+    <button class="tab on" data-tab="semaines">📅 Plan 4 semaines</button>
+    <button class="tab" data-tab="tout">Tout</button>
+    <button class="tab" data-tab="articles">📰 Articles</button>
+    <button class="tab" data-tab="gratuits">📚 Livres gratuits</button>
+    <button class="tab" data-tab="cours">🎓 Cours</button>
+    <button class="tab" data-tab="payants">💳 30 Livres payants</button>
+  </div>
+  <div class="themes" id="themeChips"></div>
+</div>
+
+<main id="grid"></main>
+
+<script>
+var THEMES = {
+  politique:  { label:"Politique",   color:"#c0392b" },
+  societal:   { label:"Sociétal",    color:"#8e44ad" },
+  economique: { label:"Économie",    color:"#27ae60" },
+  romans:     { label:"Romans",      color:"#d4a017" },
+  sciences:   { label:"Sciences",    color:"#2980b9" },
+  futur:      { label:"Futur & SF",  color:"#16a085" },
+};
+
+var ITEMS = [
+/* ═══════════════════════════════════════════════════════════════
+   ARTICLES ESSENTIELS
+══════════════════════════════════════════════════════════════ */
+{ id:"fukuyama", type:"article", theme:"politique", week:1,
+  icon:"🏛️", title:"The End of History?",
+  author:"Francis Fukuyama", year:1989, source:"Foreign Affairs",
+  time:"45 min",
+  desc:"L'article fondateur qui annonçait la victoire définitive de la démocratie libérale après la Guerre Froide. 30 ans plus tard, Fukuyama lui-même nuance sa thèse : essentiel pour comprendre pourquoi.",
+  skill:"Cadre conceptuel de la géopolitique moderne",
+  url:"https://www.foreignaffairs.com/articles/1989-06-01/end-history",
+  where:"Foreign Affairs (accès limité gratuit) · Archives universitaires",
+  prix:null },
+
+{ id:"huntington", type:"article", theme:"politique", week:1,
+  icon:"⚔️", title:"The Clash of Civilizations",
+  author:"Samuel P. Huntington", year:1993, source:"Foreign Affairs",
+  time:"50 min",
+  desc:"Thèse controversée mais incontournable : après la Guerre Froide, les conflits majeurs opposeront des civilisations, non des nations. Indispensable pour décoder l'actualité géopolitique.",
+  skill:"Grille de lecture des conflits du XXIe siècle",
+  url:"https://www.foreignaffairs.com/articles/united-states/1993-06-01/clash-civilizations",
+  where:"Foreign Affairs · Academic Earth · Résumé sur Wikipedia",
+  prix:null },
+
+{ id:"mlk", type:"article", theme:"societal", week:2,
+  icon:"✊", title:"Letter from Birmingham Jail",
+  author:"Martin Luther King Jr.", year:1963, source:"Atlantic/Domaine public",
+  time:"30 min",
+  desc:"L'un des textes politiques les plus importants du XXe siècle. MLK répond à ses critiques depuis sa cellule : un cours magistral sur la désobéissance civile, la justice et l'urgence morale.",
+  skill:"Pensée politique · Argumentation morale · Désobéissance civile",
+  url:"https://www.theatlantic.com/magazine/archive/1963/08/letter-from-birmingham-jail/657230/",
+  where:"The Atlantic (gratuit) · Stanford Martin Luther King Papers",
+  prix:null },
+
+{ id:"uninhabitable", type:"article", theme:"futur", week:3,
+  icon:"🌡️", title:"The Uninhabitable Earth",
+  author:"David Wallace-Wells", year:2017, source:"New York Magazine",
+  time:"60 min",
+  desc:"L'article scientifique grand public le plus lu de la décennie. Un scénario détaillé et documenté des effets du changement climatique à +2°, +3° et +4°. Anxiogène mais nécessaire.",
+  skill:"Compréhension systémique du dérèglement climatique",
+  url:"https://nymag.com/intelligencer/2017/07/climate-change-earth-too-hot-for-humans.html",
+  where:"New York Magazine (gratuit en ligne)",
+  prix:null },
+
+{ id:"great-filter", type:"article", theme:"futur", week:3,
+  icon:"🌌", title:"The Great Filter — Are We Almost Past It?",
+  author:"Robin Hanson", year:1998, source:"George Mason University",
+  time:"25 min",
+  desc:"Pourquoi l'univers semble-t-il vide de civilisations intelligentes ? Hanson propose l'idée d'un 'Grand Filtre' — une barrière presque impossible à franchir. L'article le plus fascinant sur la condition humaine.",
+  skill:"Pensée probabiliste · Paradoxe de Fermi · Risques existentiels",
+  url:"https://mason.gmu.edu/~rhanson/greatfilter.html",
+  where:"Site de Robin Hanson, George Mason University (gratuit)",
+  prix:null },
+
+{ id:"paul-graham", type:"article", theme:"economique", week:2,
+  icon:"💡", title:"How to Do Great Work",
+  author:"Paul Graham", year:2023, source:"paulgraham.com",
+  time:"60 min",
+  desc:"L'essai le plus complet jamais écrit sur la créativité et l'excellence. Fondateur de Y Combinator, Graham distille 30 ans d'observation des meilleurs créateurs. Long mais chaque paragraphe est dense.",
+  skill:"Méthode de travail · Créativité · Excellence personnelle",
+  url:"https://www.paulgraham.com/greatwork.html",
+  where:"paulgraham.com (gratuit, toujours disponible)",
+  prix:null },
+
+{ id:"feynman-essay", type:"article", theme:"sciences", week:3,
+  icon:"⚛️", title:"The Pleasure of Finding Things Out",
+  author:"Richard Feynman", year:1981, source:"BBC Horizon / YouTube",
+  time:"45 min",
+  desc:"Conférence-interview mythique de Feynman sur pourquoi la science enrichit l'émerveillement plutôt que de le détruire. Vidéo disponible sur YouTube, transcript en ligne.",
+  skill:"Épistémologie · Curiosité scientifique · Méthode de pensée",
+  url:"https://www.youtube.com/watch?v=nYg6jzotiAc",
+  where:"YouTube (gratuit) · Transcript sur openculture.com",
+  prix:null },
+
+{ id:"le-guin", type:"article", theme:"societal", week:4,
+  icon:"🌹", title:"The Ones Who Walk Away from Omelas",
+  author:"Ursula K. Le Guin", year:1973, source:"Nouvelle SF",
+  time:"20 min",
+  desc:"Nouvelle de 8 pages parmi les plus importantes de la SF. Une utopie parfaite dont le bonheur repose sur la souffrance d'un enfant. Un dilemme moral que vous ne pourrez pas oublier.",
+  skill:"Éthique · Utilitarisme · Contrat social",
+  url:"https://shsdavisapes.pbworks.com/f/Omelas.pdf",
+  where:"PDF légal disponible via diverses universités · Archive.org",
+  prix:null },
+
+{ id:"asimov-last", type:"article", theme:"futur", week:4,
+  icon:"🤖", title:"The Last Question",
+  author:"Isaac Asimov", year:1956, source:"Nouvelle SF",
+  time:"25 min",
+  desc:"La nouvelle préférée d'Asimov lui-même. En 10 pages, il couvre 10 milliards d'années d'histoire humaine autour d'une seule question posée à une IA. Stupéfiante.",
+  skill:"Pensée long-termiste · Énergie · Entropie · IA",
+  url:"https://www.multivax.com/last_question.html",
+  where:"multivax.com (gratuit) · Traductions françaises sur Archive.org",
+  prix:null },
+
+{ id:"tocqueville-art", type:"article", theme:"politique", week:1,
+  icon:"🗽", title:"De la Démocratie en Amérique — Extraits choisis",
+  author:"Alexis de Tocqueville", year:1835, source:"Domaine public",
+  time:"40 min",
+  desc:"Les passages sur la tyrannie de la majorité, le despotisme doux et l'individualisme restent d'une acuité absolue en 2025. Lisez les chapitres IV et V du tome II en priorité.",
+  skill:"Théorie politique · Mécanique des démocraties",
+  url:"https://www.gutenberg.org/ebooks/816",
+  where:"Project Gutenberg (gratuit, domaine public)",
+  prix:null },
+
+{ id:"piketty-article", type:"article", theme:"economique", week:2,
+  icon:"📊", title:"Capital et idéologie — Introduction",
+  author:"Thomas Piketty", year:2019, source:"Éditions du Seuil",
+  time:"35 min",
+  desc:"Piketty met gratuitement en ligne l'introduction de son œuvre majeure. Il y explique comment chaque société construit un récit idéologique pour justifier ses inégalités.",
+  skill:"Économie politique · Inégalités · Histoire économique",
+  url:"https://www.seuil.com/ouvrage/capital-et-ideologie-thomas-piketty/9782021338041",
+  where:"piketty.pse.ens.fr (données et intro gratuites) · Seuil.com",
+  prix:null },
+
+{ id:"darwin-art", type:"article", theme:"sciences", week:3,
+  icon:"🧬", title:"L'Origine des espèces — Introduction + Chapitre 1",
+  author:"Charles Darwin", year:1859, source:"Domaine public",
+  time:"40 min",
+  desc:"La première page de l'introduction de Darwin est l'un des meilleurs textes scientifiques jamais écrits. Lire ce que Darwin lui-même dit de sa théorie : plus puissant que n'importe quel résumé.",
+  skill:"Évolution · Méthode scientifique · Pensée darwinienne",
+  url:"https://www.gutenberg.org/ebooks/1228",
+  where:"Project Gutenberg · Litteratureaudio.com (version audio française)",
+  prix:null },
+
+/* ═══════════════════════════════════════════════════════════════
+   LIVRES GRATUITS (domaine public / PDF légaux)
+══════════════════════════════════════════════════════════════ */
+{ id:"le-prince", type:"gratuit", theme:"politique", week:1,
+  icon:"👑", title:"Le Prince",
+  author:"Nicolas Machiavel", year:1532, source:"Project Gutenberg",
+  time:"4h",
+  desc:"Le manuel de politique le plus influent de l'histoire. Machiavel décrit le pouvoir tel qu'il est, non tel qu'il devrait être. Chaque chapitre est une leçon condensée de réalisme politique.",
+  skill:"Réalisme politique · Stratégie · Pouvoir",
+  url:"https://www.gutenberg.org/ebooks/1232",
+  where:"Project Gutenberg (EN) · Wikisource (FR) · Litteratureaudio.com (audio)",
+  prix:null },
+
+{ id:"machine-temps", type:"gratuit", theme:"futur", week:4,
+  icon:"⏳", title:"La Machine à explorer le temps",
+  author:"H.G. Wells", year:1895, source:"Project Gutenberg",
+  time:"3h",
+  desc:"Le roman fondateur du voyage dans le temps. Wells imagine l'an 802 701 et deux races humaines aux antipodes — une métaphore de la lutte des classes d'une modernité absolue.",
+  skill:"Imagination prospective · Critique sociale",
+  url:"https://www.gutenberg.org/ebooks/35",
+  where:"Project Gutenberg · Litteratureaudio.com · Archive.org",
+  prix:null },
+
+{ id:"guerre-mondes", type:"gratuit", theme:"futur", week:4,
+  icon:"👽", title:"La Guerre des Mondes",
+  author:"H.G. Wells", year:1898, source:"Project Gutenberg",
+  time:"5h",
+  desc:"L'invasion extraterrestre comme miroir de l'impérialisme colonial. Wells met les Anglais dans la peau des peuples colonisés. Le texte fondateur de la SF telle qu'on la connaît.",
+  skill:"SF · Critique coloniale · Humilité civilisationnelle",
+  url:"https://www.gutenberg.org/ebooks/36",
+  where:"Project Gutenberg · Litteratureaudio.com",
+  prix:null },
+
+{ id:"frankenstein", type:"gratuit", theme:"sciences", week:3,
+  icon:"⚡", title:"Frankenstein ou le Prométhée moderne",
+  author:"Mary Shelley", year:1818, source:"Project Gutenberg",
+  time:"6h",
+  desc:"Le premier roman de SF, écrit par une femme de 18 ans. Frankenstein pose les questions sur l'éthique scientifique et la responsabilité du créateur envers sa création — brûlant d'actualité à l'ère de l'IA.",
+  skill:"Éthique des sciences · Responsabilité · IA (miroir)",
+  url:"https://www.gutenberg.org/ebooks/84",
+  where:"Project Gutenberg · Litteratureaudio.com",
+  prix:null },
+
+{ id:"origine-especes", type:"gratuit", theme:"sciences", week:3,
+  icon:"🦕", title:"De l'origine des espèces",
+  author:"Charles Darwin", year:1859, source:"Project Gutenberg",
+  time:"15h (extraits conseillés : 3h)",
+  desc:"La sélection naturelle expliquée par Darwin lui-même. Lisez l'introduction, le chapitre IV (sélection naturelle) et la conclusion. La clarté d'écriture est stupéfiante pour un texte scientifique.",
+  skill:"Pensée évolutionnaire · Biologie · Méthode scientifique",
+  url:"https://www.gutenberg.org/ebooks/1228",
+  where:"Project Gutenberg · Litteratureaudio.com",
+  prix:null },
+
+{ id:"zarathoustra", type:"gratuit", theme:"societal", week:2,
+  icon:"⚡", title:"Ainsi parlait Zarathoustra",
+  author:"Friedrich Nietzsche", year:1883, source:"Project Gutenberg",
+  time:"8h (extraits conseillés : 2h)",
+  desc:"La prose la plus dense et la plus belle de la philosophie. Lisez en priorité : Le Prologue, Des trois métamorphoses, De la nouvelle idole. Lire Nietzsche, c'est apprendre à penser contre soi-même.",
+  skill:"Philosophie · Surhomme · Critique des valeurs · Écriture",
+  url:"https://www.gutenberg.org/ebooks/1998",
+  where:"Project Gutenberg · Wikisource (FR) · Litteratureaudio.com",
+  prix:null },
+
+{ id:"manifeste", type:"gratuit", theme:"economique", week:2,
+  icon:"✊", title:"Le Manifeste du Parti Communiste",
+  author:"Marx & Engels", year:1848, source:"Project Gutenberg",
+  time:"1h30",
+  desc:"Que l'on soit d'accord ou non, ce texte de 50 pages a changé l'histoire. Lire Marx dans le texte pour comprendre les tensions du capitalisme et ne plus se fier aux caricatures.",
+  skill:"Économie politique · Histoire des idées · Analyse critique",
+  url:"https://www.gutenberg.org/ebooks/61",
+  where:"Project Gutenberg · Marxists.org (FR gratuit)",
+  prix:null },
+
+{ id:"discours-methode", type:"gratuit", theme:"sciences", week:3,
+  icon:"🧪", title:"Discours de la Méthode",
+  author:"René Descartes", year:1637, source:"Domaine public",
+  time:"2h",
+  desc:"'Je pense donc je suis.' Descartes fonde la méthode scientifique moderne en partant du doute absolu. Court (6 parties), dense, et toujours d'une pertinence totale pour apprendre à penser.",
+  skill:"Méthode · Épistémologie · Pensée critique",
+  url:"https://www.gutenberg.org/ebooks/59",
+  where:"Project Gutenberg · Wikisource (texte original FR)",
+  prix:null },
+
+/* ═══════════════════════════════════════════════════════════════
+   COURS EN LIGNE GRATUITS
+══════════════════════════════════════════════════════════════ */
+{ id:"sandel-justice", type:"cours", theme:"politique", week:1,
+  icon:"⚖️", title:"Justice — What's the Right Thing to Do?",
+  author:"Michael Sandel · Harvard University", year:2009, source:"edX / YouTube",
+  time:"24h (12 épisodes de 2h)",
+  desc:"Le cours le plus suivi de l'histoire de Harvard, enfin en ligne. Sandel explore Kant, Mill, Rawls et Aristote à travers des cas réels. Les 50 premières minutes changent votre façon de penser l'éthique.",
+  skill:"Philosophie politique · Éthique · Justice sociale",
+  url:"https://www.edx.org/learn/ethics/harvard-university-justice",
+  where:"edX (audit gratuit) · YouTube : rechercher 'Harvard Justice Sandel'",
+  prix:null },
+
+{ id:"yale-wellbeing", type:"cours", theme:"societal", week:2,
+  icon:"😊", title:"The Science of Well-Being",
+  author:"Laurie Santos · Yale University", year:2018, source:"Coursera",
+  time:"19h (10 semaines)",
+  desc:"Le cours le plus populaire de l'histoire de Yale, suivi par 4 millions de personnes. Santos déconstruit scientifiquement ce que nous croyons rendre heureux. Pas un cours de développement perso : de la psychologie cognitive.",
+  skill:"Psychologie du bonheur · Biais cognitifs · Habitudes",
+  url:"https://www.coursera.org/learn/the-science-of-well-being",
+  where:"Coursera (audit gratuit, sans certificat)",
+  prix:null },
+
+{ id:"yale-politics", type:"cours", theme:"politique", week:1,
+  icon:"🌍", title:"Power and Politics in Today's World",
+  author:"Ian Shapiro · Yale University", year:2019, source:"Yale Open Courses / YouTube",
+  time:"25h (25 conférences de 1h)",
+  desc:"Un panorama magistral de la politique mondiale depuis 1989 : fin du communisme, montée des inégalités, islamisme, démocraties en crise. Dense, factuel, brillant.",
+  skill:"Géopolitique · Science politique · Monde contemporain",
+  url:"https://oyc.yale.edu/political-science/plsc-118",
+  where:"Yale Open Courses (gratuit) · YouTube : 'Shapiro Power and Politics Yale'",
+  prix:null },
+
+{ id:"mit-astro", type:"cours", theme:"sciences", week:3,
+  icon:"🔭", title:"Introduction to Astrophysics",
+  author:"MIT OpenCourseWare", year:2016, source:"MIT OCW",
+  time:"30h (lectures + lectures notes)",
+  desc:"Le cours complet de physique stellaire du MIT en libre accès. Naissance des étoiles, trous noirs, cosmologie. Niveau avancé mais les premières conférences sont accessibles à tous.",
+  skill:"Astrophysique · Cosmologie · Méthode scientifique",
+  url:"https://ocw.mit.edu/courses/8-282j-introduction-to-astronomy-spring-2006/",
+  where:"MIT OpenCourseWare (totalement gratuit)",
+  prix:null },
+
+{ id:"edinburgh-philo", type:"cours", theme:"societal", week:2,
+  icon:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", title:"Introduction to Philosophy",
+  author:"Université d'Édimbourg", year:2020, source:"Coursera",
+  time:"18h (6 semaines)",
+  desc:"De Platon à Searle en passant par Hume. Épistémologie, philosophie de l'esprit, éthique, et philosophie politique. La meilleure introduction en anglais accessible, avec sous-titres FR.",
+  skill:"Raisonnement critique · Épistémologie · Philosophie",
+  url:"https://www.coursera.org/learn/philosophy",
+  where:"Coursera (audit gratuit, sans certificat)",
+  prix:null },
+
+/* ═══════════════════════════════════════════════════════════════
+   BIBLIOTHÈQUE PAYANTE — 30 LIVRES INCONTOURNABLES
+══════════════════════════════════════════════════════════════ */
+/* ── Politique (6) ── */
+{ id:"sapiens", type:"payant", theme:"politique", week:null,
+  icon:"🦴", title:"Sapiens — Une brève histoire de l'humanité",
+  author:"Yuval Noah Harari", year:2011,
+  time:"12h", prix:"~12 € Kindle / ~9 € poche",
+  desc:"Le livre de culture générale le plus important du XXIe siècle. Harari retrace 70 000 ans d'histoire humaine avec une clarté stupéfiante. Incontournable avant tout autre lecture.",
+  skill:"Cadre historique global · Macro-histoire · Condition humaine",
+  url:null, where:"Amazon · Fnac · Votre librairie" },
+
+{ id:"why-nations-fail", type:"payant", theme:"politique", week:null,
+  icon:"🏚️", title:"Why Nations Fail",
+  author:"Acemoglu & Robinson", year:2012,
+  time:"14h", prix:"~14 € Kindle / ~12 € poche",
+  desc:"Pourquoi certains pays sont riches et d'autres pauvres ? La réponse en 500 pages : les institutions. L'argument le plus solide jamais construit sur les inégalités géographiques.",
+  skill:"Économie institutionnelle · Développement · Géopolitique",
+  url:null, where:"Amazon · Fnac · Kobo" },
+
+{ id:"origins-totalitarianism", type:"payant", theme:"politique", week:null,
+  icon:"🔱", title:"Les Origines du totalitarisme",
+  author:"Hannah Arendt", year:1951,
+  time:"25h", prix:"~15 € poche",
+  desc:"L'analyse la plus complète des conditions d'émergence du nazisme et du stalinisme. Arendt est la boussole morale du siècle. Difficile, mais transformateur.",
+  skill:"Politique · Totalitarisme · Éthique · Résistance",
+  url:null, where:"Gallimard · Amazon · Fnac" },
+
+{ id:"on-tyranny", type:"payant", theme:"politique", week:null,
+  icon:"✊", title:"On Tyranny — Twenty Lessons from the Twentieth Century",
+  author:"Timothy Snyder", year:2017,
+  time:"2h", prix:"~8 € Kindle",
+  desc:"20 leçons en 128 pages pour résister à l'autoritarisme. Snyder (historien de la Shoah) tire les leçons du XXe siècle. Parfait pour commencer — ou à offrir.",
+  skill:"Résistance politique · Citoyenneté · Histoire",
+  url:null, where:"Amazon · Fnac" },
+
+{ id:"21-lessons", type:"payant", theme:"politique", week:null,
+  icon:"📡", title:"21 Leçons pour le XXIe siècle",
+  author:"Yuval Noah Harari", year:2018,
+  time:"10h", prix:"~12 € Kindle / ~9 € poche",
+  desc:"Harari aborde les défis actuels : travail, IA, démocratie, terrorisme, religion. Plus politique que Sapiens, plus ancré dans l'actualité. Idéal après Sapiens.",
+  skill:"Prospective · Politique contemporaine · IA société",
+  url:null, where:"Amazon · Fnac · Votre librairie" },
+
+{ id:"how-democracies-die", type:"payant", theme:"politique", week:null,
+  icon:"🗳️", title:"Comment les démocraties meurent",
+  author:"Levitsky & Ziblatt", year:2018,
+  time:"8h", prix:"~12 € Kindle / ~10 € poche",
+  desc:"Deux professeurs de Harvard montrent que les démocraties ne meurent plus sous les tanks, mais de l'intérieur. Un manuel pour reconnaître les signaux d'alarme.",
+  skill:"Science politique · Démocratie · Garde-fous institutionnels",
+  url:null, where:"Amazon · Fnac" },
+
+/* ── Sociétal (6) ── */
+{ id:"thinking-fast", type:"payant", theme:"societal", week:null,
+  icon:"🧠", title:"Système 1 / Système 2 — La double pensée",
+  author:"Daniel Kahneman", year:2011,
+  time:"14h", prix:"~12 € Kindle / ~10 € poche",
+  desc:"Économiste Nobel, Kahneman démontre que notre cerveau fonctionne avec deux systèmes : rapide/intuitif et lent/rationnel. Comprendre nos biais change radicalement la prise de décision.",
+  skill:"Biais cognitifs · Prise de décision · Rationalité",
+  url:null, where:"Amazon · Fnac · Kobo" },
+
+{ id:"invisible-women", type:"payant", theme:"societal", week:null,
+  icon:"♀️", title:"Invisible Women — Data Bias in a World Designed for Men",
+  author:"Caroline Criado Perez", year:2019,
+  time:"10h", prix:"~12 € Kindle",
+  desc:"Perez documente la façon dont nos données ignorent systématiquement les femmes — des crash tests aux médicaments en passant par l'urbanisme. Prix Royal Society Science Book 2019.",
+  skill:"Genre · Data · Biais systémiques · Politique publique",
+  url:null, where:"Amazon · Fnac" },
+
+{ id:"tipping-point", type:"payant", theme:"societal", week:null,
+  icon:"🔺", title:"Le Point de Bascule",
+  author:"Malcolm Gladwell", year:2000,
+  time:"6h", prix:"~9 € Kindle / ~8 € poche",
+  desc:"Comment une idée, un produit ou un comportement devient-il épidémique ? Gladwell identifie trois facteurs : les connecteurs, les mavens, les vendeurs. Sa lecture la plus influente.",
+  skill:"Dynamiques sociales · Diffusion · Marketing · Épidémies",
+  url:null, where:"Amazon · Fnac" },
+
+{ id:"status-game", type:"payant", theme:"societal", week:null,
+  icon:"🏆", title:"The Status Game",
+  author:"Will Storr", year:2021,
+  time:"8h", prix:"~12 € Kindle",
+  desc:"Le livre le plus important sur la psychologie sociale de la dernière décennie. Storr explique que la recherche de statut est le moteur principal de tout comportement humain. Réseaux sociaux, politique, religion.",
+  skill:"Psychologie sociale · Réseaux sociaux · Comportement",
+  url:null, where:"Amazon (version anglaise)" },
+
+{ id:"outliers", type:"payant", theme:"societal", week:null,
+  icon:"🌟", title:"Outliers — Ceux qui réussissent",
+  author:"Malcolm Gladwell", year:2008,
+  time:"6h", prix:"~9 € Kindle",
+  desc:"La règle des 10 000 heures, mais aussi : le contexte, la chance, le mois de naissance. Gladwell déconstruit le mythe du mérite pur et montre les structures cachées derrière la réussite.",
+  skill:"Sociologie du succès · Biais de survivant · Contexte",
+  url:null, where:"Amazon · Fnac" },
+
+{ id:"freakonomics", type:"payant", theme:"societal", week:null,
+  icon:"🔍", title:"Freakonomics",
+  author:"Levitt & Dubner", year:2005,
+  time:"5h", prix:"~8 € Kindle",
+  desc:"L'économie appliquée à des questions inattendues : les dealers de drogue sont-ils vraiment riches ? Pourquoi les sumo trichent-ils ? Une leçon sur les incitations qui gouvernent tout.",
+  skill:"Économie comportementale · Pensée non-conventionnelle",
+  url:null, where:"Amazon · Fnac" },
+
+/* ── Économie (5) ── */
+{ id:"capital-21", type:"payant", theme:"economique", week:null,
+  icon:"📈", title:"Le Capital au XXIe siècle",
+  author:"Thomas Piketty", year:2013,
+  time:"25h (extraits conseillés : 5h)", prix:"~15 € poche",
+  desc:"La démonstration statistique la plus rigoureuse jamais faite que le capital croît plus vite que l'économie, creusant les inégalités. Lisez l'introduction et les chapitres 1, 10 et 15 au minimum.",
+  skill:"Économie · Inégalités · Histoire économique",
+  url:null, where:"Seuil · Amazon · Fnac" },
+
+{ id:"psych-money", type:"payant", theme:"economique", week:null,
+  icon:"💰", title:"La Psychologie de l'Argent",
+  author:"Morgan Housel", year:2020,
+  time:"5h", prix:"~10 € Kindle / ~12 € poche",
+  desc:"Le meilleur livre de finance personnelle jamais écrit. Housel ne parle pas de chiffres mais de comportements : humilité, patience, aversion au risque. 19 courts chapitres, chacun mémorable.",
+  skill:"Finance personnelle · Biais · Décisions long-terme",
+  url:null, where:"Amazon · Fnac" },
+
+{ id:"poor-economics", type:"payant", theme:"economique", week:null,
+  icon:"🌍", title:"Repenser la pauvreté",
+  author:"Banerjee & Duflo", year:2011,
+  time:"10h", prix:"~10 € poche",
+  desc:"Prix Nobel 2019. Banerjee et Duflo utilisent des expériences contrôlées randomisées pour comprendre la pauvreté de l'intérieur. Révolutionne la façon d'évaluer l'aide au développement.",
+  skill:"Économie du développement · Méthode expérimentale",
+  url:null, where:"Seuil · Amazon · Fnac" },
+
+{ id:"big-short", type:"payant", theme:"economique", week:null,
+  icon:"💥", title:"The Big Short",
+  author:"Michael Lewis", year:2010,
+  time:"7h", prix:"~9 € Kindle",
+  desc:"Comment une poignée de personnes ont prévu la crise de 2008 et en ont profité. Lewis rend la finance compréhensible et humaine. Meilleur roman non-fiction sur le capitalisme financier.",
+  skill:"Finance · Crise 2008 · Système bancaire",
+  url:null, where:"Amazon · Fnac" },
+
+{ id:"flash-boys", type:"payant", theme:"economique", week:null,
+  icon:"⚡", title:"Flash Boys",
+  author:"Michael Lewis", year:2014,
+  time:"7h", prix:"~9 € Kindle",
+  desc:"Comment le trading haute fréquence a riggé les marchés financiers contre tous les investisseurs ordinaires. Lewis à son meilleur : une enquête haletante sur Wall Street.",
+  skill:"Finance algorithmique · Marchés · Trading HFT",
+  url:null, where:"Amazon · Fnac" },
+
+/* ── Romans cultes (6) ── */
+{ id:"1984", type:"payant", theme:"romans", week:null,
+  icon:"👁️", title:"1984",
+  author:"George Orwell", year:1949,
+  time:"9h", prix:"~6 € poche Folio",
+  desc:"Le roman politique le plus important du XXe siècle. Orwell invente la novlangue, le Ministère de la Vérité, Big Brother. Lire Orwell en 2025, c'est lire le présent.",
+  skill:"Totalitarisme · Manipulation · Liberté",
+  url:null, where:"Gallimard Folio · Amazon · Fnac · Votre librairie" },
+
+{ id:"brave-new-world", type:"payant", theme:"romans", week:null,
+  icon:"💊", title:"Le Meilleur des mondes",
+  author:"Aldous Huxley", year:1932,
+  time:"7h", prix:"~6 € poche",
+  desc:"Dystopie inverse d'Orwell : pas la terreur, mais le plaisir comme contrôle. Le soma, les castes, le conditionnement. Plus proche de notre réalité que 1984 selon Neil Postman.",
+  skill:"Consommation · Contrôle social · Biotechnologie",
+  url:null, where:"Pockets · Amazon · Fnac" },
+
+{ id:"great-gatsby", type:"payant", theme:"romans", week:null,
+  icon:"🥂", title:"Gatsby le Magnifique",
+  author:"F. Scott Fitzgerald", year:1925,
+  time:"5h", prix:"~6 € poche",
+  desc:"Le roman américain par excellence. Fitzgerald dissèque le Rêve Américain, la richesse, la nostalgie et la désillusion. Écriture absolument parfaite — chaque phrase est un chef-d'œuvre.",
+  skill:"Critique sociale · Écriture · Rêve américain",
+  url:null, where:"Folio · Amazon · aussi disponible en domaine public en anglais" },
+
+{ id:"dune", type:"payant", theme:"romans", week:null,
+  icon:"🏜️", title:"Dune",
+  author:"Frank Herbert", year:1965,
+  time:"20h", prix:"~9 € poche",
+  desc:"Le seigneur des anneaux de la SF. Écologie, religion, pouvoir, politique impériale — Herbert a tout prévu. Le roman le plus influent de la SF, étudié dans les facs de politique.",
+  skill:"SF · Politique · Écologie · Complexité",
+  url:null, where:"Pocket · Amazon · Fnac · Votre librairie" },
+
+{ id:"foundation", type:"payant", theme:"romans", week:null,
+  icon:"📐", title:"Fondation",
+  author:"Isaac Asimov", year:1951,
+  time:"6h", prix:"~7 € poche",
+  desc:"Une civilisation galactique en déclin. Un mathématicien prédit l'avenir. Asimov invente la 'psychohistoire' — la modélisation du comportement des masses. Une réflexion sur la science et le pouvoir.",
+  skill:"SF · Civilisation · Prévision · Science",
+  url:null, where:"Pocket · Amazon · Fnac" },
+
+{ id:"catcher-rye", type:"payant", theme:"romans", week:null,
+  icon:"🧢", title:"L'Attrape-cœurs",
+  author:"J.D. Salinger", year:1951,
+  time:"6h", prix:"~7 € poche",
+  desc:"Le roman de formation le plus influent du XXe siècle. Holden Caulfield, 16 ans, en rupture avec un monde 'poseur'. La voix narrative la plus originale de la littérature américaine.",
+  skill:"Identité · Adolescence · Alienation · Narration",
+  url:null, where:"Pocket · Amazon · Fnac" },
+
+/* ── Sciences (4) ── */
+{ id:"brief-history", type:"payant", theme:"sciences", week:null,
+  icon:"🌌", title:"Une Brève Histoire du temps",
+  author:"Stephen Hawking", year:1988,
+  time:"6h", prix:"~8 € poche",
+  desc:"Hawking rend la physique théorique accessible à tous. Big Bang, trous noirs, flèche du temps, théorie du tout. Le livre de vulgarisation scientifique le plus vendu de l'histoire.",
+  skill:"Cosmologie · Physique quantique · Temps",
+  url:null, where:"Flammarion · Amazon · Fnac" },
+
+{ id:"feynman-jokes", type:"payant", theme:"sciences", week:null,
+  icon:"😄", title:"Vous voulez rire, Monsieur Feynman ?",
+  author:"Richard Feynman", year:1985,
+  time:"7h", prix:"~9 € poche",
+  desc:"Autobiographie de Feynman, prix Nobel de physique : bohémien, joueur de bongo, craqueur de coffres-forts. Le plus grand physicien américain du XXe siècle raconté de l'intérieur. Impossible à lâcher.",
+  skill:"Curiosité · Méthode scientifique · Pensée latérale",
+  url:null, where:"Points Sciences · Amazon · Fnac" },
+
+{ id:"the-gene", type:"payant", theme:"sciences", week:null,
+  icon:"🧬", title:"The Gene — An Intimate History",
+  author:"Siddhartha Mukherjee", year:2016,
+  time:"15h", prix:"~12 € Kindle",
+  desc:"L'histoire du gène depuis Mendel jusqu'à CRISPR. Mukherjee est un conteur exceptionnel — il entremêle science, éthique et politique. Essentiel avant d'ouvrir n'importe quel débat sur la bioéthique.",
+  skill:"Génétique · CRISPR · Bioéthique",
+  url:null, where:"Amazon (version anglaise)" },
+
+{ id:"body", type:"payant", theme:"sciences", week:null,
+  icon:"🫀", title:"Le Corps — Guide pour les occupants",
+  author:"Bill Bryson", year:2019,
+  time:"12h", prix:"~10 € poche",
+  desc:"Bryson explore le corps humain avec humour et érudition. Du microbiome au cerveau en passant par le système immunitaire. La vulgarisation médicale la plus accessible et divertissante qui soit.",
+  skill:"Biologie humaine · Santé · Médecine",
+  url:null, where:"Payot · Amazon · Fnac" },
+
+/* ── Futur & SF (3) ── */
+{ id:"homo-deus", type:"payant", theme:"futur", week:null,
+  icon:"🔮", title:"Homo Deus — Une brève histoire du futur",
+  author:"Yuval Noah Harari", year:2015,
+  time:"11h", prix:"~12 € Kindle / ~9 € poche",
+  desc:"La suite de Sapiens projetée dans le futur : IA, biotechnologies, data-religion. Harari prédit que l'humanisme pourrait céder face au dataïsme. Provocateur et brillant.",
+  skill:"Prospective · IA · Transhumanisme · Politique future",
+  url:null, where:"Albin Michel · Amazon · Fnac" },
+
+{ id:"singularity", type:"payant", theme:"futur", week:null,
+  icon:"🤖", title:"The Singularity Is Near",
+  author:"Ray Kurzweil", year:2005,
+  time:"20h", prix:"~12 € Kindle",
+  desc:"La vision la plus radicale de l'avenir technologique. Kurzweil prédit l'accélération exponentielle et la fusion homme-machine. Que l'on y croie ou non, indispensable pour comprendre Silicon Valley.",
+  skill:"IA · Transhumanisme · Technologie exponentielle",
+  url:null, where:"Amazon (version anglaise)" },
+
+{ id:"neuromancer", type:"payant", theme:"futur", week:null,
+  icon:"💾", title:"Neuromancien",
+  author:"William Gibson", year:1984,
+  time:"8h", prix:"~7 € poche",
+  desc:"Le roman fondateur du cyberpunk. Gibson invente le cyberespace et la matrice en 1984 — un an après Orwell écrit 1984. L'IA, les hackers, les mégacorporations : le présent anticipé.",
+  skill:"SF · Cyberpunk · IA · Dystopie technologique",
+  url:null, where:"J'ai Lu · Amazon · Fnac" },
+];
+
+/* ── Plan 4 semaines ──────────────────────────── */
+var WEEKS = [
+  { num:1, title:"Politique & Pouvoir", focus:"Comprendre les structures du pouvoir politique",
+    ids:["fukuyama","huntington","tocqueville-art","le-prince","sandel-justice","yale-politics","on-tyranny","sapiens"] },
+  { num:2, title:"Société, Économie & Idées",  focus:"Décoder la mécanique sociale et économique",
+    ids:["mlk","paul-graham","piketty-article","zarathoustra","manifeste","yale-wellbeing","edinburgh-philo","thinking-fast","psych-money","capital-21"] },
+  { num:3, title:"Sciences & Futur",           focus:"Comprendre le monde physique et ce qui nous attend",
+    ids:["uninhabitable","great-filter","feynman-essay","darwin-art","frankenstein","origine-especes","discours-methode","mit-astro","brief-history","feynman-jokes"] },
+  { num:4, title:"Romans, SF & Synthèse",      focus:"Fiction comme outil de pensée + bilan personnel",
+    ids:["le-guin","asimov-last","machine-temps","guerre-mondes","1984","brave-new-world","dune","homo-deus"] },
+];
+
+/* ── LocalStorage ────────────────────────────── */
+var READ_KEY = "rhub_read";
+function loadRead() { try { return JSON.parse(localStorage.getItem(READ_KEY)||"[]"); } catch(e){ return []; } }
+function saveRead(r){ localStorage.setItem(READ_KEY, JSON.stringify(r)); }
+var readSet = loadRead();
+
+/* ── State ───────────────────────────────────── */
+var st = { tab:"semaines", theme:"all", q:"" };
+
+/* ── Theme chips ─────────────────────────────── */
+function initChips() {
+  var el = document.getElementById("themeChips");
+  var all = document.createElement("button");
+  all.className = "tchip on"; all.setAttribute("data-th","all");
+  all.textContent = "Tous thèmes"; all.style.border = "1px solid #555"; all.style.color = "#ccc";
+  all.addEventListener("click", function(){ setTheme("all"); });
+  el.appendChild(all);
+  Object.keys(THEMES).forEach(function(k) {
+    var b = document.createElement("button");
+    b.className = "tchip"; b.setAttribute("data-th",k);
+    b.textContent = THEMES[k].label;
+    b.style.color = THEMES[k].color; b.style.border = "1px solid " + THEMES[k].color + "60";
+    b.addEventListener("click", function(){ setTheme(k); });
+    el.appendChild(b);
+  });
+}
+function setTheme(t) {
+  st.theme = t;
+  document.querySelectorAll(".tchip").forEach(function(c){ c.classList.toggle("on", c.getAttribute("data-th") === t); });
+  render();
+}
+
+/* ── Helpers ─────────────────────────────────── */
+var TYPE_LABELS = { article:"📰 Article", gratuit:"📚 Livre gratuit", cours:"🎓 Cours", payant:"💳 Livre payant" };
+var TYPE_BADGE  = { article:"b-article", gratuit:"b-free", cours:"b-cours", payant:"b-payant" };
+function matchSearch(s) {
+  if (!st.q) return true;
+  var q = st.q.toLowerCase();
+  return [s.title,s.author,s.desc,s.skill].some(function(t){ return (t||"").toLowerCase().includes(q); });
+}
+function matchTheme(s) { return st.theme === "all" || s.theme === st.theme; }
+function matchTab(s) {
+  if (st.tab === "tout")     return true;
+  if (st.tab === "articles") return s.type === "article";
+  if (st.tab === "gratuits") return s.type === "gratuit";
+  if (st.tab === "cours")    return s.type === "cours";
+  if (st.tab === "payants")  return s.type === "payant";
+  return true;
+}
+
+/* ── Card HTML ───────────────────────────────── */
+function cardHTML(s) {
+  var col = THEMES[s.theme].color;
+  var isRead = readSet.includes(s.id);
+  return '<div class="card" id="c-'+s.id+'" style="'+(isRead?'opacity:.55;':'')+'">'
+    + '<div class="stripe" style="background:'+col+'"></div>'
+    + '<div class="ctop">'
+    +   '<div class="cicon">'+s.icon+'</div>'
+    +   '<div class="ctitles">'
+    +     '<div class="ctitle">'+s.title+'</div>'
+    +     '<div class="cauthor">'+s.author+(s.year?' · '+s.year:'')+'</div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="badges">'
+    +   '<span class="badge '+TYPE_BADGE[s.type]+'">'+TYPE_LABELS[s.type]+'</span>'
+    +   '<span class="badge" style="background:'+col+'18;color:'+col+';border:1px solid '+col+'40">'+THEMES[s.theme].label+'</span>'
+    +   '<span class="badge b-time">⏱ '+s.time+'</span>'
+    + '</div>'
+    + '<div class="cdesc">'+s.desc+'</div>'
+    + '<div class="cskill">✦ Compétence/problème : <strong>'+s.skill+'</strong></div>'
+    + (s.where ? '<div class="csource">🔍 Où : <span>'+s.where+'</span></div>' : '')
+    + (s.prix  ? '<div class="prix">💳 Prix estimé : <strong>'+s.prix+'</strong></div>' : '')
+    + '<div style="display:flex;gap:8px;margin-top:4px">'
+    + (s.url ? '<a class="clink" style="flex:1" href="'+s.url+'" target="_blank" rel="noopener">→ Accéder</a>' : '<div class="clink" style="flex:1;cursor:default;opacity:.4">🔒 Payant / Librairie</div>')
+    + '<button class="clink" style="width:80px;background:'+(isRead?'rgba(212,160,23,.2)':'none')+';border-color:'+(isRead?'var(--gold)':'var(--border)')+';color:'+(isRead?'var(--gold)':'var(--muted)')+';" onclick="toggleRead(\''+s.id+'\')">'+(isRead?'✓ Lu':'Marquer')+'</button>'
+    + '</div>'
+    + '</div>';
+}
+
+window.toggleRead = function(id) {
+  var i = readSet.indexOf(id);
+  if (i >= 0) readSet.splice(i,1); else readSet.push(id);
+  saveRead(readSet);
+  document.getElementById("sRead").textContent = readSet.length;
+  render();
+};
+
+/* ── Render ──────────────────────────────────── */
+function render() {
+  var grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  document.getElementById("sRead").textContent = readSet.length;
+
+  if (st.tab === "semaines") renderWeeks(grid);
+  else renderCards(grid);
+}
+
+function renderWeeks(grid) {
+  var wrap = document.createElement("div");
+  wrap.className = "weeks-grid";
+
+  WEEKS.forEach(function(w) {
+    var wc = document.createElement("div");
+    wc.className = "week-card";
+    var items = w.ids.map(function(id){ return ITEMS.find(function(s){ return s.id===id; }); }).filter(Boolean);
+
+    var inner = '<div class="week-header">'
+      + '<div class="wnum">S'+w.num+'</div>'
+      + '<div class="winfo"><h3>'+w.title+'</h3><p>'+w.focus+'</p></div>'
+      + '</div><div class="week-items">';
+
+    items.forEach(function(s) {
+      var col   = THEMES[s.theme].color;
+      var isRead = readSet.includes(s.id);
+      inner += '<div class="wi" onclick="scrollToCard(\''+s.id+'\')">'
+        + '<div class="wi-icon">'+s.icon+'</div>'
+        + '<div class="wi-info">'
+        +   '<div class="wi-title" style="text-decoration:'+(isRead?'line-through':'none')+';opacity:'+(isRead?.55:1)+'">'+s.title+'</div>'
+        +   '<div class="wi-meta"><span style="color:'+col+'">'+THEMES[s.theme].label+'</span> · '+TYPE_LABELS[s.type]+'</div>'
+        + '</div>'
+        + '<div class="wi-time">'+s.time+'</div>'
+        + '</div>';
+    });
+
+    inner += '</div>';
+    wc.innerHTML = inner;
+    wrap.appendChild(wc);
+  });
+
+  var detail = document.createElement("div");
+  detail.id = "week-detail";
+  detail.style.cssText = "margin-top:24px";
+
+  grid.appendChild(wrap);
+  grid.appendChild(detail);
+}
+
+window.scrollToCard = function(id) {
+  st.tab = "tout";
+  document.querySelectorAll(".tab").forEach(function(t){ t.classList.toggle("on", t.getAttribute("data-tab")==="tout"); });
+  render();
+  setTimeout(function(){
+    var el = document.getElementById("c-"+id);
+    if (el) { el.scrollIntoView({behavior:"smooth",block:"center"}); el.style.boxShadow="0 0 0 2px var(--gold)"; setTimeout(function(){ el.style.boxShadow=""; },2000); }
+  },100);
+};
+
+function renderCards(grid) {
+  var items = ITEMS.filter(function(s){ return matchTab(s) && matchTheme(s) && matchSearch(s); });
+  if (!items.length) { grid.innerHTML='<div id="empty">Aucun résultat pour ces filtres.</div>'; return; }
+
+  var grouped = {};
+  items.forEach(function(s){ if(!grouped[s.theme]) grouped[s.theme]=[]; grouped[s.theme].push(s); });
+
+  Object.keys(THEMES).forEach(function(th) {
+    var gi = grouped[th];
+    if (!gi || !gi.length) return;
+    var shdr = document.createElement("div");
+    shdr.className = "shdr";
+    shdr.innerHTML = '<h2 style="color:'+THEMES[th].color+'">'+THEMES[th].label+'</h2><span class="cnt">'+gi.length+' élément'+(gi.length>1?'s':'')+'</span>';
+    grid.appendChild(shdr);
+    var cg = document.createElement("div");
+    cg.className = "cards-grid";
+    cg.innerHTML = gi.map(cardHTML).join("");
+    grid.appendChild(cg);
+  });
+}
+
+/* ── Events ─────────────────────────────────── */
+document.getElementById("srch").addEventListener("input", function(){ st.q = this.value; render(); });
+document.querySelectorAll(".tab").forEach(function(b){
+  b.addEventListener("click", function(){
+    st.tab = this.getAttribute("data-tab");
+    document.querySelectorAll(".tab").forEach(function(x){ x.classList.toggle("on", x===b); });
+    render();
+  });
+});
+
+initChips();
+render();
+</script>
+</body>
+</html>
