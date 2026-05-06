@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Budget 2026 — Tableau de bord</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:     #09080e; --panel:  #100f18; --card:   #17151f;
+      --border: #2a2535; --text:   #e8e0d5; --muted:  #7a6f8a;
+      --green:  #22c55e; --red:    #ef4444; --blue:   #3b82f6; --gold: #f59e0b;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 13px; min-height: 100%; }
+
+    /* ── Header ── */
+    header { background: linear-gradient(135deg, #0f0c1a 0%, #0c1520 100%); padding: 20px 28px 16px; border-bottom: 1px solid var(--border); }
+    header h1 { font-size: 22px; font-weight: 700; color: white; }
+    header h1 span { color: var(--gold); }
+    header p { color: var(--muted); font-size: 11px; margin-top: 4px; }
+    #kpis { display: flex; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+    .kpi { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 10px; padding: 10px 18px; min-width: 130px; }
+    .kv { font-size: 19px; font-weight: 700; font-family: monospace; color: var(--text); }
+    .kl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+    .kv.pos { color: var(--green); } .kv.neg { color: var(--red); }
+    .kv.gold { color: var(--gold); } .kv.blue { color: var(--blue); }
+
+    /* ── Toolbar ── */
+    #toolbar { background: var(--panel); border-bottom: 1px solid var(--border); padding: 8px 20px; display: flex; align-items: center; gap: 8px; position: sticky; top: 0; z-index: 200; }
+    .tab { padding: 5px 14px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .tab:hover { color: var(--text); }
+    .tab.on { background: var(--gold); border-color: var(--gold); color: #09080e; }
+    #btn-reset { margin-left: auto; padding: 5px 12px; border-radius: 5px; border: 1px solid #3a2a09; background: rgba(245,158,11,.08); color: var(--gold); font-size: 11px; font-weight: 600; cursor: pointer; }
+    #btn-reset:hover { background: rgba(245,158,11,.2); }
+
+    /* ── Content ── */
+    #content { padding: 20px; }
+
+    /* ── Table ── */
+    .tw { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    table { border-collapse: collapse; width: 100%; min-width: 1060px; }
+
+    th { background: var(--panel); padding: 7px 8px; text-align: right; font-size: 11px; font-weight: 700; color: var(--muted); border-bottom: 2px solid var(--border); white-space: nowrap; }
+    th:first-child { text-align: left; min-width: 215px; max-width: 215px; width: 215px; position: sticky; left: 0; z-index: 20; background: var(--panel); }
+    th.th-ann { border-left: 1px solid var(--border); }
+
+    .tr-sec td { background: var(--panel); padding: 5px 8px; font-weight: 700; font-size: 10px; letter-spacing: .8px; text-transform: uppercase; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); color: var(--muted); }
+    .tr-sec td:first-child { position: sticky; left: 0; z-index: 5; }
+
+    .tr-d td { padding: 5px 8px; border-bottom: 1px solid rgba(42,37,53,.4); text-align: right; white-space: nowrap; font-family: monospace; font-size: 12px; color: var(--text); }
+    .tr-d td:first-child { text-align: left; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--card); position: sticky; left: 0; z-index: 5; color: var(--text); font-size: 12px; }
+    .tr-d:hover td { background: rgba(255,255,255,.015); }
+    .tr-d:hover td:first-child { background: rgba(255,255,255,.03); }
+
+    .tr-tot td { padding: 6px 8px; font-weight: 700; font-family: monospace; text-align: right; border-top: 1px solid var(--border); background: rgba(255,255,255,.03); font-size: 12px; white-space: nowrap; }
+    .tr-tot td:first-child { text-align: left; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; position: sticky; left: 0; z-index: 5; background: rgba(255,255,255,.05); }
+    .tr-tot.solde td { font-size: 13px; border-top: 2px solid var(--border); }
+
+    /* editable cell */
+    .ev { cursor: pointer; border-radius: 3px; padding: 1px 3px; display: inline-block; min-width: 38px; text-align: right; }
+    .ev:hover { background: rgba(245,158,11,.15); }
+    .cell-inp { width: 80px; background: rgba(59,130,246,.15); border: 1px solid var(--blue); border-radius: 3px; color: white; font-size: 12px; font-family: monospace; padding: 2px 4px; text-align: right; outline: none; }
+
+    /* colours */
+    .cg  { color: var(--green); } .cr  { color: var(--red); }
+    .cgd { color: var(--gold);  } .cb  { color: var(--blue); } .cm { color: var(--muted); }
+
+    /* ── Charts ── */
+    .cg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .cbox { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+    .cbox h3 { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+    .cbox canvas { max-height: 240px; }
+    .cbox.wide { grid-column: span 2; }
+
+    /* ── Patrimoine ── */
+    .pat-wrap { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+
+    .hint { color: var(--muted); font-size: 11px; margin-top: 10px; font-style: italic; }
+
+    @media (max-width: 900px) {
+      .cg2 { grid-template-columns: 1fr; } .cbox.wide { grid-column: span 1; }
+      .pat-wrap { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>💰 Budget <span>2026</span></h1>
+  <p>Données stockées dans le navigateur (localStorage) · Cliquez sur une valeur pour la modifier · Sauvegarde automatique</p>
+  <div id="kpis">
+    <div class="kpi"><div class="kv blue" id="kv-pat">–</div><div class="kl">Patrimoine (dernier mois)</div></div>
+    <div class="kpi"><div class="kv pos"  id="kv-rev">–</div><div class="kl">Revenus moy / mois</div></div>
+    <div class="kpi"><div class="kv neg"  id="kv-dep">–</div><div class="kl">Dépenses moy / mois</div></div>
+    <div class="kpi"><div class="kv"      id="kv-sol">–</div><div class="kl">Solde moyen / mois</div></div>
+    <div class="kpi"><div class="kv gold" id="kv-tau">–</div><div class="kl">Taux épargne moyen</div></div>
+  </div>
+</header>
+
+<div id="toolbar">
+  <button class="tab on" data-tab="budget">📊 Budget</button>
+  <button class="tab" data-tab="graphiques">📈 Graphiques</button>
+  <button class="tab" data-tab="patrimoine">🏦 Patrimoine</button>
+  <button id="btn-reset">↺ Réinitialiser</button>
+</div>
+
+<div id="content"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   DONNÉES 2026 — issues de Budget Suivi 2026.xlsx
+   Éditez directement dans l'interface, sauvegarde auto (localStorage)
+═══════════════════════════════════════════════════════════════════ */
+var MONTHS = ["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
+var LS_KEY  = "budget_2026_v1";
+
+var DEFAULT = {
+  revenus: [
+    { id:"salaire",    label:"💼 Salaire net",                  values:[3800,3800,3700,3970,3900,3900,3900,3900,3900,3900,3900,3900] },
+    { id:"autres_rev", label:"💡 Primes / Vacations / Autres",  values:[0,0,4200,4622,9250,0,0,0,0,0,0,0] },
+  ],
+  depenses: [
+    { id:"loyer",        label:"🏠 Loyer",                         cat:"Fixes",     values:[800,800,800,800,800,800,800,800,800,800,800,800] },
+    { id:"elec",         label:"⚡ Électricité",                    cat:"Fixes",     values:[60,60,60,22,22,22,22,22,22,22,22,22] },
+    { id:"internet",     label:"📡 Internet",                       cat:"Fixes",     values:[15,15,15,15,15,15,15,15,15,15,15,15] },
+    { id:"abonnements",  label:"📱 Abonnements (Spotify, Claude)",  cat:"Fixes",     values:[33,33,33,28,28,28,28,28,28,28,28,28] },
+    { id:"assurance",    label:"🛡️ Assurance voiture + logement",   cat:"Fixes",     values:[850,0,0,0,0,0,0,0,0,0,0,0] },
+    { id:"tel",          label:"📞 Téléphone",                      cat:"Fixes",     values:[6,6,6,6,6,6,6,6,6,6,6,6] },
+    { id:"navigo",       label:"🚇 Navigo (remb. Pluxee)",          cat:"Fixes",     values:[91,91,91,91,91,91,91,91,91,91,91,91] },
+    { id:"sante",        label:"🏥 Santé / Mutuelle",               cat:"Fixes",     values:[83,83,83,83,83,83,83,83,83,83,83,83] },
+    { id:"bouffe",       label:"🛒 Alimentation",                   cat:"Variables", values:[350,350,350,350,350,350,350,350,350,350,350,350] },
+    { id:"loisirs",      label:"🎭 Loisirs (resto, ciné, bars)",    cat:"Variables", values:[150,150,150,150,150,150,150,150,150,150,150,150] },
+    { id:"essence",      label:"⛽ Essence & parking",              cat:"Variables", values:[25,25,25,25,25,25,25,25,25,25,25,25] },
+    { id:"hygiene",      label:"🧴 Hygiène",                        cat:"Variables", values:[20,20,20,20,20,20,20,20,20,20,20,20] },
+    { id:"coiffeur",     label:"✂️ Coiffeur",                       cat:"Variables", values:[10,10,10,10,10,10,10,10,10,10,10,10] },
+    { id:"autres_dep",   label:"🛍️ Autres achats (vêtements…)",     cat:"Variables", values:[150,150,150,150,150,150,150,150,150,150,150,150] },
+    { id:"piano",        label:"🎹 Piano",                          cat:"Activités", values:[160,160,160,0,160,160,160,160,160,160,160,160] },
+    { id:"sports",       label:"🎾 Tennis / Tir à l'arc",           cat:"Activités", values:[80,80,80,0,80,80,80,80,80,80,80,80] },
+    { id:"salle_sport",  label:"🏋️ Salle de sport",                 cat:"Activités", values:[0,0,0,0,33,33,33,33,33,33,33,33] },
+    { id:"vacances",     label:"✈️ Vacances",                       cat:"Excep.",    values:[0,800,1500,300,600,0,2500,0,0,0,0,0] },
+    { id:"exceptionnel", label:"⚠️ Dépenses exceptionnelles",       cat:"Excep.",    values:[4100,0,0,0,0,3000,0,0,0,0,0,0] },
+  ],
+  patrimoine: [
+    { id:"compte",    label:"🏦 Compte courant",  values:[4866,6030,3600,9622,20149,19025,18402,20279,22155,24032,25909,27785] },
+    { id:"livretA",   label:"💚 Livret A",         values:[0,0,0,0,0,0,0,0,0,0,0,0] },
+    { id:"ldds",      label:"💚 LDDS",             values:[12732,12732,12732,12732,12732,12732,12732,12732,12732,12732,12732,12732] },
+    { id:"lv_plus",   label:"💚 Livret+",          values:[36924,36924,36924,36924,36924,36924,36924,36924,36924,36924,36924,36924] },
+    { id:"av",        label:"📈 Assurance Vie",    values:[10909,11010,10783,10950,10950,10950,10950,10950,10950,10950,10950,10950] },
+    { id:"pee_esri",  label:"📈 PEE Esri",         values:[15038,15234,14500,15241,15241,15241,15241,15241,15241,15241,15241,15241] },
+    { id:"pee_hdi",   label:"📈 PEE HDI",          values:[38476,39190,36854,38477,38477,38477,38477,38477,38477,38477,38477,38477] },
+    { id:"pea",       label:"📈 PEA",              values:[4526,4539,10855,11604,11604,11604,11604,11604,11604,11604,11604,11604] },
+    { id:"crypto",    label:"🪙 Crypto",           values:[500,500,500,500,500,500,500,500,500,500,500,500] },
+    { id:"per",       label:"🔒 PER",              values:[7812,7812,7856,7684,7684,7684,7684,7684,7684,7684,7684,7684] },
+    { id:"cpf",       label:"🎓 CPF",              values:[2695,2695,2695,2695,2695,2695,2695,2695,2695,2695,2695,2695] },
+  ]
+};
+
+/* ── Storage ──── */
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function load()   { try { var r=localStorage.getItem(LS_KEY); if(r) return JSON.parse(r); } catch(e){} return clone(DEFAULT); }
+function save()   { try { localStorage.setItem(LS_KEY, JSON.stringify(DATA)); } catch(e){} }
+var DATA = load();
+
+document.getElementById("btn-reset").onclick = function() {
+  if (!confirm("Réinitialiser toutes les données aux valeurs d'origine ?")) return;
+  localStorage.removeItem(LS_KEY); DATA = clone(DEFAULT); render();
+};
+
+/* ── Computed ───── */
+function sumRows(rows) {
+  var t=Array(12).fill(0);
+  rows.forEach(function(r){ r.values.forEach(function(v,i){ t[i]+=(Number(v)||0); }); });
+  return t;
+}
+function compute() {
+  var tRev=sumRows(DATA.revenus), tDep=sumRows(DATA.depenses);
+  var sol=tRev.map(function(v,i){return v-tDep[i];});
+  var tPat=sumRows(DATA.patrimoine);
+  var tau=tRev.map(function(v,i){return v>0?(sol[i]/v*100):0;});
+  return {tRev:tRev,tDep:tDep,sol:sol,tPat:tPat,tau:tau};
+}
+
+/* ── Format ─────── */
+function f(v,d){
+  var n=Math.round((Number(v)||0)*Math.pow(10,d||0))/Math.pow(10,d||0);
+  return n.toLocaleString("fr-FR",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});
+}
+function cc(v){return v>0?"cg":v<0?"cr":"cm";}
+
+/* ── KPIs ────────── */
+function updateKPIs(c){
+  var lp=0; for(var i=11;i>=0;i--){if(c.tPat[i]>0){lp=c.tPat[i];break;}}
+  var sum=function(a){return a.reduce(function(x,y){return x+y;},0);};
+  var mRev=sum(c.tRev)/12, mDep=sum(c.tDep)/12, mSol=sum(c.sol)/12, mTau=sum(c.tau)/12;
+  document.getElementById("kv-pat").textContent=f(lp)+" €";
+  document.getElementById("kv-rev").textContent=f(mRev)+" €";
+  document.getElementById("kv-dep").textContent=f(mDep)+" €";
+  var es=document.getElementById("kv-sol"); es.textContent=f(mSol)+" €"; es.className="kv "+(mSol>=0?"pos":"neg");
+  var et=document.getElementById("kv-tau"); et.textContent=f(mTau,1)+" %"; et.className="kv "+(mTau>=20?"pos":mTau>=0?"gold":"neg");
+}
+
+/* ── Inline edit ─── */
+window.editCell = function(td, section, id, mi) {
+  if (td.querySelector("input")) return;
+  var cur=parseFloat(td.textContent.replace(/[\s ]/g,"").replace(",",".")) || 0;
+  td.innerHTML="";
+  var inp=document.createElement("input");
+  inp.className="cell-inp"; inp.type="number"; inp.value=cur; inp.step="any";
+  td.appendChild(inp); inp.focus(); inp.select();
+
+  function commit() {
+    var val=parseFloat(inp.value); if(isNaN(val)) val=0;
+    var arr=DATA[section];
+    for(var i=0;i<arr.length;i++){if(arr[i].id===id){arr[i].values[mi]=val;break;}}
+    save(); render();
+  }
+  inp.onkeydown=function(e){if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();commit();}else if(e.key==="Escape"){render();}};
+  inp.onblur=commit;
+};
+
+/* ── Budget table ─── */
+function tableBudget(c) {
+  var cats=[]; DATA.depenses.forEach(function(r){if(!cats.includes(r.cat))cats.push(r.cat);});
+  var h='<div class="tw"><table><tr><th>Catégorie</th>';
+  MONTHS.forEach(function(m){h+='<th>'+m+'</th>';});
+  h+='<th class="th-ann">Annuel</th></tr>';
+
+  /* — revenus — */
+  h+='<tr class="tr-sec"><td colspan="14" style="color:#22c55e">▸ REVENUS</td></tr>';
+  DATA.revenus.forEach(function(r){
+    var tot=r.values.reduce(function(a,b){return a+(Number(b)||0);},0);
+    h+='<tr class="tr-d"><td>'+r.label+'</td>';
+    r.values.forEach(function(v,mi){
+      h+='<td onclick="editCell(this,\'revenus\',\''+r.id+'\','+mi+')" title="Cliquer pour modifier"><span class="ev'+(v?'':' cm')+'">'+(v?f(v):'–')+'</span></td>';
+    });
+    h+='<td class="cg" style="font-weight:600">'+f(tot)+'</td></tr>';
+  });
+  h+='<tr class="tr-tot"><td>📊 Total revenus</td>';
+  var annR=0; c.tRev.forEach(function(v){annR+=v; h+='<td class="cg">'+(v?f(v):'–')+'</td>';});
+  h+='<td class="cg">'+f(annR)+'</td></tr>';
+
+  /* — dépenses — */
+  cats.forEach(function(cat){
+    var rows=DATA.depenses.filter(function(r){return r.cat===cat;});
+    h+='<tr class="tr-sec"><td colspan="14" style="color:#ef4444">▸ DÉPENSES — '+cat+'</td></tr>';
+    rows.forEach(function(r){
+      var tot=r.values.reduce(function(a,b){return a+(Number(b)||0);},0);
+      h+='<tr class="tr-d"><td>'+r.label+'</td>';
+      r.values.forEach(function(v,mi){
+        h+='<td onclick="editCell(this,\'depenses\',\''+r.id+'\','+mi+')" title="Cliquer pour modifier"><span class="ev'+(v?'':' cm')+'">'+(v?f(v):'–')+'</span></td>';
+      });
+      h+='<td class="cr" style="font-weight:600">'+(tot?f(tot):'–')+'</td></tr>';
+    });
+  });
+  h+='<tr class="tr-tot"><td>📊 Total dépenses</td>';
+  var annD=0; c.tDep.forEach(function(v){annD+=v; h+='<td class="cr">'+f(v)+'</td>';});
+  h+='<td class="cr">'+f(annD)+'</td></tr>';
+
+  /* — solde & taux — */
+  h+='<tr class="tr-tot solde"><td>💰 Solde mensuel</td>';
+  var annS=0; c.sol.forEach(function(v){annS+=v; h+='<td class="'+cc(v)+'" style="font-weight:700">'+f(v)+'</td>';});
+  h+='<td class="'+cc(annS)+'" style="font-weight:700">'+f(annS)+'</td></tr>';
+  h+='<tr class="tr-tot"><td>📊 Taux d\'épargne</td>';
+  c.tau.forEach(function(v){h+='<td class="'+(v>=20?"cg":v>=0?"cgd":"cr")+'">'+f(v,1)+' %</td>';});
+  var mT=c.tau.reduce(function(a,b){return a+b;},0)/12;
+  h+='<td class="'+(mT>=20?"cg":mT>=0?"cgd":"cr")+'">'+f(mT,1)+' %</td></tr>';
+
+  h+='</table></div><p class="hint">💡 Cliquez sur n\'importe quelle valeur pour la modifier. Entrée pour valider, Échap pour annuler. Les totaux se recalculent automatiquement.</p>';
+  return h;
+}
+
+/* ── Patrimoine table ─── */
+function tablePatrimoine(c){
+  var h='<div class="pat-wrap"><div class="tw"><table><tr><th>Poche</th>';
+  MONTHS.forEach(function(m){h+='<th>'+m+'</th>';});
+  h+='<th class="th-ann">Variation</th></tr>';
+  h+='<tr class="tr-sec"><td colspan="14" style="color:#3b82f6">▸ PATRIMOINE — Valeurs réelles fin de mois</td></tr>';
+  DATA.patrimoine.forEach(function(r){
+    var first=r.values.find(function(v){return v>0;})||0;
+    var last=r.values[11]||0, delta=last-first;
+    h+='<tr class="tr-d"><td>'+r.label+'</td>';
+    r.values.forEach(function(v,mi){
+      h+='<td onclick="editCell(this,\'patrimoine\',\''+r.id+'\','+mi+')" title="Cliquer pour modifier"><span class="ev'+(v?'':' cm')+'">'+(v?f(v):'–')+'</span></td>';
+    });
+    h+='<td class="'+cc(delta)+'">'+(delta>0?"+":"")+f(delta)+'</td></tr>';
+  });
+  h+='<tr class="tr-tot solde"><td>🏦 Total patrimoine</td>';
+  c.tPat.forEach(function(v){h+='<td class="cb" style="font-weight:700">'+f(v)+'</td>';});
+  var d=c.tPat[11]-c.tPat[0]; h+='<td class="'+cc(d)+'">'+(d>0?"+":"")+f(d)+'</td></tr>';
+  h+='</table></div>';
+  h+='<div class="cbox" style="position:sticky;top:58px"><h3>Répartition (dernier mois connu)</h3><canvas id="c-donut"></canvas></div>';
+  h+='</div><p class="hint" style="margin-top:10px">💡 Cliquez sur une valeur pour la modifier.</p>';
+  return h;
+}
+
+/* ── Charts ─────── */
+var CH={};
+function mk(id,cfg){if(CH[id]){CH[id].destroy();}var el=document.getElementById(id);if(el)CH[id]=new Chart(el,cfg);}
+var BASE_OPTS={responsive:true,plugins:{legend:{labels:{color:"#e8e0d5",font:{size:11},padding:12}}},scales:{x:{ticks:{color:"#7a6f8a",font:{size:10}},grid:{color:"rgba(42,37,53,.5)"}},y:{ticks:{color:"#7a6f8a",font:{size:10}},grid:{color:"rgba(42,37,53,.5)"}}}};
+function bo(){return JSON.parse(JSON.stringify(BASE_OPTS));}
+
+function buildCharts(c){
+  mk("c-rd",{type:"bar",data:{labels:MONTHS,datasets:[
+    {label:"Revenus", data:c.tRev,backgroundColor:"rgba(34,197,94,.5)",borderColor:"#22c55e",borderWidth:1},
+    {label:"Dépenses",data:c.tDep,backgroundColor:"rgba(239,68,68,.5)",borderColor:"#ef4444",borderWidth:1}
+  ]},options:bo()});
+
+  mk("c-sol",{type:"bar",data:{labels:MONTHS,datasets:[{label:"Solde (€)",data:c.sol,
+    backgroundColor:c.sol.map(function(v){return v>=0?"rgba(34,197,94,.5)":"rgba(239,68,68,.5)";}),
+    borderColor:c.sol.map(function(v){return v>=0?"#22c55e":"#ef4444";}),borderWidth:1
+  }]},options:bo()});
+
+  mk("c-tau",{type:"line",data:{labels:MONTHS,datasets:[{label:"Taux d'épargne (%)",
+    data:c.tau.map(function(v){return Math.round(v*10)/10;}),
+    borderColor:"#f59e0b",backgroundColor:"rgba(245,158,11,.1)",tension:.3,pointRadius:4,fill:true
+  }]},options:bo()});
+
+  mk("c-pat",{type:"line",data:{labels:MONTHS,datasets:[{label:"Patrimoine total (€)",
+    data:c.tPat,borderColor:"#3b82f6",backgroundColor:"rgba(59,130,246,.08)",
+    tension:.3,pointRadius:5,fill:true
+  }]},options:bo()});
+
+  var li=0; for(var i=11;i>=0;i--){if(c.tPat[i]>0){li=i;break;}}
+  var PAL=["#3b82f6","#22c55e","#16a34a","#15803d","#f59e0b","#f97316","#ef4444","#8b5cf6","#ec4899","#06b6d4","#84cc16"];
+  mk("c-donut",{type:"doughnut",data:{
+    labels:DATA.patrimoine.map(function(r){return r.label.replace(/^.\s*/,"");}),
+    datasets:[{data:DATA.patrimoine.map(function(r){return r.values[li]||0;}),backgroundColor:PAL,borderWidth:1,borderColor:"#17151f"}]
+  },options:{responsive:true,plugins:{legend:{position:"bottom",labels:{color:"#e8e0d5",font:{size:10},padding:6,boxWidth:12}}}}});
+}
+
+/* ── Render ─────── */
+var curTab="budget";
+function render(){
+  var c=compute(); updateKPIs(c);
+  var el=document.getElementById("content");
+  if(curTab==="budget"){
+    el.innerHTML=tableBudget(c);
+  } else if(curTab==="graphiques"){
+    el.innerHTML='<div class="cg2">'
+      +'<div class="cbox wide"><h3>Revenus vs Dépenses</h3><canvas id="c-rd" height="200"></canvas></div>'
+      +'<div class="cbox"><h3>Solde mensuel (€)</h3><canvas id="c-sol" height="200"></canvas></div>'
+      +'<div class="cbox"><h3>Taux d\'épargne (%)</h3><canvas id="c-tau" height="200"></canvas></div>'
+      +'<div class="cbox wide"><h3>Évolution du patrimoine total (€)</h3><canvas id="c-pat" height="170"></canvas></div>'
+      +'</div>';
+    setTimeout(function(){buildCharts(c);},50);
+  } else if(curTab==="patrimoine"){
+    el.innerHTML=tablePatrimoine(c);
+    setTimeout(function(){buildCharts(c);},50);
+  }
+}
+
+document.querySelectorAll(".tab").forEach(function(b){
+  b.addEventListener("click",function(){
+    curTab=this.getAttribute("data-tab");
+    document.querySelectorAll(".tab").forEach(function(x){x.classList.toggle("on",x===b);});
+    render();
+  });
+});
+
+render();
+</script>
+</body>
+</html>
