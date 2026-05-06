@@ -3,311 +3,434 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Testez votre géographie</title>
+  <title>Quiz Géographique – Pays du monde</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
+
   <style>
     html, body, #viewDiv {
       padding: 0;
       margin: 0;
       height: 100%;
       width: 100%;
+      font-family: "Avenir Next", Avenir, Helvetica, Arial, sans-serif;
     }
-   
-            #titleDiv {
-            padding: 5px;
-            font-weight: bold;
-            text-align: center;
-            font-size: 20px;
-            color: white;
-            background-color: #007AC2;
-        }
-                #questionDiv {
-            padding: 5px;
-            font-weight: bold;
-            text-align: center;
-            font-size: 20px;
-            color: white;
-            background-color: #007AC2;
-        }
-   
-                    #counterPoints {
-            padding: 5px;
-            font-weight: bold;
-            text-align: center;
-            font-size: 20px;
-            color: white;
-            background-color: #007AC2;
-        }
+
+    /* Barre de progression */
+    #progressBar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 5px;
+      width: 0%;
+      background: linear-gradient(90deg, #27AE60, #2ECC71);
+      transition: width 0.4s ease;
+      z-index: 20;
+    }
+
+    /* Panneau titre + question */
+    #questionPanel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #titleDiv {
+      width: 100%;
+      padding: 7px 16px;
+      font-size: 15px;
+      font-weight: bold;
+      text-align: center;
+      color: white;
+      background-color: #007AC2;
+      box-sizing: border-box;
+      letter-spacing: 0.5px;
+    }
+
+    #questionDiv {
+      margin-top: 6px;
+      padding: 10px 24px;
+      background: rgba(0, 60, 100, 0.88);
+      border-radius: 8px;
+      text-align: center;
+      color: white;
+      backdrop-filter: blur(4px);
+    }
+
+    #questionLabel {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+
+    #questionText {
+      font-size: 24px;
+      font-weight: bold;
+      display: block;
+    }
+
+    #questionNum {
+      font-size: 12px;
+      opacity: 0.75;
+      margin-top: 4px;
+    }
+
+    /* Score en bas */
+    #scoreDiv {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 20px;
+      background: rgba(0, 0, 0, 0.72);
+      border-radius: 20px;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      z-index: 10;
+      text-align: center;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* Feedback central */
+    #feedbackDiv {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-size: 22px;
+      font-weight: bold;
+      color: white;
+      z-index: 30;
+      text-align: center;
+      display: none;
+      pointer-events: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+      animation: popIn 0.2s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: translate(-50%, -50%) scale(0.85); opacity: 0; }
+      to   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+    }
+
+    #feedbackDiv.correct { background-color: rgba(39, 174, 96, 0.95); }
+    #feedbackDiv.wrong   { background-color: rgba(192, 57, 43, 0.95); }
+
+    /* Écran fin de jeu */
+    #gameOverDiv {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 36px 52px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+      text-align: center;
+      z-index: 40;
+      display: none;
+      min-width: 280px;
+    }
+
+    #gameOverDiv h2 {
+      margin: 0 0 6px 0;
+      color: #007AC2;
+      font-size: 26px;
+    }
+
+    #finalScore {
+      font-size: 56px;
+      font-weight: bold;
+      color: #222;
+      margin: 10px 0 6px 0;
+      line-height: 1;
+    }
+
+    #gradeText {
+      font-size: 17px;
+      color: #555;
+      margin-bottom: 22px;
+    }
+
+    #restartBtn {
+      padding: 11px 28px;
+      background-color: #007AC2;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #restartBtn:hover { background-color: #005f99; }
+
+    /* Instruction au démarrage */
+    #hintDiv {
+      position: absolute;
+      bottom: 65px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 16px;
+      background: rgba(255,255,255,0.82);
+      border-radius: 16px;
+      font-size: 13px;
+      color: #333;
+      z-index: 10;
+      pointer-events: none;
+      white-space: nowrap;
+    }
   </style>
- 
-    <link rel="stylesheet" href="https://js.arcgis.com/4.15/esri/themes/light/main.css">
-  <script src="https://js.arcgis.com/4.15/"></script>
- 
-  <script>  
+
+  <script>
     require([
       "esri/Map",
-      "esri/views/MapView","esri/layers/FeatureLayer","esri/tasks/support/Query",'esri/symbols/SimpleLineSymbol','esri/symbols/SimpleFillSymbol',"esri/widgets/Home"], function(Map, MapView,FeatureLayer,Query,SimpleLineSymbol,SimpleFillSymbol,Home) {
-     
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/widgets/Home"
+    ], function(Map, MapView, FeatureLayer, Home) {
+
+      // ── Constantes ──────────────────────────────────────
+      var TOTAL_QUESTIONS = 20;
+      var FEEDBACK_DURATION = 1800; // ms
+
+      // ── État du jeu ──────────────────────────────────────
       var country_table = [];
-     
-      var map = new Map({
-        basemap: "satellite"
-      });
+      var pts = 0;
+      var question = 0;
+      var randValue = 0;
+      var prevRandValue = -1;
+      var clickLocked = true; // locked until countries are loaded
+
+      // ── Carte ────────────────────────────────────────────
+      var map = new Map({ basemap: "satellite" });
 
       var view = new MapView({
         container: "viewDiv",
         map: map,
         zoom: 3,
-      constraints: {
-        maxZoom: 12,
-        minZoom: 3
-      }
+        constraints: { maxZoom: 14, minZoom: 2 }
       });
- 
+
       var countrieslayer = new FeatureLayer({
-        portalItem: {
-          id: "7f9f157a99cf4e1c9f451562c35fe428"
-        },
-              popupEnabled: false,
-          renderer: {
-    type: 'simple',
-    symbol: new SimpleFillSymbol({
-      outline: new SimpleLineSymbol({
-        color: 'white',
-        width: 1
-      })
-    })
-  }
-      });
-      
-      
-      retrieveData();
-      map.add(countrieslayer, 1);
-     
-      var reponse,reponse2, Points;
-      var randValue;
-     
-      function getRandomInt(max) {
-  return Math.floor(Math.random() * Math.floor(max));
-}
-     
-              view.ui.add(titleDiv, {
-            position: "top-left",
-            index: 0
-        });
-     
-                    view.ui.add(questionDiv, {
-            position: "top-right",
-            index: 0
-        });
-     
-      view.ui.add(counterPoints, {
-            position: "top-right",
-            index: 1
-        });
-      
-        // Créez une instance du widget d'accueil en passant la vue de carte en tant qu'argument
-  var homeWidget = new Home({
-    view: view
-  });
-     
-  view.ui.add(homeWidget, "top-left");     
-     
-      //gestion des points
-      var pts=0;
-      var j=0;
-      var ptsElement = document.querySelector( '.pts' );
-      var questionElement = document.querySelector( '.question' );
-      randValue=0;
-      view.on("click", function(event){
-            getPays(event.mapPoint);
-        });
-     
-     
-     
-     
-      function retrieveData(){
-        var query2 = countrieslayer.createQuery();
-        query2.cacheHint = true;
-        query2.returnGeometry = false;
-        query2.outFields = ["NAME_FR"];
-        query2.where = "1=1";
-        query2.num = 300;
-        query2.orderByFields = ["OBJECTID"];
-        countrieslayer.queryFeatures(query2).then(function(response){
-          country_table = response.features.map(function(f){ return f.attributes.NAME_FR; });
-          randValue = getRandomInt(country_table.length);
-          questionElement.innerHTML = String(country_table[randValue]);
-        });
-      }
-     
-     
-      function queryFeatureCountryTable(){
-         var countryQueryreponse = {
-         where: "NAME_FR ='"+ country_table[randValue]+"'",  // Set by select element
-         spatialRelationship: "intersects", // Relationship operation to apply
-         //geometry: view.extent, // Restricted to visible extent of the map
-         outFields: [ "NAME_FR" ], // Attributes to return
-         returnGeometry: true
-        };           
-              
- countrieslayer.queryFeatures(countryQueryreponse)
-        .then(function(response2){
-          if (!response2.features || !response2.features.length) return;
-          view.goTo(response2.features[0].geometry.extent);
-   
-   //le bout ci dessous permet de tout mettre en rouge, mais maintenant je veux qu'uniquement une entité soit en rouge
-   
-   /*
-             response2.features[0].graphic={
-    type: 'simple',
-    symbol: new SimpleFillSymbol({
-      outline: new SimpleLineSymbol({
-        color: 'red',
-        width: 1
-      })
-    })
-  };*/
-   
-   // Obtenir la première entité dans la réponse
-var feature = response2.features[0];
-
-// Modifier la symbologie de l'entité pour ajouter un contour rouge
-feature.symbol = {
-  type: "simple-fill",  // Utiliser un symbole de remplissage simple
-  color: [128, 128, 128, 0],       // Couleur de remplissage blanche
-  outline: {            // Définir l'outline (contour)
-    color: "red",       // Couleur du contour rouge
-    width: "3px"        // Largeur du contour
-  }
-};
-
-// Ajouter l'entité mise en évidence à la couche de géométries de la vue
-view.graphics.add(feature);
-
-// Centrer la vue sur l'entité mise en évidence
-view.goTo(feature.geometry);
-   
-   
-  
-   /*
-     response2.features[0].graphic={
-    type: 'simple',
-    symbol: new SimpleFillSymbol({
-      outline: new SimpleLineSymbol({
-        color: 'red',
-        width: 1
-      })
-    })
-  };*/
-
-   //countrieslayer.renderer.symbol.outline.color = [128, 128, 128, 0.8];
-  /*
-var feature = response2.features[0].graphic;
-        feature.symbol = {
-          type: "simple-line",
-          color: "red",
-          width: "3px"
-        };
-        view.graphics.add(feature);
-   */
-   
-   
-   
-  /*response2.features[0] = new SimpleFillSymbol({
-    color: 'green',
-    outline: new SimpleLineSymbol({
-      color: 'red',
-      width: 2
-    })
-  });*/
-   
-   
-        })
-   //.catch((error) => {
-         // console.log(error.error);
-        //});    
-        
-      }; //fin de queryFeatureCountryTable
-      
-      
-      function getPays(geom){
-     if(j>20){
-       questionElement.innerHTML = "Jeu terminé ! Score final : " + pts + "/20";
-       return;
-     }
-     if(j<=20){
-        var query = countrieslayer.createQuery();
-            query.cacheHint=true;
-            query.geometry = (geom);  // the point location of the pointer
-            query.spatialRelationship = "intersects";  // this is the default
-            query.returnGeometry = true;
-            query.outFields = [ "NAME_FR" ];
-
-            countrieslayer.queryFeatures(query)
-            .then(function(response){
-              if (!response.features.length) return;
-                // returns a feature set with features containing the
-                reponse=response.features[0].attributes.NAME_FR;
-       
-              
-
-              //si bonne réponse
-              if(reponse===country_table[randValue] && j!==0){ //bonne réponse
-                pts=pts+1;
-                ptsElement.innerHTML=pts+"/"+ j+ " points";
-                //alert("Bonne réponse !");
-                view.goTo(response.features[0].geometry.extent);
-
-                var feature2 = response.features[0];
-
-// Modifier la symbologie de l'entité pour ajouter un contour rouge
-feature2.symbol = {
-  type: "simple-fill",  // Utiliser un symbole de remplissage simple
-  color: [128, 128, 128, 0],       // Couleur de remplissage blanche
-  outline: {            // Définir l'outline (contour)
-    color: "green",       // Couleur du contour rouge
-    width: "3px"        // Largeur du contour
-  }
-};
-
-// Ajouter l'entité mise en évidence à la couche de géométries de la vue
-view.graphics.add(feature2);
-
-// Centrer la vue sur l'entité mise en évidence
-view.goTo(feature2.geometry);
-                
-              }
-              else{ //mauvaise reponse
-                queryFeatureCountryTable();
-              }
-              if (j==1){
-                ptsElement.innerHTML=pts+"/"+ 0+ " points"
-              }
-              else{
-              ptsElement.innerHTML=pts+"/"+ String(j-1)+ " points";}
-             randValue=getRandomInt(country_table.length); //nouveau pays au hasard pour le jeu
-            questionElement.innerHTML = String(country_table[randValue]);
-            j=j+1;
-            });
-      }
-        else{ //fin du jeu
-          randValue=getRandomInt(country_table.length); //nouveau pays au hasard pour le jeu
-          questionElement.innerHTML = String(country_table[randValue]);
+        portalItem: { id: "7f9f157a99cf4e1c9f451562c35fe428" },
+        popupEnabled: false,
+        renderer: {
+          type: "simple",
+          symbol: {
+            type: "simple-fill",
+            color: [0, 0, 0, 0],
+            outline: { color: [255, 255, 255, 0.6], width: 1 }
+          }
         }
-      };   //fin de getPays
-     
-     
-     
+      });
 
+      map.add(countrieslayer);
+      view.ui.add(new Home({ view: view }), "bottom-left");
+
+      // ── Références UI ────────────────────────────────────
+      var questionTextEl = document.getElementById("questionText");
+      var questionNumEl  = document.getElementById("questionNum");
+      var scoreEl        = document.getElementById("scoreDiv");
+      var feedbackEl     = document.getElementById("feedbackDiv");
+      var gameOverEl     = document.getElementById("gameOverDiv");
+      var finalScoreEl   = document.getElementById("finalScore");
+      var gradeEl        = document.getElementById("gradeText");
+      var progressEl     = document.getElementById("progressBar");
+      var hintEl         = document.getElementById("hintDiv");
+
+      // ── Chargement des pays ──────────────────────────────
+      countrieslayer.when(function() {
+        var q = countrieslayer.createQuery();
+        q.cacheHint = true;
+        q.returnGeometry = false;
+        q.outFields = ["NAME_FR"];
+        q.where = "NAME_FR IS NOT NULL";
+        q.num = 300;
+        q.orderByFields = ["OBJECTID"];
+        return countrieslayer.queryFeatures(q);
+      }).then(function(result) {
+        country_table = result.features.map(function(f) {
+          return f.attributes.NAME_FR;
+        });
+        startGame();
+      }).catch(function(err) {
+        questionTextEl.innerHTML = "Erreur de chargement";
+        console.error(err);
+      });
+
+      // ── Logique du jeu ───────────────────────────────────
+
+      function startGame() {
+        pts = 0;
+        question = 0;
+        prevRandValue = -1;
+        clickLocked = false;
+        view.graphics.removeAll();
+        gameOverEl.style.display = "none";
+        progressEl.style.width = "0%";
+        nextQuestion();
+      }
+
+      function nextQuestion() {
+        question++;
+        if (question > TOTAL_QUESTIONS) {
+          endGame();
+          return;
+        }
+        view.graphics.removeAll();
+        // Évite de retomber deux fois sur le même pays
+        do {
+          randValue = Math.floor(Math.random() * country_table.length);
+        } while (randValue === prevRandValue && country_table.length > 1);
+        prevRandValue = randValue;
+
+        questionTextEl.innerHTML = country_table[randValue];
+        questionNumEl.innerHTML  = "Question " + question + " / " + TOTAL_QUESTIONS;
+        scoreEl.innerHTML        = "Score : " + pts + " / " + (question - 1);
+        progressEl.style.width   = ((question - 1) / TOTAL_QUESTIONS * 100) + "%";
+        hintEl.style.display     = "block";
+        clickLocked = false;
+      }
+
+      function endGame() {
+        clickLocked = true;
+        hintEl.style.display = "none";
+        view.graphics.removeAll();
+        progressEl.style.width = "100%";
+        scoreEl.innerHTML = "Partie terminée !";
+
+        var pct = Math.round(pts / TOTAL_QUESTIONS * 100);
+        var grade;
+        if (pct === 100)      grade = "Parfait ! Vous êtes un expert ! 🌍";
+        else if (pct >= 80)   grade = "Excellent ! 🌟";
+        else if (pct >= 60)   grade = "Bien joué !";
+        else if (pct >= 40)   grade = "Pas mal, continuez !";
+        else                  grade = "Entraînez-vous encore !";
+
+        finalScoreEl.innerHTML = pts + " / " + TOTAL_QUESTIONS;
+        gradeEl.innerHTML = grade;
+        gameOverEl.style.display = "block";
+      }
+
+      function showFeedback(correct, correctCountryName) {
+        feedbackEl.className   = correct ? "correct" : "wrong";
+        feedbackEl.innerHTML   = correct
+          ? "✓ Bonne réponse !"
+          : "✗ C'était : <em>" + correctCountryName + "</em>";
+        feedbackEl.style.display = "block";
+        hintEl.style.display = "none";
+        setTimeout(function() {
+          feedbackEl.style.display = "none";
+          nextQuestion();
+        }, FEEDBACK_DURATION);
+      }
+
+      // ── Clic sur la carte ────────────────────────────────
+      view.on("click", function(event) {
+        if (clickLocked || country_table.length === 0 || question < 1 || question > TOTAL_QUESTIONS) return;
+        clickLocked = true;
+
+        var query = countrieslayer.createQuery();
+        query.cacheHint = true;
+        query.geometry = event.mapPoint;
+        query.spatialRelationship = "intersects";
+        query.returnGeometry = true;
+        query.outFields = ["NAME_FR"];
+
+        countrieslayer.queryFeatures(query).then(function(response) {
+          if (!response.features.length) {
+            // Clic sur l'océan → on laisse réessayer
+            clickLocked = false;
+            return;
+          }
+
+          var clickedName = response.features[0].attributes.NAME_FR;
+          var correct     = clickedName === country_table[randValue];
+
+          // Surligner le pays cliqué
+          var clickedFeature = response.features[0].clone();
+          clickedFeature.symbol = {
+            type: "simple-fill",
+            color: correct ? [39, 174, 96, 0.45] : [192, 57, 43, 0.45],
+            outline: { color: correct ? "#27AE60" : "#C0392B", width: "3px" }
+          };
+          view.graphics.add(clickedFeature);
+          view.goTo(clickedFeature.geometry.extent.expand(2.5), { duration: 600 });
+
+          if (correct) {
+            pts++;
+            showFeedback(true, null);
+          } else {
+            // Montrer le bon pays en vert
+            highlightCorrectCountry(function() {
+              showFeedback(false, country_table[randValue]);
+            });
+          }
+        }).catch(function() {
+          clickLocked = false;
+        });
+      });
+
+      function highlightCorrectCountry(callback) {
+        var safeName = country_table[randValue].replace(/'/g, "''");
+        countrieslayer.queryFeatures({
+          where: "NAME_FR = '" + safeName + "'",
+          outFields: ["NAME_FR"],
+          returnGeometry: true
+        }).then(function(r) {
+          if (r.features.length) {
+            var f = r.features[0].clone();
+            f.symbol = {
+              type: "simple-fill",
+              color: [39, 174, 96, 0.25],
+              outline: { color: "#27AE60", width: "3px" }
+            };
+            view.graphics.add(f);
+            view.goTo(f.geometry.extent.expand(2.5), { duration: 600 });
+          }
+          callback();
+        }).catch(callback);
+      }
+
+      document.getElementById("restartBtn").addEventListener("click", startGame);
     });
   </script>
 </head>
 <body>
-  <div id="viewDiv">
-    <div id="titleDiv" class="esri-widget"><div id="title">Testez votre géographie</div></div>
-   
+  <div id="progressBar"></div>
+  <div id="viewDiv"></div>
+
+  <div id="questionPanel">
+    <div id="titleDiv">🌍 Quiz Géographique – Pays du monde</div>
+    <div id="questionDiv">
+      <div id="questionLabel">Cliquez sur le pays :</div>
+      <span id="questionText">Chargement…</span>
+      <div id="questionNum"></div>
+    </div>
   </div>
-  <div id="questionDiv" class="esri-widget">Trouvez le pays suivant : <span class="question">Pays à deviner</span></div>
-  <div id="counterPoints" class="esri-widget"><span class="pts">Points</span></div>
+
+  <div id="scoreDiv">Score : 0 / 0</div>
+  <div id="hintDiv">👆 Cliquez sur le pays indiqué</div>
+  <div id="feedbackDiv"></div>
+
+  <div id="gameOverDiv">
+    <h2>Partie terminée !</h2>
+    <div id="finalScore">0 / 20</div>
+    <div id="gradeText"></div>
+    <button id="restartBtn">↺ Rejouer</button>
+  </div>
 </body>
 </html>
