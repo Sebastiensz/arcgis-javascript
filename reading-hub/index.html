@@ -64,16 +64,21 @@
     /* ── Grid ─────────────────── */
     #grid { padding:20px 24px; }
 
-    /* ── Week layout ──────────── */
-    .weeks-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:18px; }
-    .week-card {
-      background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden;
+    /* ── Month layout ─────────── */
+    .months-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:20px; }
+    .month-card {
+      background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden;
     }
-    .week-header { padding:14px 18px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
-    .week-header .wnum { font-size:28px; font-weight:700; color:var(--gold); font-family:sans-serif; line-height:1; }
-    .week-header .winfo h3 { font-size:15px; color:white; }
-    .week-header .winfo p  { font-size:11px; color:var(--muted); margin-top:2px; font-family:sans-serif; }
-    .week-items { padding:10px 0; }
+    .month-header {
+      padding:16px 20px; display:flex; align-items:center; gap:14px; border-bottom:1px solid var(--border);
+    }
+    .month-header .mnum { font-size:38px; font-weight:700; font-family:sans-serif; line-height:1; min-width:52px; }
+    .month-header .minfo .mname { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; font-family:sans-serif; margin-bottom:3px; }
+    .month-header .minfo h3 { font-size:15px; color:white; font-weight:700; line-height:1.3; }
+    .month-week { border-bottom:1px solid rgba(42,37,53,.5); }
+    .month-week:last-child { border-bottom:none; }
+    .mw-label { padding:8px 16px 3px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; font-family:sans-serif; }
+    .month-items { padding-bottom:4px; }
     .wi {
       display:flex; align-items:flex-start; gap:10px; padding:9px 16px;
       border-bottom:1px solid rgba(42,37,53,.7); cursor:pointer; transition:background .1s;
@@ -152,7 +157,7 @@
 <div id="toolbar">
   <div id="searchWrap"><span>🔍</span><input type="text" id="srch" placeholder="Titre, auteur, thème…"></div>
   <div class="tabs">
-    <button class="tab on" data-tab="semaines">📅 Plan 4 semaines</button>
+    <button class="tab on" data-tab="annuel">📅 Plan Annuel</button>
     <button class="tab" data-tab="tout">Tout</button>
     <button class="tab" data-tab="articles">📰 Articles</button>
     <button class="tab" data-tab="gratuits">📚 Livres gratuits</button>
@@ -684,16 +689,104 @@ var ITEMS = [
   url:null, where:"J'ai Lu · Amazon · Fnac" },
 ];
 
-/* ── Plan 4 semaines ──────────────────────────── */
-var WEEKS = [
-  { num:1, title:"Politique & Pouvoir", focus:"Comprendre les structures du pouvoir politique",
-    ids:["fukuyama","huntington","tocqueville-art","le-prince","sandel-justice","yale-politics","on-tyranny","sapiens"] },
-  { num:2, title:"Société, Économie & Idées",  focus:"Décoder la mécanique sociale et économique",
-    ids:["mlk","paul-graham","piketty-article","zarathoustra","manifeste","yale-wellbeing","edinburgh-philo","thinking-fast","psych-money","capital-21"] },
-  { num:3, title:"Sciences & Futur",           focus:"Comprendre le monde physique et ce qui nous attend",
-    ids:["uninhabitable","great-filter","feynman-essay","darwin-art","frankenstein","origine-especes","discours-methode","mit-astro","brief-history","feynman-jokes"] },
-  { num:4, title:"Romans, SF & Synthèse",      focus:"Fiction comme outil de pensée + bilan personnel",
-    ids:["le-guin","asimov-last","machine-temps","guerre-mondes","1984","brave-new-world","dune","homo-deus"] },
+/* ── Plan Annuel 12 mois ──────────────────────── */
+var MONTHS = [
+  { num:1, name:"Janvier", title:"Fondements du Pouvoir Politique", color:"#c0392b",
+    weeks:[
+      { label:"S1 · Machiavel & les classiques", ids:["le-prince","tocqueville-art"] },
+      { label:"S2 · Le monde après 1989", ids:["fukuyama","huntington"] },
+      { label:"S3 · Éthique politique (cours Harvard)", ids:["sandel-justice"] },
+      { label:"S4 · Résistance pratique & actualité", ids:["on-tyranny"] }
+    ]
+  },
+  { num:2, name:"Février", title:"Démocraties : Vie, Crise & Mort", color:"#e74c3c",
+    weeks:[
+      { label:"S1 · Comment les démocraties meurent", ids:["how-democracies-die"] },
+      { label:"S2 · Le totalitarisme : anatomie complète", ids:["origins-totalitarianism"] },
+      { label:"S3 · 1984 — la fiction prophétique d'Orwell", ids:["1984"] },
+      { label:"S4 · Le XXIe siècle en 21 leçons", ids:["21-lessons"] }
+    ]
+  },
+  { num:3, name:"Mars", title:"Grandes Forces Historiques", color:"#e67e22",
+    weeks:[
+      { label:"S1 · 70 000 ans d'humanité", ids:["sapiens"] },
+      { label:"S2 · Pourquoi les nations échouent", ids:["why-nations-fail"] },
+      { label:"S3 · Homo Deus — l'avenir de l'espèce", ids:["homo-deus"] },
+      { label:"S4 · Géopolitique mondiale (cours Yale)", ids:["yale-politics"] }
+    ]
+  },
+  { num:4, name:"Avril", title:"Psychologie Sociale & Société", color:"#8e44ad",
+    weeks:[
+      { label:"S1 · MLK & la désobéissance civile", ids:["mlk"] },
+      { label:"S2 · Nos deux cerveaux", ids:["thinking-fast"] },
+      { label:"S3 · Comment les idées se propagent", ids:["tipping-point","outliers"] },
+      { label:"S4 · Statut, genre & biais systémiques", ids:["status-game","invisible-women"] }
+    ]
+  },
+  { num:5, name:"Mai", title:"Économie Politique & Inégalités", color:"#27ae60",
+    weeks:[
+      { label:"S1 · Marx & Piketty — les fondements", ids:["manifeste","piketty-article"] },
+      { label:"S2 · Le Capital au XXIe siècle", ids:["capital-21"] },
+      { label:"S3 · La psychologie de l'argent", ids:["psych-money"] },
+      { label:"S4 · Pauvreté & développement", ids:["poor-economics","freakonomics"] }
+    ]
+  },
+  { num:6, name:"Juin", title:"Finance, Marchés & Excellence", color:"#16a085",
+    weeks:[
+      { label:"S1 · La crise de 2008 de l'intérieur", ids:["big-short"] },
+      { label:"S2 · Wall Street & trading haute fréquence", ids:["flash-boys"] },
+      { label:"S3 · Science du bien-être (cours Yale)", ids:["yale-wellbeing"] },
+      { label:"S4 · Comment produire un travail remarquable", ids:["paul-graham"] }
+    ]
+  },
+  { num:7, name:"Juillet", title:"Méthode, Philosophie & Pensée Critique", color:"#2980b9",
+    weeks:[
+      { label:"S1 · Descartes & la méthode scientifique", ids:["discours-methode"] },
+      { label:"S2 · Nietzsche & la critique des valeurs", ids:["zarathoustra"] },
+      { label:"S3 · Feynman & la joie de comprendre", ids:["feynman-essay"] },
+      { label:"S4 · Introduction à la philosophie (cours Edinburgh)", ids:["edinburgh-philo"] }
+    ]
+  },
+  { num:8, name:"Août", title:"Sciences de la Vie & Éthique", color:"#1abc9c",
+    weeks:[
+      { label:"S1 · Darwin dans le texte original", ids:["darwin-art","origine-especes"] },
+      { label:"S2 · Frankenstein — éthique du créateur", ids:["frankenstein"] },
+      { label:"S3 · Le génome, de Mendel à CRISPR", ids:["the-gene"] },
+      { label:"S4 · Le corps humain de A à Z", ids:["body"] }
+    ]
+  },
+  { num:9, name:"Septembre", title:"Physique, Cosmos & Univers", color:"#3498db",
+    weeks:[
+      { label:"S1 · Feynman — le génie rieur", ids:["feynman-jokes"] },
+      { label:"S2 · Hawking & les mystères du temps", ids:["brief-history"] },
+      { label:"S3 · Astrophysique complète (cours MIT)", ids:["mit-astro"] },
+      { label:"S4 · Le Grand Filtre & paradoxe de Fermi", ids:["great-filter"] }
+    ]
+  },
+  { num:10, name:"Octobre", title:"Romans Cultes du XXe Siècle", color:"#d4a017",
+    weeks:[
+      { label:"S1 · Huxley — le plaisir comme contrôle", ids:["brave-new-world"] },
+      { label:"S2 · Fitzgerald — désillusion américaine", ids:["great-gatsby"] },
+      { label:"S3 · Salinger — voix de la jeunesse", ids:["catcher-rye"] },
+      { label:"S4 · Asimov — la science comme civilisation", ids:["foundation"] }
+    ]
+  },
+  { num:11, name:"Novembre", title:"Science-Fiction & Futurs Possibles", color:"#9b59b6",
+    weeks:[
+      { label:"S1 · Herbert — politique, écologie, empire", ids:["dune"] },
+      { label:"S2 · Gibson & les fondateurs du cyberpunk", ids:["neuromancer"] },
+      { label:"S3 · H.G. Wells — les deux classiques fondateurs", ids:["machine-temps","guerre-mondes"] },
+      { label:"S4 · Le Guin & Asimov — nouvelles essentielles", ids:["le-guin","asimov-last"] }
+    ]
+  },
+  { num:12, name:"Décembre", title:"Futur, Singularité & Bilan Annuel", color:"#f39c12",
+    weeks:[
+      { label:"S1 · La Terre inhabitable", ids:["uninhabitable"] },
+      { label:"S2 · Kurzweil — l'accélération exponentielle", ids:["singularity"] },
+      { label:"S3 · Vos 3 coups de cœur — relecture & notes", ids:[] },
+      { label:"S4 · Bilan & programme pour l'année suivante", ids:[] }
+    ]
+  }
 ];
 
 /* ── LocalStorage ────────────────────────────── */
@@ -703,7 +796,7 @@ function saveRead(r){ localStorage.setItem(READ_KEY, JSON.stringify(r)); }
 var readSet = loadRead();
 
 /* ── State ───────────────────────────────────── */
-var st = { tab:"semaines", theme:"all", q:"" };
+var st = { tab:"annuel", theme:"all", q:"" };
 
 /* ── Theme chips ─────────────────────────────── */
 function initChips() {
@@ -789,48 +882,54 @@ function render() {
   grid.innerHTML = "";
   document.getElementById("sRead").textContent = readSet.length;
 
-  if (st.tab === "semaines") renderWeeks(grid);
+  if (st.tab === "annuel") renderMonths(grid);
   else renderCards(grid);
 }
 
-function renderWeeks(grid) {
+function renderMonths(grid) {
   var wrap = document.createElement("div");
-  wrap.className = "weeks-grid";
+  wrap.className = "months-grid";
 
-  WEEKS.forEach(function(w) {
-    var wc = document.createElement("div");
-    wc.className = "week-card";
-    var items = w.ids.map(function(id){ return ITEMS.find(function(s){ return s.id===id; }); }).filter(Boolean);
+  MONTHS.forEach(function(m) {
+    var mc = document.createElement("div");
+    mc.className = "month-card";
 
-    var inner = '<div class="week-header">'
-      + '<div class="wnum">S'+w.num+'</div>'
-      + '<div class="winfo"><h3>'+w.title+'</h3><p>'+w.focus+'</p></div>'
-      + '</div><div class="week-items">';
+    var header = '<div class="month-header" style="border-top:3px solid '+m.color+'">'
+      + '<div class="mnum" style="color:'+m.color+'">'+String(m.num).padStart(2,'0')+'</div>'
+      + '<div class="minfo"><div class="mname">'+m.name+'</div><h3>'+m.title+'</h3></div>'
+      + '</div>';
 
-    items.forEach(function(s) {
-      var col   = THEMES[s.theme].color;
-      var isRead = readSet.includes(s.id);
-      inner += '<div class="wi" onclick="scrollToCard(\''+s.id+'\')">'
-        + '<div class="wi-icon">'+s.icon+'</div>'
-        + '<div class="wi-info">'
-        +   '<div class="wi-title" style="text-decoration:'+(isRead?'line-through':'none')+';opacity:'+(isRead?.55:1)+'">'+s.title+'</div>'
-        +   '<div class="wi-meta"><span style="color:'+col+'">'+THEMES[s.theme].label+'</span> · '+TYPE_LABELS[s.type]+'</div>'
-        + '</div>'
-        + '<div class="wi-time">'+s.time+'</div>'
-        + '</div>';
+    var body = '';
+    m.weeks.forEach(function(w) {
+      var items = w.ids.map(function(id){ return ITEMS.find(function(s){ return s.id===id; }); }).filter(Boolean);
+      body += '<div class="month-week">';
+      body += '<div class="mw-label" style="color:'+m.color+'">'+w.label+'</div>';
+      body += '<div class="month-items">';
+      if (items.length === 0) {
+        body += '<div class="wi" style="opacity:.35;cursor:default"><div class="wi-icon">✨</div>'
+          + '<div class="wi-info"><div class="wi-title">Relecture · Notes · Réflexion personnelle</div></div></div>';
+      } else {
+        items.forEach(function(s) {
+          var col = THEMES[s.theme].color;
+          var isRead = readSet.includes(s.id);
+          body += '<div class="wi" onclick="scrollToCard(\''+s.id+'\')">'
+            + '<div class="wi-icon">'+s.icon+'</div>'
+            + '<div class="wi-info">'
+            +   '<div class="wi-title" style="text-decoration:'+(isRead?'line-through':'none')+';opacity:'+(isRead?.55:1)+'">'+s.title+'</div>'
+            +   '<div class="wi-meta"><span style="color:'+col+'">'+THEMES[s.theme].label+'</span> · '+TYPE_LABELS[s.type]+' · '+s.time+'</div>'
+            + '</div>'
+            + '<div class="wi-time" style="color:'+(isRead?'var(--gold)':'var(--muted)')+'">'+(isRead?'✓':'→')+'</div>'
+            + '</div>';
+        });
+      }
+      body += '</div></div>';
     });
 
-    inner += '</div>';
-    wc.innerHTML = inner;
-    wrap.appendChild(wc);
+    mc.innerHTML = header + body;
+    wrap.appendChild(mc);
   });
 
-  var detail = document.createElement("div");
-  detail.id = "week-detail";
-  detail.style.cssText = "margin-top:24px";
-
   grid.appendChild(wrap);
-  grid.appendChild(detail);
 }
 
 window.scrollToCard = function(id) {
