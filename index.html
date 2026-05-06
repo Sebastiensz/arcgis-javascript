@@ -1,204 +1,537 @@
-<!DOCTYPE HTML>
-<!--
-Multiverse by HTML5 UP
-html5up.net | @ajlkn
-Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
-<html>
-
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <title>CodeTheMap</title>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <link rel="stylesheet" href="./website/css/main.css" />
-  <noscript>
-    <link rel="stylesheet" href="./website/css/noscript.css" /></noscript>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodeTheMap — Applications ArcGIS JavaScript</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #09080e;
+      --panel:   #100f18;
+      --card:    #17151f;
+      --border:  #2a2535;
+      --text:    #e8e0d5;
+      --muted:   #7a6f8a;
+      --gold:    #d4a017;
+      --gold2:   #f0c040;
+      --green:   #22c55e;
+      --blue:    #3b82f6;
+      --red:     #ef4444;
+      --purple:  #8b5cf6;
+      --teal:    #14b8a6;
+      --orange:  #f97316;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; min-height: 100%; }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0d0a16 0%, #0a0d1a 60%, #0a100d 100%);
+      padding: 48px 40px 40px;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    .logo { font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    header h1 { font-size: 38px; font-weight: 700; color: white; line-height: 1.2; }
+    header h1 em { font-style: italic; color: var(--gold2); }
+    header p { color: var(--muted); font-size: 15px; margin-top: 12px; max-width: 580px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+    .header-links { display: flex; justify-content: center; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+    .header-links a { padding: 7px 18px; border-radius: 6px; border: 1px solid var(--border); color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 600; transition: all .15s; }
+    .header-links a:hover { color: var(--gold); border-color: var(--gold); }
+
+    /* ── Layout ── */
+    main { max-width: 1400px; margin: 0 auto; padding: 40px 28px 60px; }
+
+    /* ── Section ── */
+    .section-hdr {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 20px; margin-top: 44px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-hdr:first-child { margin-top: 0; }
+    .section-hdr h2 { font-size: 18px; font-weight: 700; color: white; }
+    .section-hdr .cnt { font-size: 11px; color: var(--muted); font-weight: 600; background: rgba(255,255,255,.05); padding: 2px 8px; border-radius: 10px; }
+    .section-hdr p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+    /* ── Grid ── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; }
+    .grid-featured { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; display: flex; flex-direction: column; gap: 10px;
+      text-decoration: none; color: inherit;
+      transition: transform .15s, box-shadow .15s, border-color .15s;
+      position: relative; overflow: hidden;
+    }
+    .card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent, var(--gold)); border-radius: 12px 12px 0 0; }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.5); border-color: var(--accent, var(--gold)); }
+
+    .card-top { display: flex; align-items: flex-start; gap: 12px; }
+    .card-icon { font-size: 32px; line-height: 1; flex-shrink: 0; }
+    .card-titles { flex: 1; min-width: 0; }
+    .card-title { font-size: 15px; font-weight: 700; color: white; line-height: 1.3; }
+    .card-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .card-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .card-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 700; width: fit-content; margin-top: auto; }
+    .card-link {
+      display: block; text-align: center; padding: 8px; border-radius: 7px;
+      border: 1px solid var(--border); color: var(--muted); text-decoration: none;
+      font-size: 12px; font-weight: 600; transition: all .15s; margin-top: auto;
+    }
+    .card-link:hover { color: var(--accent, var(--gold)); border-color: var(--accent, var(--gold)); background: rgba(255,255,255,.03); }
+
+    /* Featured cards */
+    .card-featured {
+      background: linear-gradient(135deg, var(--card) 0%, rgba(255,255,255,.02) 100%);
+      border-radius: 14px; padding: 24px;
+    }
+    .card-featured .card-icon { font-size: 40px; }
+    .card-featured .card-title { font-size: 17px; }
+
+    /* ── Footer ── */
+    footer { background: var(--panel); border-top: 1px solid var(--border); padding: 32px 40px; text-align: center; }
+    footer p { color: var(--muted); font-size: 12px; line-height: 1.7; }
+    footer a { color: var(--gold); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      header { padding: 32px 20px 28px; }
+      header h1 { font-size: 28px; }
+      main { padding: 24px 16px 48px; }
+    }
+  </style>
 </head>
+<body>
 
-<body class="is-preload">
+<header>
+  <div class="logo">CodeTheMap</div>
+  <h1>Applications <em>ArcGIS</em> JavaScript</h1>
+  <p>Une collection d'expériences cartographiques, de hubs de données et d'outils personnels — tous construits avec ArcGIS API for JavaScript et des technologies web.</p>
+  <div class="header-links">
+    <a href="https://github.com/Sebastiensz/arcgis-javascript" target="_blank">⬡ GitHub</a>
+    <a href="https://developers.arcgis.com/javascript/" target="_blank">📚 ArcGIS JS API</a>
+    <a href="https://sebastiensz.github.io/arcgis-javascript/" target="_blank">🌐 Site en ligne</a>
+  </div>
+</header>
 
-  <!-- Wrapper -->
-  <div id="wrapper">
+<main>
 
-    <!-- Header -->
-    <header id="header">
-      <h1><a href="index.html">Applications ArcGIS JavaScript</a></h1>
-      <nav>
-        <ul>
-          <li><a href="#footer" class="icon fa-info-circle">A propos</a></li>
-        </ul>
-      </nav>
-    </header>
+  <!-- ════════════════════════════════════════
+       HUBS PERSONNELS
+  ════════════════════════════════════════ -->
+  <div class="section-hdr">
+    <h2>🎯 Hubs Personnels</h2>
+    <span class="cnt">4 apps</span>
+  </div>
+  <div class="grid-featured">
 
-    <!-- Main -->
-    <div id="main">
-      <article class="thumb">
-        <a href="./website/images/globe-extreme.PNG" class="image"><img src="./website/images/globe-extreme.PNG"
-            alt="" /></a>
-        <h2>Globe-Extreme</h2>
-        <p> Visualization of extreme heights on Earth. <a href="./globe-extreme/">Live demo</a>.
-        </p>
-      </article>
-      <article class="thumb">
-        <a href="./website/images/clusteringpowerplants.PNG" class="image"><img src="./website/images/clusteringpowerplants.PNG"
-            alt="" /></a>
-        <h2>Clustering Powerplants</h2>
-        <p>An app that maps the powerplants in the world with the firefly symbology <a href="./clustering_powerplants/">Live demo</a>.
-        </p>
-      </article>
-      <article class="thumb">
-        <a href="./website/images/earthquakes.png" class="image"><img src="./website/images/earthquakes.png"
-            alt="" /></a>
-        <h2>Earthquakes in real time</h2>
-        <p>Displays earthquakes between 2008 and 2018.
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/natcat/earthquake/usgs_data/index.html">live demo</a>.
-        </p>
-      </article>
-            <article class="thumb">
-        <a href="./website/images/earthquakes_heatmap.PNG" class="image"><img src="./website/images/earthquakes_heatmap.PNG"
-            alt="" /></a>
-        <h2>Earthquakes heatmap in real time</h2>
-        <p>Displays an heatmap of earthquakes between 2008 and 2018.
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/natcat/earthquake/usgs_data/earthquake_heatmap.html">live demo</a>.
-        </p>
-      </article>
-      
-                  <article class="thumb">
-        <a href="./website/images/earthquakes3Dlastmonth.PNG" class="image"><img src="./website/images/earthquakes3Dlastmonth.PNG"
-            alt="" /></a>
-        <h2>Last months earthquakes in 3D</h2>
-        <p>Displays an heatmap of earthquakes between 2008 and 2018.
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/natcat/earthquake/usgs_data/earthquakes_last_month_3D.html">live demo</a>.
-        </p>
-      </article>
-      
-                 <article class="thumb">
-        <a href="./website/images/earthquakes_lumineux.PNG" class="image"><img src="./website/images/earthquakes_lumineux.PNG"
-            alt="" /></a>
-        <h2>Earthquakes heatmap in real time</h2>
-        <p>Displays an heatmap of earthquakes between 2008 and 2018.
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/seisme%20globe%20lumineux/">live demo</a>.
-        </p>
-      </article>
-      
-      <article class="thumb">
-        <a href="./website/images/covid19.PNG" class="image"><img src="./website/images/covid19.PNG"
-            alt="" /></a>
-        <h2>Covid-19 Spreading</h2>
-        <p>Observe the Covid-19 spreading around the World since the beginning. Updates every day.
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/covid-19/covid19-spreading/">live demo</a>.
-        </p>
-      </article>
-      <article class="thumb">
-        <a href="./website/images/100km_application.PNG" class="image"><img src="./website/images/100km_application.PNG"
-            alt="" /></a>
-        <h2>100km radius after deconfinement</h2>
-        <p>Observe the area where people can go in a 100km radius after deconfinement
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/covid-19/perimetre-100-km/">live demo</a>.
-          
-          <! --  "https://deconfinement.logiciel-sig.com/" -->
-        </p>
-      </article>
-      <article class="thumb">
-        <a href="./website/images/appli_vaccin_js.PNG" class="image"><img src="./website/images/appli_vaccin_js.PNG"
-            alt="vaccination over the world image" /></a>
-        <h2>COVID-19 vaccines over the world</h2>
-        <p>Discover the Covid-19 vaccines over the world with the absolute value and the rate by population.
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/covid-19/covid19-vaccin/">live demo</a>.
-        </p>
-      </article>
-            <article class="thumb">
-        <a href="./website/images/ever-given-boat.PNG" class="image"><img src="./website/images/ever-given-boat.PNG"
-            alt="ever-given boat" /></a>
-        <h2>Play with the Ever-Given boat</h2>
-        <p>You can edit the size of the boat to see in other places a potential blockage
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/ever-given/">live demo</a>.
-        </p>
-      </article>
-      <article class="thumb">
-        <a href="./website/images/world-population-2020.PNG" class="image"><img src="./website/images/world-population-2020.PNG"
-            alt="world-population-2020" /></a>
-        <h2>See the 2020 World Population by density</h2>
-        <p>You can use the slider to filter the map to see only density above the value defined in the slider.
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/world-population-2020/">live demo</a>.
-        </p>
-      </article>
-      
-            <article class="thumb">
-        <a href="./website/images/carburants_carte_et_logo.png" class="image"><img src="./website/images/carburants_carte_et_logo.png"
-            alt="carburants_carte_et_logo" /></a>
-        <h2>Observe fuel prices by station in France.</h2>
-        <p>You can filter stations by fuel type and see which stations are open 24 hours a day.
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/carburants/">live demo</a>.
-        </p>
-      </article>
-      
-                  <article class="thumb">
-        <a href="./website/images/wind_FlowRenderer.PNG" class="image"><img src="./website/images/wind_FlowRenderer.PNG"
-            alt="wind_FlowRenderer" /></a>
-        <h2>Wind FlowRenderer</h2>
-        <p>This sample shows how to apply the FlowRenderer to an ImageryTileLayer to create an animated streamline visualization of wind speed and direction during Hurricane Ida in August 2021.
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/natcat/wind/USA/">live demo</a>.
-        </p>
-      </article>
-      
-        <article class="thumb">
-        <a href="./website/images/hurricane_stereographicprojection.PNG" class="image"><img src="./website/images/hurricane_stereographicprojection.PNG"
-            alt="hurricane_stereographicprojection" /></a>
-        <h2>Hurricanes</h2>
-        <p>This sample demonstrates how a CSVLayer can re-project client-side to other spatial references. The raw data of the CSVLayer contains latitude/longitude coordinates, but the SpatialReference of the MapView is a South Pole Stereographic projection. 
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/natcat/wind/hurricane_south_stereographic_projection.html">live demo</a>.
-        </p>
-      </article>
-      
-              <article class="thumb">
-        <a href="./website/images/geography-game.PNG" class="image"><img src="./website/images/geography-game.PNG"
-            alt="geography-game" /></a>
-        <h2>Geography Game : Guess where are the countries </h2>
-        <p>The game offers you a series of 20 countries, you have to guess their position to get the best score possible. Good luck ! 
-          See the <a href="https://sebastiensz.github.io/arcgis-javascript/quizz-geographique/">live demo</a>.
-        </p>
-      </article>
-      
-    </div>
-
-    <!-- Footer -->
-    <footer id="footer" class="panel">
-      <div>
-        <section>
-          <h2>Applications JavaScript CodeTheMap</h2>
-          <p>This repository is just a collection of small experiments I make with <a href="https://developers.arcgis.com/javascript/">ArcGIS API for JavaScript</a>.
-          The data comes either from OpenData portals, Esri's Living Atlas, Natural Earth or OpenStreetMap.
-          All these demo apps are under <a href="https://github.com/RalucaNicola/JSAPI_demos/blob/master/LICENSE">Apache
-            2.0 License</a>.
-          They live on <a href="https://github.com/Sebastiensz/demos_arcgisJS">GitHub</a>
-          </p>
-        </section>
-        <section>
-          <ul class="icons">
-            <li><a href="https://twitter.com/szollosisbasti1" class="icon fa-twitter"><span class="label">Twitter</span></a></li>
-            <li><a href="https://github.com/Sebastiensz/demos_arcgisJS" class="icon fa-github"><span class="label">GitHub</span></a></li>
-          </ul>
-        </section>
-        <section>
-          <p class="copyright">
-            This site is using multiverse theme by <a href="http://html5up.net">HTML5 UP</a> and is hosted on GitHub
-            Pages.
-          </p>
-        </section>
-
+    <a class="card card-featured" href="https://sebastiensz.github.io/arcgis-javascript/catnat-hub/" target="_blank" style="--accent:#e74c3c">
+      <div class="card-top">
+        <div class="card-icon">🌊</div>
+        <div class="card-titles">
+          <div class="card-title">CatNat Hub</div>
+          <div class="card-sub">Catastrophes naturelles France</div>
+        </div>
       </div>
-    </footer>
+      <div class="card-desc">Tableau de bord complet des catastrophes naturelles en France depuis 1909 : cartes interactives, graphiques sinistralité, gap de protection assurantiel, données filtrables par péril, pays et date.</div>
+      <div class="card-link">→ Voir le hub</div>
+    </a>
+
+    <a class="card card-featured" href="https://sebastiensz.github.io/arcgis-javascript/entertainment-hub/" target="_blank" style="--accent:#8b5cf6">
+      <div class="card-top">
+        <div class="card-icon">🎬</div>
+        <div class="card-titles">
+          <div class="card-title">Entertainment Hub</div>
+          <div class="card-sub">Streaming gratuit & légal</div>
+        </div>
+      </div>
+      <div class="card-desc">36 sources de streaming et de divertissement gratuites et légales : films, musique, podcasts, jeux, documentaires. Filtres par catégorie, langue, présence ou non de publicités.</div>
+      <div class="card-link">→ Voir le hub</div>
+    </a>
+
+    <a class="card card-featured" href="https://sebastiensz.github.io/arcgis-javascript/reading-hub/" target="_blank" style="--accent:#d4a017">
+      <div class="card-top">
+        <div class="card-icon">📖</div>
+        <div class="card-titles">
+          <div class="card-title">Reading Hub</div>
+          <div class="card-sub">Bibliothèque & plan lecture annuel</div>
+        </div>
+      </div>
+      <div class="card-desc">55 ressources (articles, livres gratuits, cours, livres payants) sur 7 thèmes : politique, société, économie, romans, sciences, futur. Plan de lecture annuel sur 12 mois avec suivi de progression.</div>
+      <div class="card-link">→ Voir la bibliothèque</div>
+    </a>
+
+    <a class="card card-featured" href="https://sebastiensz.github.io/arcgis-javascript/budget-perso/" target="_blank" style="--accent:#22c55e">
+      <div class="card-top">
+        <div class="card-icon">💰</div>
+        <div class="card-titles">
+          <div class="card-title">Budget Perso 2026</div>
+          <div class="card-sub">Tableau de bord financier</div>
+        </div>
+      </div>
+      <div class="card-desc">Suivi budget personnel complet : revenus, dépenses (fixes, variables, activités, exceptionnelles), patrimoine (Livret A, PEE, PEA, AV, PER…). Données éditables directement dans l'interface, sauvegarde automatique.</div>
+      <div class="card-link">→ Voir le budget</div>
+    </a>
 
   </div>
-  <!-- Scripts -->
-  <script src="./website/js/jquery.min.js"></script>
-  <script src="./website/js/jquery.poptrox.min.js"></script>
-  <script src="./website/js/browser.min.js"></script>
-  <script src="./website/js/breakpoints.min.js"></script>
-  <script src="./website/js/util.js"></script>
-  <script src="./website/js/main.js"></script>
+
+  <!-- ════════════════════════════════════════
+       FINANCE & ANALYSE
+  ════════════════════════════════════════ -->
+  <div class="section-hdr">
+    <h2>📊 Finance & Analyse</h2>
+    <span class="cnt">1 app</span>
+  </div>
+  <div class="grid">
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/budget-dashboard/" target="_blank" style="--accent:#3b82f6">
+      <div class="card-top">
+        <div class="card-icon">📈</div>
+        <div class="card-titles">
+          <div class="card-title">Dashboard Financier</div>
+          <div class="card-sub">Upload Excel → analyse automatique</div>
+        </div>
+      </div>
+      <div class="card-desc">Importez votre fichier Excel de budget et visualisez automatiquement votre patrimoine, vos revenus/dépenses, votre taux d'épargne et vos projections par scénario.</div>
+      <div class="card-link">→ Voir le dashboard</div>
+    </a>
+
+  </div>
+
+  <!-- ════════════════════════════════════════
+       COVID-19
+  ════════════════════════════════════════ -->
+  <div class="section-hdr">
+    <h2>🦠 COVID-19</h2>
+    <span class="cnt">3 apps</span>
+  </div>
+  <div class="grid">
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/covid-19/covid19-spreading/" target="_blank" style="--accent:#ef4444">
+      <div class="card-top">
+        <div class="card-icon">🌍</div>
+        <div class="card-titles">
+          <div class="card-title">Covid-19 Spreading</div>
+          <div class="card-sub">Propagation mondiale animée</div>
+        </div>
+      </div>
+      <div class="card-desc">Observez la propagation du Covid-19 dans le monde depuis le début de l'épidémie. TimeSlider animé, taux de létalité par pays, mise à jour quotidienne.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/covid-19/covid19-vaccin/" target="_blank" style="--accent:#ef4444">
+      <div class="card-top">
+        <div class="card-icon">💉</div>
+        <div class="card-titles">
+          <div class="card-title">Vaccins Covid-19</div>
+          <div class="card-sub">Campagnes mondiales de vaccination</div>
+        </div>
+      </div>
+      <div class="card-desc">Découvrez les campagnes de vaccination Covid-19 dans le monde : valeur absolue et taux par population. Comparaison entre pays en temps réel.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/covid-19/perimetre-100-km/" target="_blank" style="--accent:#ef4444">
+      <div class="card-top">
+        <div class="card-icon">📏</div>
+        <div class="card-titles">
+          <div class="card-title">Périmètre 100 km</div>
+          <div class="card-sub">Zone de déplacement post-confinement</div>
+        </div>
+      </div>
+      <div class="card-desc">Visualisez la zone accessible dans un rayon de 100 km autour de votre position depuis n'importe quel point de France, après le déconfinement de 2020.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+  </div>
+
+  <!-- ════════════════════════════════════════
+       CATASTROPHES NATURELLES
+  ════════════════════════════════════════ -->
+  <div class="section-hdr">
+    <h2>🌋 Catastrophes Naturelles & Météo</h2>
+    <span class="cnt">8 apps</span>
+  </div>
+  <div class="grid">
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/natcat/earthquake/usgs_data/index.html" target="_blank" style="--accent:#f97316">
+      <div class="card-top">
+        <div class="card-icon">🌋</div>
+        <div class="card-titles">
+          <div class="card-title">Séismes en temps réel</div>
+          <div class="card-sub">USGS · 2008–2018</div>
+        </div>
+      </div>
+      <div class="card-desc">Visualisation des séismes mondiaux entre 2008 et 2018 à partir des données de l'USGS. Magnitude, profondeur et localisation en temps réel.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/natcat/earthquake/usgs_data/earthquake_heatmap.html" target="_blank" style="--accent:#f97316">
+      <div class="card-top">
+        <div class="card-icon">🔥</div>
+        <div class="card-titles">
+          <div class="card-title">Séismes — Heatmap</div>
+          <div class="card-sub">Carte de densité mondiale</div>
+        </div>
+      </div>
+      <div class="card-desc">Carte de densité des séismes mondiaux de 2008 à 2018. Identifiez visuellement les zones de plus forte activité sismique à l'échelle planétaire.</div>
+      <div class="card-link">→ Voir la heatmap</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/natcat/earthquake/usgs_data/earthquakes_last_month_3D.html" target="_blank" style="--accent:#f97316">
+      <div class="card-top">
+        <div class="card-icon">🌐</div>
+        <div class="card-titles">
+          <div class="card-title">Séismes 3D</div>
+          <div class="card-sub">Dernier mois — Globe interactif</div>
+        </div>
+      </div>
+      <div class="card-desc">Globe 3D interactif des séismes du dernier mois. Explorez la profondeur des foyers et la magnitude de chaque événement en trois dimensions.</div>
+      <div class="card-link">→ Voir le globe</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/seisme%20globe%20lumineux/" target="_blank" style="--accent:#f97316">
+      <div class="card-top">
+        <div class="card-icon">✨</div>
+        <div class="card-titles">
+          <div class="card-title">Globe Séismique Lumineux</div>
+          <div class="card-sub">Visualisation « firefly »</div>
+        </div>
+      </div>
+      <div class="card-desc">Globe 3D lumineux avec symbologie « firefly » pour les séismes mondiaux. Un rendu artistique et percutant pour visualiser l'activité sismique planétaire.</div>
+      <div class="card-link">→ Voir le globe</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/incendies-USA/" target="_blank" style="--accent:#f97316">
+      <div class="card-top">
+        <div class="card-icon">🔥</div>
+        <div class="card-titles">
+          <div class="card-title">Incendies USA</div>
+          <div class="card-sub">Feux de forêt aux États-Unis</div>
+        </div>
+      </div>
+      <div class="card-desc">Cartographie des incendies de forêt aux États-Unis. Données de superficie brûlée, localisation et évolution temporelle des grands feux américains.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/natcat/wind/USA/" target="_blank" style="--accent:#14b8a6">
+      <div class="card-top">
+        <div class="card-icon">🌀</div>
+        <div class="card-titles">
+          <div class="card-title">Wind FlowRenderer</div>
+          <div class="card-sub">Ouragan Ida — Animation vent</div>
+        </div>
+      </div>
+      <div class="card-desc">Visualisation animée de la vitesse et direction du vent pendant l'ouragan Ida (août 2021) avec le FlowRenderer d'ArcGIS appliqué à un ImageryTileLayer.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/natcat/wind/hurricane_south_stereographic_projection.html" target="_blank" style="--accent:#14b8a6">
+      <div class="card-top">
+        <div class="card-icon">🌪️</div>
+        <div class="card-titles">
+          <div class="card-title">Ouragans</div>
+          <div class="card-sub">Projection stéréographique polaire</div>
+        </div>
+      </div>
+      <div class="card-desc">Trajectoires d'ouragans reprojetées en projection stéréographique Pôle Sud. Démontre la reprojection client-side d'un CSVLayer dans ArcGIS JS API.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/nukemap/" target="_blank" style="--accent:#ef4444">
+      <div class="card-top">
+        <div class="card-icon">💥</div>
+        <div class="card-titles">
+          <div class="card-title">Nukemap</div>
+          <div class="card-sub">Simulation d'impact nucléaire</div>
+        </div>
+      </div>
+      <div class="card-desc">Simulez l'impact d'une explosion nucléaire sur une ville. Visualisez les zones de souffle, de chaleur et de radiation selon la puissance de la bombe.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+  </div>
+
+  <!-- ════════════════════════════════════════
+       GLOBE & CARTOGRAPHIE
+  ════════════════════════════════════════ -->
+  <div class="section-hdr">
+    <h2>🗺️ Globe & Cartographie</h2>
+    <span class="cnt">10 apps</span>
+  </div>
+  <div class="grid">
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/globe-extreme/" target="_blank" style="--accent:#8b5cf6">
+      <div class="card-top">
+        <div class="card-icon">🏔️</div>
+        <div class="card-titles">
+          <div class="card-title">Globe Extreme</div>
+          <div class="card-sub">Hauteurs extrêmes sur Terre</div>
+        </div>
+      </div>
+      <div class="card-desc">Visualisation 3D des altitudes extrêmes de notre planète : sommets, fosses océaniques, plaines. Un globe interactif pour explorer les contrastes topographiques de la Terre.</div>
+      <div class="card-link">→ Voir le globe</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/clustering_powerplants/" target="_blank" style="--accent:#f59e0b">
+      <div class="card-top">
+        <div class="card-icon">⚡</div>
+        <div class="card-titles">
+          <div class="card-title">Centrales Électriques</div>
+          <div class="card-sub">Clustering mondial « firefly »</div>
+        </div>
+      </div>
+      <div class="card-desc">Cartographie mondiale des centrales électriques avec la symbologie Firefly et le clustering ArcGIS. Filtrez par type de source d'énergie.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/world-population-2020/" target="_blank" style="--accent:#3b82f6">
+      <div class="card-top">
+        <div class="card-icon">👥</div>
+        <div class="card-titles">
+          <div class="card-title">Population Mondiale 2020</div>
+          <div class="card-sub">Densité par slider</div>
+        </div>
+      </div>
+      <div class="card-desc">Visualisez la densité de population mondiale en 2020. Un slider permet de filtrer dynamiquement les zones selon un seuil de densité défini.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/carburants/" target="_blank" style="--accent:#22c55e">
+      <div class="card-top">
+        <div class="card-icon">⛽</div>
+        <div class="card-titles">
+          <div class="card-title">Carburants France</div>
+          <div class="card-sub">Prix par station-service</div>
+        </div>
+      </div>
+      <div class="card-desc">Observez les prix des carburants par station en France. Filtrez par type de carburant et identifiez les stations ouvertes 24h/24.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/ever-given/" target="_blank" style="--accent:#14b8a6">
+      <div class="card-top">
+        <div class="card-icon">🚢</div>
+        <div class="card-titles">
+          <div class="card-title">Ever-Given</div>
+          <div class="card-sub">Simulez un blocage de canal</div>
+        </div>
+      </div>
+      <div class="card-desc">Modifiez la taille du porte-conteneurs Ever-Given et positionnez-le n'importe où dans le monde pour visualiser un potentiel blocage de canal ou de détroit.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/carte-de-France/" target="_blank" style="--accent:#3b82f6">
+      <div class="card-top">
+        <div class="card-icon">🇫🇷</div>
+        <div class="card-titles">
+          <div class="card-title">Carte de France</div>
+          <div class="card-sub">Données géographiques françaises</div>
+        </div>
+      </div>
+      <div class="card-desc">Exploration interactive des données géographiques françaises. Découvrez les territoires, données administratives et statistiques à l'échelle nationale.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/liste-incidents-route-Europe/" target="_blank" style="--accent:#f97316">
+      <div class="card-top">
+        <div class="card-icon">🚗</div>
+        <div class="card-titles">
+          <div class="card-title">Incidents Routiers Europe</div>
+          <div class="card-sub">Tableau de suivi temps réel</div>
+        </div>
+      </div>
+      <div class="card-desc">Liste et carte des incidents routiers en Europe. Visualisez en temps réel les accidents, travaux et perturbations sur les grands axes européens.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/quizz-geographique/" target="_blank" style="--accent:#d4a017">
+      <div class="card-top">
+        <div class="card-icon">🌍</div>
+        <div class="card-titles">
+          <div class="card-title">Quiz Géographique</div>
+          <div class="card-sub">Devinez les pays sur la carte</div>
+        </div>
+      </div>
+      <div class="card-desc">20 pays à localiser sur une carte vierge — cliquez sur la bonne position pour marquer des points. Testez votre connaissance de la géographie mondiale !</div>
+      <div class="card-link">→ Jouer</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/tothemoon/" target="_blank" style="--accent:#8b5cf6">
+      <div class="card-top">
+        <div class="card-icon">🚀</div>
+        <div class="card-titles">
+          <div class="card-title">To the Moon</div>
+          <div class="card-sub">Modèle 3D glTF interactif</div>
+        </div>
+      </div>
+      <div class="card-desc">Visualisation 3D d'un modèle glTF dans une scène ArcGIS. Explorez un environnement spatial en trois dimensions avec les capacités 3D de l'API JavaScript.</div>
+      <div class="card-link">→ Voir la scène</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/Mars/" target="_blank" style="--accent:#ef4444">
+      <div class="card-top">
+        <div class="card-icon">🔴</div>
+        <div class="card-titles">
+          <div class="card-title">Mars</div>
+          <div class="card-sub">Exploration de la planète rouge</div>
+        </div>
+      </div>
+      <div class="card-desc">Exploration cartographique de la surface martienne. Visualisez la topographie et les données géologiques de Mars avec ArcGIS JavaScript API.</div>
+      <div class="card-link">→ Explorer Mars</div>
+    </a>
+
+  </div>
+
+  <!-- ════════════════════════════════════════
+       ÉVÉNEMENTS & DIVERTISSEMENT
+  ════════════════════════════════════════ -->
+  <div class="section-hdr">
+    <h2>🎉 Événements & Divertissement</h2>
+    <span class="cnt">2 apps</span>
+  </div>
+  <div class="grid">
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/JO/2022/" target="_blank" style="--accent:#f59e0b">
+      <div class="card-top">
+        <div class="card-icon">🥇</div>
+        <div class="card-titles">
+          <div class="card-title">Jeux Olympiques 2022</div>
+          <div class="card-sub">Beijing — Sites et résultats</div>
+        </div>
+      </div>
+      <div class="card-desc">Carte interactive des Jeux Olympiques d'hiver 2022 de Pékin. Localisez les sites de compétition et explorez les résultats par discipline et par pays.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+    <a class="card" href="https://sebastiensz.github.io/arcgis-javascript/Christmas/" target="_blank" style="--accent:#ef4444">
+      <div class="card-top">
+        <div class="card-icon">🎄</div>
+        <div class="card-titles">
+          <div class="card-title">Carte de Noël</div>
+          <div class="card-sub">Joyeux Noël interactif</div>
+        </div>
+      </div>
+      <div class="card-desc">Une carte interactive festive pour célébrer Noël. Exploration géographique ludique avec une mise en scène hivernale et interactive.</div>
+      <div class="card-link">→ Voir la carte</div>
+    </a>
+
+  </div>
+
+</main>
+
+<footer>
+  <p>
+    Construit avec <a href="https://developers.arcgis.com/javascript/">ArcGIS API for JavaScript</a> ·
+    Hébergé sur <a href="https://sebastiensz.github.io/arcgis-javascript/">GitHub Pages</a> ·
+    Données : OpenData, Esri Living Atlas, Natural Earth, OpenStreetMap
+  </p>
+  <p style="margin-top:8px">
+    <a href="https://github.com/Sebastiensz/arcgis-javascript">⬡ GitHub — Sebastiensz/arcgis-javascript</a>
+  </p>
+</footer>
 
 </body>
-
 </html>
