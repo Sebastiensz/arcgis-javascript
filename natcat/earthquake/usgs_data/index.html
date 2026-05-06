@@ -280,14 +280,9 @@ require([
     }
   });
 
-  /* ── Loading fallback ── */
-  var loadingTimeout = setTimeout(function() {
-    document.getElementById("loading").classList.add("hidden");
-  }, 12000);
-
   /* ── Stats ── */
-  function updateStats(lv) {
-    lv.queryFeatures({
+  function updateStats(layer) {
+    layer.queryFeatures({
       where: "1=1",
       outFields: ["mag"],
       returnGeometry: false
@@ -299,12 +294,7 @@ require([
       document.getElementById("kv-count").textContent = count.toLocaleString("fr-FR");
       document.getElementById("kv-max").textContent   = maxMag;
       document.getElementById("kv-sig").textContent   = sig.toLocaleString("fr-FR");
-      clearTimeout(loadingTimeout);
-      document.getElementById("loading").classList.add("hidden");
-    }).catch(function() {
-      clearTimeout(loadingTimeout);
-      document.getElementById("loading").classList.add("hidden");
-    });
+    }).catch(function() {});
   }
 
   /* ── LayerView hook ── */
@@ -315,12 +305,17 @@ require([
     view.whenLayerView(layer).then(function(lv) {
       layerView = lv;
       statsReady = false;
-      lv.watch("updating", function(val) {
-        if (!val && !statsReady) {
+
+      function onDone() {
+        if (!lv.updating && !statsReady) {
           statsReady = true;
-          updateStats(lv);
+          document.getElementById("loading").classList.add("hidden");
+          updateStats(layer);
         }
-      });
+      }
+
+      onDone();                      // cas où updating est déjà false
+      lv.watch("updating", onDone); // cas où ça change après
     });
   }
   hookLayerView(currentLayer);
