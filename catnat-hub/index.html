@@ -7,6 +7,7 @@
 
   <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/dark/main.css">
   <script src="https://js.arcgis.com/4.30/"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -172,6 +173,21 @@
     #dataTab { display: none; flex-direction: column; flex: 1; overflow: hidden; }
     #dataTab.active { display: flex; }
 
+    /* Charts tab */
+    #chartsTab { display: none; flex-direction: column; flex: 1; overflow: hidden; background: var(--bg); }
+    #chartsTab.active { display: flex; }
+    .charts-header { padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--panel); display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+    .charts-header h3 { font-size: 13px; font-weight: 700; }
+    .charts-grid { display: flex; gap: 14px; padding: 14px; flex: 1; overflow: hidden; }
+    .chart-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; }
+    .chart-card.wide { flex: 2; min-width: 0; }
+    .chart-card.narrow { flex: 1; min-width: 0; }
+    .chart-card h4 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; flex-shrink: 0; }
+    .chart-inner { position: relative; flex: 1; min-height: 0; }
+    .chart-toggle { display: flex; gap: 4px; }
+    .chart-btn { padding: 3px 10px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border); background: var(--card); font-size: 11px; color: var(--muted); transition: all 0.15s; }
+    .chart-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
     /* Utility */
     .sep { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
   </style>
@@ -301,6 +317,82 @@
   };
 
   var layerView, blobUrl;
+  var chartBar = null, chartPie = null, pieMetric = "eco";
+
+  // ── Graphiques ────────────────────────────────────────
+  function renderCharts(events) {
+    if (typeof Chart === "undefined") return;
+
+    // — Courbe sinistralité par année —
+    var byYear = {};
+    events.forEach(function(e) {
+      var y = +e.date.substring(0,4);
+      if (!byYear[y]) byYear[y] = { eco: 0, ins: 0, deaths: 0 };
+      byYear[y].eco    += e.eco    || 0;
+      byYear[y].ins    += e.ins    || 0;
+      byYear[y].deaths += e.deaths || 0;
+    });
+    var years   = Object.keys(byYear).sort();
+    var insData = years.map(function(y) { return +byYear[y].ins.toFixed(2); });
+    var gapData = years.map(function(y) { return +(byYear[y].eco - byYear[y].ins).toFixed(2); });
+
+    var ctxBar = document.getElementById("chartBar").getContext("2d");
+    if (chartBar) chartBar.destroy();
+    chartBar = new Chart(ctxBar, {
+      type: "bar",
+      data: {
+        labels: years,
+        datasets: [
+          { label: "Pertes assurées (Md$)",     data: insData, backgroundColor: "rgba(58,173,110,0.75)", stack: "s" },
+          { label: "Pertes non assurées (Md$)", data: gapData, backgroundColor: "rgba(229,83,83,0.75)",  stack: "s" }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: "#d4e3f0", font: { size: 11 }, boxWidth: 14 } } },
+        scales: {
+          x: { stacked: true, ticks: { color: "#7a99b2", font: { size: 10 }, maxRotation: 45 }, grid: { color: "rgba(37,58,80,0.6)" } },
+          y: { stacked: true, ticks: { color: "#7a99b2", font: { size: 10 } }, grid: { color: "rgba(37,58,80,0.6)" },
+               title: { display: true, text: "Pertes économiques (Md$)", color: "#7a99b2", font: { size: 10 } } }
+        }
+      }
+    });
+
+    // — Camembert par péril —
+    var byPeril = {};
+    events.forEach(function(e) {
+      if (!byPeril[e.type]) byPeril[e.type] = { count: 0, deaths: 0, eco: 0 };
+      byPeril[e.type].count++;
+      byPeril[e.type].deaths += e.deaths || 0;
+      byPeril[e.type].eco    += e.eco    || 0;
+    });
+    var perils    = Object.keys(byPeril);
+    var pieVals   = perils.map(function(p) {
+      return pieMetric === "count" ? byPeril[p].count : pieMetric === "deaths" ? byPeril[p].deaths : +byPeril[p].eco.toFixed(2);
+    });
+    var pieColors = perils.map(function(p) { return COLORS[p] || "#888"; });
+
+    var ctxPie = document.getElementById("chartPie").getContext("2d");
+    if (chartPie) chartPie.destroy();
+    chartPie = new Chart(ctxPie, {
+      type: "doughnut",
+      data: {
+        labels: perils.map(function(p) { return LABELS[p] || p; }),
+        datasets: [{ data: pieVals, backgroundColor: pieColors.map(function(c){ return c+"cc"; }), borderColor: pieColors, borderWidth: 1.5 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { color: "#d4e3f0", font: { size: 11 }, boxWidth: 12, padding: 8 } },
+          tooltip: { callbacks: { label: function(ctx) {
+            var v = ctx.parsed;
+            var sfx = pieMetric === "count" ? " événements" : pieMetric === "deaths" ? " morts" : " Md$";
+            return ctx.label + " : " + (pieMetric === "eco" ? v.toFixed(1) : Math.round(v).toLocaleString("fr")) + sfx;
+          }}}
+        }
+      }
+    });
+  }
 
   // ── Filtrage ──────────────────────────────────────────
   function getFiltered() {
@@ -436,6 +528,7 @@
       map.add(layer);
       updateStats(events);
       renderTable(events);
+      if (state.tab === "charts") renderCharts(events);
     }
 
     // ── Stats bar ─────────────────────────────────────────
@@ -514,8 +607,11 @@
 
         var isFrance = state.tab === "france";
         document.getElementById("franceNote").style.display = isFrance ? "block" : "none";
-        document.getElementById("main").style.display = state.tab === "data" ? "none" : "flex";
+        var mapVisible = state.tab !== "data" && state.tab !== "charts";
+        document.getElementById("main").style.display = mapVisible ? "flex" : "none";
         document.getElementById("dataTab").classList.toggle("active", state.tab === "data");
+        document.getElementById("chartsTab").classList.toggle("active", state.tab === "charts");
+        if (state.tab === "charts") renderCharts(getFiltered());
 
         if (isFrance) view.goTo({ center: [2, 46], zoom: 5 });
         else if (state.tab === "monde") view.goTo({ center: [10, 20], zoom: 2 });
@@ -576,6 +672,17 @@
       });
     });
 
+    // ── Pie metric toggle ─────────────────────────────────
+    document.querySelectorAll(".chart-btn[data-pie]").forEach(function(b) {
+      b.addEventListener("click", function() {
+        pieMetric = this.getAttribute("data-pie");
+        document.querySelectorAll(".chart-btn[data-pie]").forEach(function(x) {
+          x.classList.toggle("active", x.getAttribute("data-pie") === pieMetric);
+        });
+        renderCharts(getFiltered());
+      });
+    });
+
     // ── Init ─────────────────────────────────────────────
     reloadLayer();
     document.querySelector(".chip[data-peril='all']").classList.add("active");
@@ -595,6 +702,7 @@
       <button class="tab" data-tab="france">🇫🇷 France</button>
       <button class="tab" data-tab="hazard">🗺️ Aléas</button>
       <button class="tab" data-tab="data">📊 Données</button>
+      <button class="tab" data-tab="charts">📈 Graphiques</button>
     </div>
     <a href="protection-gap.html" style="margin-left:auto;background:#1a9cd8;color:white;padding:5px 12px;border-radius:5px;text-decoration:none;font-size:12px;font-weight:600;white-space:nowrap">🛡️ Protection Gap →</a>
     <div id="headerRight">Sources : Munich Re · Swiss Re Sigma · EM-DAT · CCR · USGS</div>
@@ -765,6 +873,31 @@
         </thead>
         <tbody id="evtBody"></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Tab Graphiques -->
+  <div id="chartsTab">
+    <div class="charts-header">
+      <h3>📈 Graphiques — événements filtrés</h3>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)">
+        Camembert par :
+        <div class="chart-toggle">
+          <div class="chart-btn active" data-pie="eco">💸 Pertes éco.</div>
+          <div class="chart-btn" data-pie="deaths">💀 Morts</div>
+          <div class="chart-btn" data-pie="count">🔢 Nb événements</div>
+        </div>
+      </div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card wide">
+        <h4>📈 Sinistralité par année — pertes économiques (Md$)</h4>
+        <div class="chart-inner"><canvas id="chartBar"></canvas></div>
+      </div>
+      <div class="chart-card narrow">
+        <h4>🥧 Répartition par péril</h4>
+        <div class="chart-inner"><canvas id="chartPie"></canvas></div>
+      </div>
     </div>
   </div>
 
