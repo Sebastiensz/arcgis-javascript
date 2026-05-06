@@ -209,8 +209,7 @@ require([
       type: "size",
       field: "mag",
       stops: [
-        { value: 0, size: "2px"  },
-        { value: 1, size: "4px"  },
+        { value: 1, size: "3px"  },
         { value: 2, size: "7px"  },
         { value: 3, size: "12px" },
         { value: 4, size: "18px" },
@@ -272,13 +271,6 @@ require([
     }
   });
 
-  /* ── Ouvre lien USGS depuis popup ── */
-  view.popup.on("trigger-action", function(e) {
-    if (e.action.id === "usgs-link") {
-      var url = view.popup.selectedFeature && view.popup.selectedFeature.attributes.url;
-      if (url) window.open(url, "_blank");
-    }
-  });
 
   /* ── Stats + hide loading via fetch direct USGS ── */
   function fetchStats(period) {
@@ -339,6 +331,13 @@ require([
 
   /* ── Widgets ArcGIS (zoom, home, légende, recherche) ── */
   view.when(function() {
+    view.popup.on("trigger-action", function(e) {
+      if (e.action.id === "usgs-link") {
+        var url = view.popup.selectedFeature && view.popup.selectedFeature.attributes.url;
+        if (url) window.open(url, "_blank");
+      }
+    });
+
     view.ui.remove("zoom");
 
     view.ui.add(new Zoom({ view: view }),  { position: "top-left", index: 0 });
