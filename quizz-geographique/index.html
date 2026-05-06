@@ -17,7 +17,6 @@
       font-family: "Avenir Next", Avenir, Helvetica, Arial, sans-serif;
     }
 
-    /* Barre de progression */
     #progressBar {
       position: absolute;
       top: 0;
@@ -29,7 +28,6 @@
       z-index: 20;
     }
 
-    /* Panneau titre + question */
     #questionPanel {
       position: absolute;
       top: 0;
@@ -82,7 +80,6 @@
       margin-top: 4px;
     }
 
-    /* Score en bas */
     #scoreDiv {
       position: absolute;
       bottom: 24px;
@@ -100,7 +97,6 @@
       white-space: nowrap;
     }
 
-    /* Feedback central */
     #feedbackDiv {
       position: absolute;
       top: 45%;
@@ -127,7 +123,6 @@
     #feedbackDiv.correct { background-color: rgba(39, 174, 96, 0.95); }
     #feedbackDiv.wrong   { background-color: rgba(192, 57, 43, 0.95); }
 
-    /* Écran fin de jeu */
     #gameOverDiv {
       position: absolute;
       top: 50%;
@@ -177,7 +172,6 @@
 
     #restartBtn:hover { background-color: #005f99; }
 
-    /* Instruction au démarrage */
     #hintDiv {
       position: absolute;
       bottom: 65px;
@@ -198,23 +192,20 @@
     require([
       "esri/Map",
       "esri/views/MapView",
-      "esri/layers/FeatureLayer",
+      "esri/layers/GeoJSONLayer",
       "esri/widgets/Home"
-    ], function(Map, MapView, FeatureLayer, Home) {
+    ], function(Map, MapView, GeoJSONLayer, Home) {
 
-      // ── Constantes ──────────────────────────────────────
       var TOTAL_QUESTIONS = 20;
-      var FEEDBACK_DURATION = 1800; // ms
+      var FEEDBACK_DURATION = 1800;
 
-      // ── État du jeu ──────────────────────────────────────
-      var country_table = [];
+      var country_table = [];  // noms français des pays
       var pts = 0;
       var question = 0;
       var randValue = 0;
       var prevRandValue = -1;
-      var clickLocked = true; // locked until countries are loaded
+      var clickLocked = true;
 
-      // ── Carte ────────────────────────────────────────────
       var map = new Map({ basemap: "satellite" });
 
       var view = new MapView({
@@ -224,9 +215,12 @@
         constraints: { maxZoom: 14, minZoom: 2 }
       });
 
-      var countrieslayer = new FeatureLayer({
-        portalItem: { id: "7f9f157a99cf4e1c9f451562c35fe428" },
+      // Natural Earth 110m — données publiques avec champ NAME_FR
+      var countrieslayer = new GeoJSONLayer({
+        url: "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson",
+        copyright: "Natural Earth",
         popupEnabled: false,
+        outFields: ["NAME_FR"],
         renderer: {
           type: "simple",
           symbol: {
@@ -240,7 +234,6 @@
       map.add(countrieslayer);
       view.ui.add(new Home({ view: view }), "bottom-left");
 
-      // ── Références UI ────────────────────────────────────
       var questionTextEl = document.getElementById("questionText");
       var questionNumEl  = document.getElementById("questionNum");
       var scoreEl        = document.getElementById("scoreDiv");
@@ -251,29 +244,31 @@
       var progressEl     = document.getElementById("progressBar");
       var hintEl         = document.getElementById("hintDiv");
 
-      // ── Chargement des pays ──────────────────────────────
-      // countrieslayer.when() résout avec la couche elle-même (pas le retour du callback)
-      // on utilise load() pour un chaînage standard de Promises
+      // Charger la liste des pays après que la couche soit prête
       countrieslayer.load().then(function() {
-        var q = countrieslayer.createQuery();
-        q.cacheHint = true;
-        q.returnGeometry = false;
-        q.outFields = ["NAME_FR"];
-        q.where = "NAME_FR IS NOT NULL";
-        q.num = 300;
-        q.orderByFields = ["OBJECTID"];
-        return countrieslayer.queryFeatures(q);
-      }).then(function(result) {
-        country_table = result.features.map(function(f) {
-          return f.attributes.NAME_FR;
+        return countrieslayer.queryFeatures({
+          where: "NAME_FR IS NOT NULL",
+          outFields: ["NAME_FR"],
+          returnGeometry: false,
+          num: 300
         });
+      }).then(function(result) {
+        // Dédoublonnage (certains features peuvent avoir le même nom)
+        var seen = {};
+        country_table = result.features
+          .map(function(f) { return f.attributes.NAME_FR; })
+          .filter(function(name) {
+            if (!name || seen[name]) return false;
+            seen[name] = true;
+            return true;
+          });
         startGame();
       }).catch(function(err) {
         questionTextEl.innerHTML = "Erreur de chargement";
-        console.error(err);
+        console.error("Erreur chargement GeoJSONLayer :", err);
       });
 
-      // ── Logique du jeu ───────────────────────────────────
+      // ── Logique du jeu ────────────────────────────────────
 
       function startGame() {
         pts = 0;
@@ -293,7 +288,6 @@
           return;
         }
         view.graphics.removeAll();
-        // Évite de retomber deux fois sur le même pays
         do {
           randValue = Math.floor(Math.random() * country_table.length);
         } while (randValue === prevRandValue && country_table.length > 1);
@@ -316,22 +310,22 @@
 
         var pct = Math.round(pts / TOTAL_QUESTIONS * 100);
         var grade;
-        if (pct === 100)      grade = "Parfait ! Vous êtes un expert ! 🌍";
-        else if (pct >= 80)   grade = "Excellent ! 🌟";
-        else if (pct >= 60)   grade = "Bien joué !";
-        else if (pct >= 40)   grade = "Pas mal, continuez !";
-        else                  grade = "Entraînez-vous encore !";
+        if (pct === 100)    grade = "Parfait ! Vous êtes un expert ! 🌍";
+        else if (pct >= 80) grade = "Excellent ! 🌟";
+        else if (pct >= 60) grade = "Bien joué !";
+        else if (pct >= 40) grade = "Pas mal, continuez !";
+        else                grade = "Entraînez-vous encore !";
 
         finalScoreEl.innerHTML = pts + " / " + TOTAL_QUESTIONS;
         gradeEl.innerHTML = grade;
         gameOverEl.style.display = "block";
       }
 
-      function showFeedback(correct, correctCountryName) {
+      function showFeedback(correct, correctName) {
         feedbackEl.className   = correct ? "correct" : "wrong";
         feedbackEl.innerHTML   = correct
           ? "✓ Bonne réponse !"
-          : "✗ C'était : <em>" + correctCountryName + "</em>";
+          : "✗ C'était : <em>" + correctName + "</em>";
         feedbackEl.style.display = "block";
         hintEl.style.display = "none";
         setTimeout(function() {
@@ -340,29 +334,26 @@
         }, FEEDBACK_DURATION);
       }
 
-      // ── Clic sur la carte ────────────────────────────────
+      // ── Clic sur la carte ─────────────────────────────────
+
       view.on("click", function(event) {
         if (clickLocked || country_table.length === 0 || question < 1 || question > TOTAL_QUESTIONS) return;
         clickLocked = true;
 
-        var query = countrieslayer.createQuery();
-        query.cacheHint = true;
-        query.geometry = event.mapPoint;
-        query.spatialRelationship = "intersects";
-        query.returnGeometry = true;
-        query.outFields = ["NAME_FR"];
-
-        countrieslayer.queryFeatures(query).then(function(response) {
+        countrieslayer.queryFeatures({
+          geometry: event.mapPoint,
+          spatialRelationship: "intersects",
+          returnGeometry: true,
+          outFields: ["NAME_FR"]
+        }).then(function(response) {
           if (!response.features.length) {
-            // Clic sur l'océan → on laisse réessayer
-            clickLocked = false;
+            clickLocked = false; // clic sur l'océan → réessai
             return;
           }
 
           var clickedName = response.features[0].attributes.NAME_FR;
-          var correct     = clickedName === country_table[randValue];
+          var correct = clickedName === country_table[randValue];
 
-          // Surligner le pays cliqué
           var clickedFeature = response.features[0].clone();
           clickedFeature.symbol = {
             type: "simple-fill",
@@ -376,7 +367,6 @@
             pts++;
             showFeedback(true, null);
           } else {
-            // Montrer le bon pays en vert
             highlightCorrectCountry(function() {
               showFeedback(false, country_table[randValue]);
             });
