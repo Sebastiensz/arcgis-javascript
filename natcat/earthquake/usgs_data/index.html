@@ -326,28 +326,30 @@ require([
   });
 
   /* ── Widgets ── */
-  view.ui.remove("zoom");
+  view.when(function() {
+    view.ui.remove("zoom");
 
-  var zoom = new Zoom({ view: view });
-  view.ui.add(zoom, { position: "top-left", index: 0 });
+    var zoom = new Zoom({ view: view });
+    view.ui.add(zoom, { position: "top-left", index: 0 });
 
-  var home = new Home({ view: view });
-  view.ui.add(home, { position: "top-left", index: 1 });
+    var home = new Home({ view: view });
+    view.ui.add(home, { position: "top-left", index: 1 });
 
-  view.ui.add("panel", { position: "top-left", index: 2 });
+    view.ui.add(document.getElementById("panel"),    { position: "top-left",    index: 2 });
 
-  var legend = new Legend({ view: view, style: { type: "card", layout: "stack" } });
-  var legendExpand = new Expand({
-    view: view, content: legend,
-    expanded: false, expandTooltip: "Légende"
+    var legend = new Legend({ view: view, style: { type: "card", layout: "stack" } });
+    var legendExpand = new Expand({
+      view: view, content: legend,
+      expanded: false, expandTooltip: "Légende"
+    });
+    view.ui.add(legendExpand, "bottom-left");
+
+    var search = new Search({ view: view });
+    view.ui.add(search, { position: "top-right", index: 0 });
+
+    view.ui.add(document.getElementById("controls"), { position: "top-right",   index: 1 });
+    view.ui.add(document.getElementById("source"),   { position: "bottom-right", index: 0 });
   });
-  view.ui.add(legendExpand, "bottom-left");
-
-  var search = new Search({ view: view });
-  view.ui.add(search, { position: "top-right", index: 0 });
-
-  view.ui.add("controls",  { position: "top-right", index: 1 });
-  view.ui.add("source",    { position: "bottom-right", index: 0 });
 });
 </script>
 </body>
