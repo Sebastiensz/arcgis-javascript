@@ -309,7 +309,7 @@
   var state = {
     tab:       "monde",   // monde | france | hazard | data
     peril:     "all",
-    sizeBy:    "deaths",  // deaths | eco
+    sizeBy:    "eco",  // deaths | eco
     yearMin:   1556,
     yearMax:   2024,
     minDeaths: 0,
@@ -481,7 +481,7 @@
             var color = COLORS[a.type] || "#888";
             return '<div style="font-size:12px;line-height:1.6">'
               + '<span style="background:' + color + ';padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;color:white">' + (LABELS[a.type]||a.type) + '</span>'
-              + '<br><b>📅 Date :</b> ' + a.evt_date
+              + '<br><b>📅 Date :</b> ' + (typeof a.evt_date === "number" ? new Date(a.evt_date).toLocaleDateString("fr-FR", {year:"numeric",month:"long",day:"numeric"}) : a.evt_date)
               + '<br><b>🌍 Pays :</b> ' + a.country
               + '<br><b>💀 Morts :</b> ' + (a.deaths ? a.deaths.toLocaleString("fr") : "N/D")
               + '<br><b>🤕 Blessés :</b> ' + (a.injured ? a.injured.toLocaleString("fr") : "N/D")
@@ -712,7 +712,7 @@
     // ── Init ─────────────────────────────────────────────
     reloadLayer();
     document.querySelector(".chip[data-peril='all']").classList.add("active");
-    document.querySelector(".radio-btn[data-size='deaths']").classList.add("active");
+    document.querySelector(".radio-btn[data-size='eco']").classList.add("active");
     document.querySelector(".tab[data-tab='monde']").classList.add("active");
   });
   </script>
