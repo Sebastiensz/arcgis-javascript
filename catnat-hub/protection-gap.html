@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Protection Gap NatCat – CatNat Hub</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/dark/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:     #0d1b2a; --panel: #152030; --card:  #1e2f42;
+      --border: #253a50; --accent:#1a9cd8; --text:  #d4e3f0;
+      --muted:  #7a99b2;
+      --c1: #1a9850; --c2: #91cf60; --c3: #fee08b; --c4: #fc8d59; --c5: #b2182b;
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text);
+      font-family: "Avenir Next", Avenir, Arial, sans-serif; font-size: 13px; }
+    #app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* Header */
+    #header {
+      background: var(--panel); border-bottom: 1px solid var(--border);
+      padding: 0 16px; display: flex; align-items: center; gap: 16px; height: 48px; flex-shrink: 0;
+    }
+    #header a { color: var(--muted); text-decoration: none; font-size: 12px; }
+    #header a:hover { color: var(--accent); }
+    #header h1 { font-size: 16px; font-weight: 700; color: white; }
+    #header h1 span { color: var(--accent); }
+    #header .sep { color: var(--border); }
+    #srcNote { margin-left: auto; font-size: 10px; color: var(--muted); }
+
+    /* Stats bar */
+    #statsBar {
+      background: var(--panel); border-bottom: 1px solid var(--border);
+      padding: 8px 16px; display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap;
+    }
+    .sc { background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+      padding: 5px 14px; }
+    .sc .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+    .sc .val { font-size: 18px; font-weight: 700; }
+    .sc .sub { font-size: 10px; color: var(--muted); }
+    .red  { color: #e55353; } .amber { color: #e89b3a; }
+    .green{ color: #3aad6e; } .white { color: white; }
+
+    /* Main */
+    #main { display: flex; flex: 1; overflow: hidden; }
+
+    /* Sidebar */
+    #sidebar {
+      width: 250px; flex-shrink: 0; background: var(--panel);
+      border-right: 1px solid var(--border); overflow-y: auto;
+      padding: 14px 12px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .sg-title { font-size: 10px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 6px; }
+
+    /* Legend */
+    .legend-scale { display: flex; flex-direction: column; gap: 4px; }
+    .leg-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .leg-box { width: 18px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+
+    /* Region filter */
+    select {
+      width: 100%; background: var(--card); border: 1px solid var(--border);
+      color: var(--text); padding: 5px 8px; border-radius: 4px; font-size: 12px;
+    }
+
+    /* Ranking list */
+    .rank-list { display: flex; flex-direction: column; gap: 3px; }
+    .rank-item {
+      display: flex; align-items: center; gap: 6px; padding: 4px 6px;
+      border-radius: 4px; cursor: pointer; font-size: 11px;
+      border: 1px solid transparent; transition: background 0.1s;
+    }
+    .rank-item:hover { background: var(--card); }
+    .rank-flag { width: 16px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+    .rank-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rank-val  { font-weight: 700; white-space: nowrap; }
+    .rank-bar-wrap { width: 50px; height: 5px; background: #253a50; border-radius: 3px; flex-shrink: 0; }
+    .rank-bar { height: 100%; border-radius: 3px; }
+
+    /* Map */
+    #mapWrap { flex: 1; position: relative; }
+    #viewDiv  { height: 100%; width: 100%; }
+    #loadMsg {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      background: rgba(13,27,42,0.9); border: 1px solid var(--border);
+      border-radius: 8px; padding: 20px 32px; text-align: center; z-index: 50;
+      font-size: 14px; color: var(--muted);
+    }
+    #loadMsg .spinner {
+      width: 32px; height: 32px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Bottom ranking table */
+    #tablePanel {
+      height: 220px; flex-shrink: 0; background: var(--panel);
+      border-top: 1px solid var(--border); display: flex; flex-direction: column;
+    }
+    #tph { padding: 6px 14px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px; }
+    #tph h3 { font-size: 12px; font-weight: 700; }
+    #tSearch { margin-left: auto; width: 180px; background: var(--card);
+      border: 1px solid var(--border); color: var(--text);
+      padding: 3px 8px; border-radius: 4px; font-size: 11px; }
+    #tableWrap { flex: 1; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    thead th { position: sticky; top: 0; background: var(--card); color: var(--muted);
+      padding: 5px 10px; text-align: left; border-bottom: 1px solid var(--border);
+      cursor: pointer; text-transform: uppercase; font-size: 10px; letter-spacing: 0.4px; white-space: nowrap; }
+    thead th:hover { color: var(--text); }
+    thead th.sorted { color: var(--accent); }
+    tbody tr { border-bottom: 1px solid rgba(37,58,80,0.4); cursor: pointer; }
+    tbody tr:hover { background: var(--card); }
+    tbody td { padding: 5px 10px; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .bar-cell { width: 80px; }
+    .mini-bar { height: 6px; border-radius: 3px; display: inline-block; }
+
+    .sep { border: none; border-top: 1px solid var(--border); }
+
+    /* Info box */
+    .info-box {
+      background: rgba(26,156,216,0.08); border: 1px solid rgba(26,156,216,0.25);
+      border-radius: 6px; padding: 8px 10px; font-size: 11px; color: var(--muted); line-height: 1.5;
+    }
+    .info-box strong { color: var(--accent); }
+  </style>
+
+  <script>
+  // ════════════════════════════════════════════════════
+  //  PROTECTION GAP NATCAT PAR PAYS
+  //  Source : Swiss Re Sigma 2023, Munich Re NatCatSERVICE,
+  //           IAIS Insurance Data, World Bank
+  //
+  //  gap     = % des pertes économiques NatCat NON assurées
+  //  pen     = pénétration assurance non-vie (primes/PIB %)
+  //  region  = région géographique
+  // ════════════════════════════════════════════════════
+  var GAP = {
+    // ── Très bien couverts (<40%) ─────────────────────
+    "NZ": { gap:25,  pen:2.8,  region:"Océanie",          name:"Nouvelle-Zélande" },
+    "CH": { gap:36,  pen:3.2,  region:"Europe occid.",     name:"Suisse" },
+    "US": { gap:40,  pen:4.1,  region:"Amérique du Nord",  name:"États-Unis" },
+    "AU": { gap:43,  pen:2.9,  region:"Océanie",          name:"Australie" },
+
+    // ── Bien couverts (40–60%) ───────────────────────
+    "GB": { gap:44,  pen:2.2,  region:"Europe occid.",     name:"Royaume-Uni" },
+    "DK": { gap:44,  pen:2.1,  region:"Europe occid.",     name:"Danemark" },
+    "NL": { gap:44,  pen:2.4,  region:"Europe occid.",     name:"Pays-Bas" },
+    "IE": { gap:44,  pen:2.5,  region:"Europe occid.",     name:"Irlande" },
+    "NO": { gap:44,  pen:2.0,  region:"Europe occid.",     name:"Norvège" },
+    "SE": { gap:46,  pen:1.9,  region:"Europe occid.",     name:"Suède" },
+    "FR": { gap:48,  pen:2.1,  region:"Europe occid.",     name:"France" },
+    "FI": { gap:48,  pen:1.7,  region:"Europe occid.",     name:"Finlande" },
+    "CA": { gap:50,  pen:2.8,  region:"Amérique du Nord",  name:"Canada" },
+    "BE": { gap:50,  pen:2.0,  region:"Europe occid.",     name:"Belgique" },
+    "AT": { gap:52,  pen:1.9,  region:"Europe occid.",     name:"Autriche" },
+    "JP": { gap:52,  pen:2.0,  region:"Asie-Pacifique",   name:"Japon" },
+    "IL": { gap:52,  pen:1.8,  region:"Moyen-Orient",     name:"Israël" },
+    "SG": { gap:54,  pen:1.4,  region:"Asie-Pacifique",   name:"Singapour" },
+    "LU": { gap:44,  pen:2.0,  region:"Europe occid.",     name:"Luxembourg" },
+
+    // ── Moyennement couverts (60–75%) ────────────────
+    "DE": { gap:62,  pen:1.9,  region:"Europe occid.",     name:"Allemagne" },
+    "TW": { gap:60,  pen:3.0,  region:"Asie-Pacifique",   name:"Taïwan" },
+    "KR": { gap:60,  pen:2.5,  region:"Asie-Pacifique",   name:"Corée du Sud" },
+    "ES": { gap:60,  pen:1.5,  region:"Europe occid.",     name:"Espagne" },
+    "PT": { gap:62,  pen:1.5,  region:"Europe occid.",     name:"Portugal" },
+    "CZ": { gap:64,  pen:1.5,  region:"Europe orientale", name:"Rép. tchèque" },
+    "IT": { gap:65,  pen:1.4,  region:"Europe occid.",     name:"Italie" },
+    "CL": { gap:65,  pen:1.5,  region:"Amérique du Sud",  name:"Chili" },
+    "SK": { gap:68,  pen:1.0,  region:"Europe orientale", name:"Slovaquie" },
+    "ZA": { gap:68,  pen:1.8,  region:"Afrique",          name:"Afrique du Sud" },
+    "HR": { gap:70,  pen:1.0,  region:"Europe orientale", name:"Croatie" },
+    "GR": { gap:70,  pen:0.9,  region:"Europe occid.",     name:"Grèce" },
+    "PL": { gap:70,  pen:1.2,  region:"Europe orientale", name:"Pologne" },
+    "HU": { gap:72,  pen:1.0,  region:"Europe orientale", name:"Hongrie" },
+    "MY": { gap:72,  pen:1.2,  region:"Asie-Pacifique",   name:"Malaisie" },
+    "TH": { gap:72,  pen:1.3,  region:"Asie-Pacifique",   name:"Thaïlande" },
+    "UY": { gap:74,  pen:0.8,  region:"Amérique du Sud",  name:"Uruguay" },
+
+    // ── Peu couverts (75–90%) ────────────────────────
+    "MX": { gap:80,  pen:0.8,  region:"Amérique latine",  name:"Mexique" },
+    "BR": { gap:80,  pen:0.8,  region:"Amérique du Sud",  name:"Brésil" },
+    "AR": { gap:82,  pen:0.6,  region:"Amérique du Sud",  name:"Argentine" },
+    "RS": { gap:82,  pen:0.7,  region:"Europe orientale", name:"Serbie" },
+    "RO": { gap:82,  pen:0.7,  region:"Europe orientale", name:"Roumanie" },
+    "BG": { gap:82,  pen:0.8,  region:"Europe orientale", name:"Bulgarie" },
+    "CO": { gap:84,  pen:0.6,  region:"Amérique du Sud",  name:"Colombie" },
+    "PH": { gap:84,  pen:0.7,  region:"Asie-Pacifique",   name:"Philippines" },
+    "AE": { gap:84,  pen:0.9,  region:"Moyen-Orient",     name:"Émirats arabes unis" },
+    "TR": { gap:84,  pen:0.7,  region:"Moyen-Orient",     name:"Turquie" },
+    "PE": { gap:85,  pen:0.6,  region:"Amérique du Sud",  name:"Pérou" },
+    "MA": { gap:86,  pen:0.7,  region:"Afrique du Nord",  name:"Maroc" },
+    "VN": { gap:86,  pen:0.7,  region:"Asie-Pacifique",   name:"Viêt Nam" },
+    "EC": { gap:86,  pen:0.5,  region:"Amérique du Sud",  name:"Équateur" },
+    "UA": { gap:86,  pen:0.5,  region:"Europe orientale", name:"Ukraine" },
+    "RU": { gap:88,  pen:0.5,  region:"Europe orientale", name:"Russie" },
+    "KZ": { gap:88,  pen:0.5,  region:"Asie centrale",   name:"Kazakhstan" },
+    "CN": { gap:88,  pen:1.2,  region:"Asie-Pacifique",   name:"Chine" },
+    "ID": { gap:88,  pen:0.6,  region:"Asie-Pacifique",   name:"Indonésie" },
+    "DZ": { gap:90,  pen:0.5,  region:"Afrique du Nord",  name:"Algérie" },
+    "EG": { gap:90,  pen:0.4,  region:"Afrique du Nord",  name:"Égypte" },
+    "SA": { gap:88,  pen:0.6,  region:"Moyen-Orient",     name:"Arabie saoudite" },
+    "KW": { gap:86,  pen:0.5,  region:"Moyen-Orient",     name:"Koweït" },
+    "QA": { gap:85,  pen:0.5,  region:"Moyen-Orient",     name:"Qatar" },
+    "VE": { gap:88,  pen:0.3,  region:"Amérique du Sud",  name:"Venezuela" },
+    "BO": { gap:90,  pen:0.4,  region:"Amérique du Sud",  name:"Bolivie" },
+    "PY": { gap:88,  pen:0.5,  region:"Amérique du Sud",  name:"Paraguay" },
+    "MM": { gap:90,  pen:0.3,  region:"Asie-Pacifique",   name:"Myanmar" },
+
+    // ── Très peu couverts (>90%) ─────────────────────
+    "IN": { gap:92,  pen:0.9,  region:"Asie du Sud",      name:"Inde" },
+    "KE": { gap:92,  pen:0.8,  region:"Afrique",          name:"Kenya" },
+    "JO": { gap:92,  pen:0.6,  region:"Moyen-Orient",     name:"Jordanie" },
+    "UZ": { gap:92,  pen:0.3,  region:"Asie centrale",   name:"Ouzbékistan" },
+    "LB": { gap:94,  pen:0.5,  region:"Moyen-Orient",     name:"Liban" },
+    "GH": { gap:94,  pen:0.5,  region:"Afrique",          name:"Ghana" },
+    "SN": { gap:96,  pen:0.3,  region:"Afrique",          name:"Sénégal" },
+    "PK": { gap:96,  pen:0.3,  region:"Asie du Sud",      name:"Pakistan" },
+    "NG": { gap:96,  pen:0.3,  region:"Afrique",          name:"Nigeria" },
+    "IR": { gap:96,  pen:0.3,  region:"Moyen-Orient",     name:"Iran" },
+    "KH": { gap:96,  pen:0.3,  region:"Asie-Pacifique",   name:"Cambodge" },
+    "TZ": { gap:97,  pen:0.3,  region:"Afrique",          name:"Tanzanie" },
+    "NP": { gap:97,  pen:0.3,  region:"Asie du Sud",      name:"Népal" },
+    "AO": { gap:97,  pen:0.2,  region:"Afrique",          name:"Angola" },
+    "ZM": { gap:97,  pen:0.2,  region:"Afrique",          name:"Zambie" },
+    "ML": { gap:98,  pen:0.1,  region:"Afrique",          name:"Mali" },
+    "CM": { gap:98,  pen:0.2,  region:"Afrique",          name:"Cameroun" },
+    "BD": { gap:98,  pen:0.2,  region:"Asie du Sud",      name:"Bangladesh" },
+    "LA": { gap:98,  pen:0.2,  region:"Asie-Pacifique",   name:"Laos" },
+    "MG": { gap:98,  pen:0.1,  region:"Afrique",          name:"Madagascar" },
+    "SY": { gap:98,  pen:0.1,  region:"Moyen-Orient",     name:"Syrie" },
+    "IQ": { gap:98,  pen:0.2,  region:"Moyen-Orient",     name:"Irak" },
+    "MZ": { gap:98,  pen:0.1,  region:"Afrique",          name:"Mozambique" },
+    "ZW": { gap:98,  pen:0.2,  region:"Afrique",          name:"Zimbabwe" },
+    "AF": { gap:99,  pen:0.1,  region:"Asie centrale",   name:"Afghanistan" },
+    "ET": { gap:99,  pen:0.1,  region:"Afrique",          name:"Éthiopie" },
+    "NE": { gap:99,  pen:0.1,  region:"Afrique",          name:"Niger" },
+    "TD": { gap:99,  pen:0.1,  region:"Afrique",          name:"Tchad" },
+    "SD": { gap:99,  pen:0.1,  region:"Afrique",          name:"Soudan" },
+    "CD": { gap:99,  pen:0.1,  region:"Afrique",          name:"Rép. dém. du Congo" },
+    "HT": { gap:99,  pen:0.1,  region:"Caraïbes",        name:"Haïti" },
+    "YE": { gap:99,  pen:0.1,  region:"Moyen-Orient",     name:"Yémen" },
+  };
+
+  var BREAKS = [
+    { max:40,  color:"#1a9850", label:"Très bien couvert  (< 40%)" },
+    { max:60,  color:"#91cf60", label:"Bien couvert       (40–60%)" },
+    { max:75,  color:"#fee08b", label:"Modérément couvert (60–75%)" },
+    { max:90,  color:"#fc8d59", label:"Peu couvert        (75–90%)" },
+    { max:101, color:"#b2182b", label:"Très peu couvert   (> 90%)" },
+  ];
+
+  function gapColor(g) {
+    for (var i = 0; i < BREAKS.length; i++) {
+      if (g < BREAKS[i].max) return BREAKS[i].color;
+    }
+    return "#888";
+  }
+
+  var allCountries = [];  // rempli après le fetch
+  var sortCol = "gap", sortDir = -1;
+  var regionFilter = "all";
+
+  require([
+    "esri/Map", "esri/views/MapView", "esri/layers/GeoJSONLayer", "esri/widgets/Home"
+  ], function(Map, MapView, GeoJSONLayer, Home) {
+
+    var map = new Map({ basemap: "dark-gray-vector" });
+    var view = new MapView({
+      container: "viewDiv", map: map,
+      zoom: 2, center: [15, 20],
+      constraints: { minZoom: 1, maxZoom: 10 }
+    });
+    view.ui.move("zoom", "top-left");
+    view.ui.add(new Home({ view: view }), "top-left");
+
+    // ── Chargement et fusion ─────────────────────────────
+    var NE_URL = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson";
+
+    fetch(NE_URL)
+      .then(function(r) { return r.json(); })
+      .then(function(geojson) {
+        document.getElementById("loadMsg").style.display = "none";
+
+        geojson.features.forEach(function(f) {
+          var iso = f.properties.ISO_A2;
+          var d   = GAP[iso];
+          f.properties.gap      = d ? d.gap  : -1;
+          f.properties.pen      = d ? d.pen  : null;
+          f.properties.region   = d ? d.region : "–";
+          f.properties.fr_name  = d ? d.name : (f.properties.NAME_FR || f.properties.NAME || iso);
+          f.properties.iso      = iso;
+          f.properties.gap_cat  = d ? gapCat(d.gap) : "N/D";
+          f.properties.has_data = d ? 1 : 0;
+          if (d) allCountries.push({ iso: iso, name: d.name, gap: d.gap, pen: d.pen, region: d.region });
+        });
+
+        var blob = new Blob([JSON.stringify(geojson)], { type: "application/json" });
+        var url  = URL.createObjectURL(blob);
+
+        var layer = new GeoJSONLayer({
+          url: url,
+          outFields: ["*"],
+          renderer: {
+            type: "class-breaks",
+            field: "gap",
+            defaultSymbol: { type: "simple-fill", color: [40,40,60,0.6], outline: { color: [80,100,120,0.4], width: 0.4 } },
+            defaultLabel: "Données non disponibles",
+            classBreakInfos: BREAKS.map(function(b, i) {
+              var min = i === 0 ? 0 : BREAKS[i-1].max;
+              return {
+                minValue: min, maxValue: b.max,
+                symbol: { type: "simple-fill", color: hexToRgba(b.color, 0.78),
+                  outline: { color: [20,30,45,0.7], width: 0.4 } },
+                label: b.label
+              };
+            })
+          },
+          popupTemplate: {
+            title: "{fr_name}",
+            outFields: ["*"],
+            content: function(e) {
+              var a = e.graphic.attributes;
+              if (a.has_data === 0) return '<p style="color:#888;font-size:12px">Données non disponibles pour ce territoire.</p>';
+              var g   = a.gap;
+              var cov = 100 - g;
+              var col = gapColor(g);
+              return '<div style="font-size:12px;line-height:1.7">'
+                + '<b>Protection Gap NatCat :</b> <span style="color:' + col + ';font-size:16px;font-weight:700">' + g + '%</span>'
+                + ' non assuré'
+                + '<div style="height:10px;background:#253a50;border-radius:4px;margin:6px 0;overflow:hidden">'
+                + '  <div style="width:' + cov + '%;height:100%;background:' + col + ';border-radius:4px;transition:width 0.5s"></div>'
+                + '</div>'
+                + '<div style="display:flex;justify-content:space-between;font-size:10px;color:#7a99b2;margin-bottom:8px">'
+                + '  <span>✅ ' + cov + '% couvert</span><span>❌ ' + g + '% non couvert</span>'
+                + '</div>'
+                + '<b>Catégorie :</b> <span style="color:' + col + '">' + a.gap_cat + '</span><br>'
+                + '<b>Pénétration non-vie :</b> ' + (a.pen ? a.pen + '% du PIB' : 'N/D') + '<br>'
+                + '<b>Région :</b> ' + a.region
+                + '<hr style="border-color:#253a50;margin:8px 0">'
+                + '<span style="font-size:10px;color:#7a99b2">Sources : Swiss Re Sigma 2023 · Munich Re NatCatSERVICE</span>'
+                + '</div>';
+            }
+          }
+        });
+        map.add(layer);
+
+        // Stats globales
+        var vals = allCountries.map(function(c) { return c.gap; });
+        var avg  = Math.round(vals.reduce(function(s,v){return s+v;},0)/vals.length);
+        var best = allCountries.slice().sort(function(a,b){return a.gap-b.gap;})[0];
+        var worst= allCountries.slice().sort(function(a,b){return b.gap-a.gap;})[0];
+        var nGood= allCountries.filter(function(c){return c.gap<60;}).length;
+        var nBad = allCountries.filter(function(c){return c.gap>90;}).length;
+
+        document.getElementById("stAvg").textContent  = avg + "%";
+        document.getElementById("stGood").textContent = nGood + " pays";
+        document.getElementById("stBad").textContent  = nBad  + " pays";
+        document.getElementById("stBest").textContent = best.name + " (" + best.gap + "%)";
+        document.getElementById("stWorst").textContent= worst.name + " (" + worst.gap + "%)";
+
+        // Régions pour le filtre
+        var regions = ["all"].concat(
+          [...new Set(allCountries.map(function(c){return c.region;}).sort())]
+        );
+        var sel = document.getElementById("regionSel");
+        regions.forEach(function(r) {
+          var o = document.createElement("option");
+          o.value = r; o.textContent = r === "all" ? "Toutes les régions" : r;
+          sel.appendChild(o);
+        });
+
+        renderRankings();
+        renderTable();
+      })
+      .catch(function(err) {
+        document.getElementById("loadMsg").innerHTML = "❌ Erreur de chargement<br><small>" + err + "</small>";
+      });
+
+    // ── Fonctions utilitaires ─────────────────────────────
+    function gapCat(g) {
+      if (g < 40) return "Très bien couvert";
+      if (g < 60) return "Bien couvert";
+      if (g < 75) return "Modérément couvert";
+      if (g < 90) return "Peu couvert";
+      return "Très peu couvert";
+    }
+
+    function hexToRgba(hex, a) {
+      var r = parseInt(hex.slice(1,3),16);
+      var g = parseInt(hex.slice(3,5),16);
+      var b = parseInt(hex.slice(5,7),16);
+      return [r,g,b,a];
+    }
+
+    function getVisible() {
+      return allCountries.filter(function(c) {
+        if (regionFilter !== "all" && c.region !== regionFilter) return false;
+        var s = document.getElementById("tSearch").value.toLowerCase();
+        if (s && c.name.toLowerCase().indexOf(s) < 0) return false;
+        return true;
+      });
+    }
+
+    // ── Rankings sidebar ──────────────────────────────────
+    function renderRankings() {
+      var sorted = allCountries.slice().sort(function(a,b){ return a.gap - b.gap; });
+      if (regionFilter !== "all") sorted = sorted.filter(function(c){return c.region===regionFilter;});
+
+      var best5  = sorted.slice(0, 5);
+      var worst5 = sorted.slice(-5).reverse();
+
+      function makeItem(c) {
+        var col = gapColor(c.gap);
+        var li = document.createElement("div");
+        li.className = "rank-item";
+        li.innerHTML =
+          '<div class="rank-name">' + c.name + '</div>'
+          + '<div class="rank-bar-wrap"><div class="rank-bar" style="width:' + c.gap + '%;background:' + col + '"></div></div>'
+          + '<div class="rank-val" style="color:' + col + '">' + c.gap + '%</div>';
+        return li;
+      }
+
+      var bList = document.getElementById("bestList");
+      var wList = document.getElementById("worstList");
+      bList.innerHTML = ""; wList.innerHTML = "";
+      best5.forEach(function(c) { bList.appendChild(makeItem(c)); });
+      worst5.forEach(function(c) { wList.appendChild(makeItem(c)); });
+    }
+
+    // ── Tableau ───────────────────────────────────────────
+    function renderTable() {
+      var data = getVisible().slice();
+      data.sort(function(a,b) {
+        var va = a[sortCol], vb = b[sortCol];
+        return va < vb ? sortDir : va > vb ? -sortDir : 0;
+      });
+      var tbody = document.getElementById("tBody");
+      tbody.innerHTML = data.map(function(c) {
+        var col = gapColor(c.gap);
+        var cov = 100 - c.gap;
+        return '<tr>'
+          + '<td>' + c.name + '</td>'
+          + '<td>' + c.region + '</td>'
+          + '<td class="num" style="color:' + col + ';font-weight:700">' + c.gap + '%</td>'
+          + '<td class="bar-cell">'
+          +   '<div style="height:8px;background:#253a50;border-radius:4px;overflow:hidden">'
+          +   '<div class="mini-bar" style="width:' + c.gap + '%;background:' + col + '"></div></div>'
+          + '</td>'
+          + '<td class="num">' + cov + '%</td>'
+          + '<td class="num">' + (c.pen ? c.pen.toFixed(1) + '%' : '–') + '</td>'
+          + '<td>' + gapCat(c.gap) + '</td>'
+          + '</tr>';
+      }).join("");
+    }
+
+    // ── Tri ───────────────────────────────────────────────
+    document.querySelectorAll("thead th[data-col]").forEach(function(th) {
+      th.addEventListener("click", function() {
+        var col = this.getAttribute("data-col");
+        sortDir = (sortCol === col) ? -sortDir : -1;
+        sortCol = col;
+        document.querySelectorAll("thead th").forEach(function(t){ t.classList.remove("sorted"); });
+        this.classList.add("sorted");
+        renderTable();
+      });
+    });
+
+    // ── Région filter ─────────────────────────────────────
+    document.getElementById("regionSel").addEventListener("change", function() {
+      regionFilter = this.value;
+      renderRankings();
+      renderTable();
+    });
+
+    // ── Recherche ─────────────────────────────────────────
+    document.getElementById("tSearch").addEventListener("input", renderTable);
+  });
+  </script>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <div id="header">
+    <a href="index.html">← CatNat Hub</a>
+    <span class="sep">|</span>
+    <h1>🛡️ Protection Gap <span>NatCat</span> Mondial</h1>
+    <div id="srcNote">Swiss Re Sigma 2023 · Munich Re NatCatSERVICE · IAIS · Banque Mondiale</div>
+  </div>
+
+  <!-- Stats bar -->
+  <div id="statsBar">
+    <div class="sc">
+      <div class="lbl">Gap moyen mondial</div>
+      <div class="val amber" id="stAvg">–</div>
+      <div class="sub">% non assuré</div>
+    </div>
+    <div class="sc">
+      <div class="lbl">Bien couverts (&lt;60%)</div>
+      <div class="val green" id="stGood">–</div>
+      <div class="sub">pays</div>
+    </div>
+    <div class="sc">
+      <div class="lbl">Très peu couverts (&gt;90%)</div>
+      <div class="val red" id="stBad">–</div>
+      <div class="sub">pays</div>
+    </div>
+    <div class="sc">
+      <div class="lbl">🥇 Meilleure couverture</div>
+      <div class="val white" style="font-size:13px;line-height:1.8" id="stBest">–</div>
+      <div class="sub">gap le plus faible</div>
+    </div>
+    <div class="sc">
+      <div class="lbl">⚠️ Exposition maximale</div>
+      <div class="val red" style="font-size:13px;line-height:1.8" id="stWorst">–</div>
+      <div class="sub">gap le plus élevé</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+
+      <div>
+        <div class="sg-title">🗺️ Filtrer par région</div>
+        <select id="regionSel"></select>
+      </div>
+
+      <hr class="sep">
+
+      <!-- Légende -->
+      <div>
+        <div class="sg-title">🎨 Échelle du protection gap</div>
+        <div class="legend-scale">
+          <div class="leg-row"><div class="leg-box" style="background:#1a9850"></div>&lt; 40% — Très bien couvert</div>
+          <div class="leg-row"><div class="leg-box" style="background:#91cf60"></div>40–60% — Bien couvert</div>
+          <div class="leg-row"><div class="leg-box" style="background:#fee08b"></div>60–75% — Modérément couvert</div>
+          <div class="leg-row"><div class="leg-box" style="background:#fc8d59"></div>75–90% — Peu couvert</div>
+          <div class="leg-row"><div class="leg-box" style="background:#b2182b"></div>&gt; 90% — Très peu couvert</div>
+          <div class="leg-row"><div class="leg-box" style="background:#28283c;border:1px solid #404060"></div>Données N/D</div>
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <!-- Top 5 meilleur -->
+      <div>
+        <div class="sg-title">🥇 Mieux couverts</div>
+        <div class="rank-list" id="bestList"></div>
+      </div>
+
+      <hr class="sep">
+
+      <!-- Top 5 pire -->
+      <div>
+        <div class="sg-title">🔴 Moins bien couverts</div>
+        <div class="rank-list" id="worstList"></div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="info-box">
+        <strong>Protection Gap NatCat</strong>
+        Part des pertes économiques causées par les catastrophes naturelles qui ne sont <b>pas couvertes par une assurance</b>.<br><br>
+        <strong>Pénétration non-vie</strong>
+        Ratio primes d'assurance non-vie / PIB — indicateur de maturité du marché assurantiel.
+      </div>
+    </div>
+
+    <!-- Carte -->
+    <div id="mapWrap">
+      <div id="viewDiv"></div>
+      <div id="loadMsg">
+        <div class="spinner"></div>
+        Chargement des données géographiques…
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tableau -->
+  <div id="tablePanel">
+    <div id="tph">
+      <h3>📋 Classement par pays — Protection Gap NatCat</h3>
+      <input id="tSearch" type="text" placeholder="🔍 Rechercher un pays…">
+    </div>
+    <div id="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="name">Pays</th>
+            <th data-col="region">Région</th>
+            <th data-col="gap" class="num sorted">Protection Gap</th>
+            <th class="bar-cell"></th>
+            <th data-col="cov" class="num">Part assurée</th>
+            <th data-col="pen" class="num">Pénétration non-vie</th>
+            <th data-col="gap_cat">Catégorie</th>
+          </tr>
+        </thead>
+        <tbody id="tBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
