@@ -549,7 +549,8 @@
     // ── Tableau ───────────────────────────────────────────
     var sortCol = "date", sortDir = -1;
     function renderTable(events) {
-      var search = (document.getElementById("tableSearch")||{}).value||"";
+      var search = (document.getElementById("tableSearch")||{}).value
+                || (document.getElementById("tableSearch2")||{}).value || "";
       var filtered = events.filter(function(e) {
         if (!search) return true;
         return e.name.toLowerCase().indexOf(search.toLowerCase()) >= 0 ||
@@ -562,8 +563,8 @@
         if (va > vb) return -sortDir;
         return 0;
       });
-      var tbody = document.getElementById("evtBody");
-      tbody.innerHTML = filtered.map(function(e) {
+
+      var rowsShort = filtered.map(function(e) {
         var col = COLORS[e.type] || "#888";
         return '<tr onclick="highlightEvent(' + e.id + ')">'
           + '<td>' + fmtDate(e.date) + '</td>'
@@ -576,6 +577,26 @@
           + '<td class="num">' + fmtEco(e.ins) + '</td>'
           + '</tr>';
       }).join("");
+
+      var rowsFull = filtered.map(function(e) {
+        var col = COLORS[e.type] || "#888";
+        return '<tr>'
+          + '<td>' + fmtDate(e.date) + '</td>'
+          + '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">' + e.name + '</td>'
+          + '<td>' + e.country + '</td>'
+          + '<td><span class="type-badge" style="background:' + col + '20;color:' + col + ';border:1px solid ' + col + '40">' + (LABELS[e.type]||e.type) + '</span></td>'
+          + '<td class="num">' + (e.deaths ? e.deaths.toLocaleString("fr") : "–") + '</td>'
+          + '<td class="num">' + (e.injured ? e.injured.toLocaleString("fr") : "–") + '</td>'
+          + '<td class="num">' + fmtEco(e.eco) + '</td>'
+          + '<td class="num">' + fmtEco(e.ins) + '</td>'
+          + '<td style="max-width:300px;white-space:normal;color:var(--muted);font-size:10px">' + e.desc + '</td>'
+          + '</tr>';
+      }).join("");
+
+      var b1 = document.getElementById("evtBody");
+      if (b1) b1.innerHTML = rowsShort;
+      var b2 = document.getElementById("evtBody2");
+      if (b2) b2.innerHTML = rowsFull;
     }
 
     window.highlightEvent = function(id) {
@@ -597,6 +618,9 @@
     });
 
     document.getElementById("tableSearch").addEventListener("input", function() {
+      renderTable(getFiltered());
+    });
+    document.getElementById("tableSearch2").addEventListener("input", function() {
       renderTable(getFiltered());
     });
 
@@ -856,7 +880,7 @@
   <div id="dataTab">
     <div id="tablePanelHeader" style="padding:10px 16px">
       <h3>📊 Données complètes — tous les événements</h3>
-      <input id="tableSearch" style="width:220px" type="text" placeholder="🔍 Rechercher…">
+      <input id="tableSearch2" style="width:220px" type="text" placeholder="🔍 Rechercher…">
     </div>
     <div style="flex:1;overflow:auto">
       <table>
@@ -873,7 +897,7 @@
             <th>Description</th>
           </tr>
         </thead>
-        <tbody id="evtBody"></tbody>
+        <tbody id="evtBody2"></tbody>
       </table>
     </div>
   </div>
