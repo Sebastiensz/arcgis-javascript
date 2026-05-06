@@ -152,7 +152,7 @@
               
  countrieslayer.queryFeatures(countryQueryreponse)
         .then(function(response2){
-   //console.log(response2.features[0].symbol);
+          if (!response2.features || !response2.features.length) return;
           view.goTo(response2.features[0].geometry.extent);
    
    //le bout ci dessous permet de tout mettre en rouge, mais maintenant je veux qu'uniquement une entité soit en rouge
@@ -285,13 +285,13 @@ view.goTo(feature2.geometry);
               }
               else{
               ptsElement.innerHTML=pts+"/"+ String(j-1)+ " points";}
-             randValue=getRandomInt(242); //nouveau pays au hasard pour le jeu
+             randValue=getRandomInt(country_table.length); //nouveau pays au hasard pour le jeu
             questionElement.innerHTML = String(country_table[randValue]);
             j=j+1;
             });
       }
         else{ //fin du jeu
-          randValue=getRandomInt(242); //nouveau pays au hasard pour le jeu
+          randValue=getRandomInt(country_table.length); //nouveau pays au hasard pour le jeu
           questionElement.innerHTML = String(country_table[randValue]);
         }
       };   //fin de getPays
