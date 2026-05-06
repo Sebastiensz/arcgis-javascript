@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entertainment Hub – Divertissement Gratuit & Légal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:     #09090f;
+      --panel:  #10101e;
+      --card:   #16162a;
+      --border: #252540;
+      --text:   #dde0ff;
+      --muted:  #7070a0;
+      --accent: #7c6af7;
+      --films:    #e53935;
+      --musique:  #1db954;
+      --podcasts: #f39c12;
+      --jeux:     #9b59b6;
+      --docs:     #2980b9;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: "Segoe UI", -apple-system, Arial, sans-serif; font-size: 14px; min-height: 100%; }
+
+    /* ── Header ─────────────────── */
+    header {
+      background: linear-gradient(135deg, #1a0a35 0%, #0b1840 100%);
+      padding: 28px 32px 22px; border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 30px; font-weight: 800; background: linear-gradient(120deg,#a78bfa,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    header p  { color: var(--muted); font-size: 13px; margin-top: 5px; }
+    #statsRow { display:flex; gap:28px; margin-top:18px; flex-wrap:wrap; }
+    .st { text-align:center; }
+    .st .v { font-size:24px; font-weight:800; color:white; }
+    .st .l { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+
+    /* ── Toolbar ────────────────── */
+    #toolbar {
+      background: var(--panel); border-bottom: 1px solid var(--border);
+      padding: 10px 24px; display:flex; flex-wrap:wrap; align-items:center;
+      gap:10px; position:sticky; top:0; z-index:100;
+    }
+    #searchWrap { display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--border); border-radius:8px; padding:6px 12px; flex:0 0 220px; }
+    #searchWrap input { background:none; border:none; outline:none; color:var(--text); font-size:13px; width:100%; }
+    .cats { display:flex; gap:4px; flex-wrap:wrap; }
+    .cbt {
+      padding:5px 13px; border-radius:20px; border:1px solid var(--border);
+      background:var(--card); color:var(--muted); font-size:12px; font-weight:600;
+      cursor:pointer; transition:all .15s; white-space:nowrap;
+    }
+    .cbt:hover { color:var(--text); }
+    .cbt.on { color:white; border-color:transparent; }
+    .cbt[data-c="all"].on     { background:var(--accent); }
+    .cbt[data-c="films"].on   { background:var(--films); }
+    .cbt[data-c="musique"].on { background:var(--musique); }
+    .cbt[data-c="podcasts"].on{ background:var(--podcasts); }
+    .cbt[data-c="jeux"].on    { background:var(--jeux); }
+    .cbt[data-c="docs"].on    { background:var(--docs); }
+    .cbt[data-c="favoris"].on { background:#f1c40f; color:#09090f; }
+    .tgls { margin-left:auto; display:flex; gap:12px; align-items:center; }
+    .tgl { display:flex; align-items:center; gap:5px; font-size:12px; color:var(--muted); cursor:pointer; white-space:nowrap; }
+    .tgl input { accent-color:var(--accent); }
+
+    /* ── Grid ───────────────────── */
+    #grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px; padding:20px 24px; }
+
+    /* ── Section header ─────────── */
+    .shdr {
+      grid-column:1/-1; display:flex; align-items:center; gap:10px;
+      padding:4px 0 8px; border-bottom:1px solid var(--border); margin-bottom:4px;
+    }
+    .shdr h2 { font-size:16px; font-weight:700; }
+    .shdr .cnt { font-size:11px; color:var(--muted); }
+
+    /* ── Card ───────────────────── */
+    .card {
+      background:var(--card); border:1px solid var(--border); border-radius:12px;
+      padding:18px; display:flex; flex-direction:column; gap:10px;
+      transition:transform .15s, box-shadow .15s; position:relative; overflow:hidden;
+    }
+    .card:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(0,0,0,.5); }
+    .stripe { position:absolute; top:0; left:0; right:0; height:3px; border-radius:12px 12px 0 0; }
+    .ctop { display:flex; align-items:flex-start; gap:12px; }
+    .cicon { font-size:34px; line-height:1; flex-shrink:0; }
+    .ctitles { flex:1; min-width:0; }
+    .cname { font-size:15px; font-weight:700; color:white; }
+    .ctag  { font-size:11px; color:var(--muted); margin-top:3px; line-height:1.4; }
+    .favbtn {
+      background:none; border:none; cursor:pointer; font-size:20px;
+      opacity:.35; transition:opacity .15s,transform .15s; flex-shrink:0; line-height:1;
+    }
+    .favbtn:hover { opacity:.8; transform:scale(1.2); }
+    .favbtn.on { opacity:1; }
+    .badges { display:flex; gap:5px; flex-wrap:wrap; }
+    .badge { font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; letter-spacing:.3px; }
+    .b-free { background:#0f2a0f; color:#4ade80; border:1px solid #1d4a1d; }
+    .b-ads  { background:#2a1d0a; color:#fbbf24; border:1px solid #4a2d0a; }
+    .b-nads { background:#0f2a1a; color:#6ee7b7; border:1px solid #1d4a2d; }
+    .b-fr   { background:#0a1a2a; color:#93c5fd; border:1px solid #1a2a4a; }
+    .cdesc { font-size:12px; color:var(--muted); line-height:1.55; }
+    .cbest { font-size:11px; color:#a78bfa; }
+    .cbest strong { color:#c4b5fd; }
+    .cbmk {
+      font-size:10px; color:var(--muted); background:rgba(255,255,255,.04);
+      border:1px solid var(--border); border-radius:6px; padding:5px 8px; line-height:1.5;
+    }
+    .cbmk span { color:var(--accent); font-weight:600; }
+    .clink {
+      display:block; text-align:center; padding:8px; border-radius:8px;
+      border:1px solid var(--border); color:var(--text); text-decoration:none;
+      font-size:12px; font-weight:600; transition:all .15s; margin-top:auto;
+    }
+    .clink:hover { color:white; border-color:var(--accent); background:rgba(124,106,247,.15); }
+
+    #empty { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--muted); display:none; }
+    #empty .ei { font-size:52px; margin-bottom:14px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎭 Entertainment Hub</h1>
+  <p>Dashboard personnel — sources 100 % gratuites et légales, organisées pour vous</p>
+  <div id="statsRow">
+    <div class="st"><div class="v" id="sTotal">–</div><div class="l">Sources</div></div>
+    <div class="st"><div class="v" id="sNoAds">–</div><div class="l">Sans pub</div></div>
+    <div class="st"><div class="v" id="sFr">–</div><div class="l">Françaises</div></div>
+    <div class="st"><div class="v" id="sFavs">0</div><div class="l">⭐ Favoris</div></div>
+  </div>
+</header>
+
+<div id="toolbar">
+  <div id="searchWrap">
+    <span>🔍</span>
+    <input type="text" id="srch" placeholder="Rechercher une source…">
+  </div>
+  <div class="cats">
+    <button class="cbt on"  data-c="all">Tout</button>
+    <button class="cbt" data-c="films">🎬 Films & Séries</button>
+    <button class="cbt" data-c="musique">🎵 Musique & Radio</button>
+    <button class="cbt" data-c="podcasts">🎙️ Podcasts & Livres audio</button>
+    <button class="cbt" data-c="jeux">🎮 Jeux & Interactif</button>
+    <button class="cbt" data-c="docs">📚 Docs & Éducatif</button>
+    <button class="cbt" data-c="favoris">⭐ Mes favoris</button>
+  </div>
+  <div class="tgls">
+    <label class="tgl"><input type="checkbox" id="fNoAds"> Sans pub uniquement</label>
+    <label class="tgl"><input type="checkbox" id="fFr"> 🇫🇷 Français uniquement</label>
+  </div>
+</div>
+
+<main id="grid"></main>
+
+<script>
+var COLORS  = { films:"#e53935", musique:"#1db954", podcasts:"#f39c12", jeux:"#9b59b6", docs:"#2980b9" };
+var CLABELS = { films:"🎬 Films & Séries", musique:"🎵 Musique & Radio", podcasts:"🎙️ Podcasts & Livres audio", jeux:"🎮 Jeux & Interactif", docs:"📚 Docs & Éducatif" };
+
+var S = [
+  /* ══ FILMS & SÉRIES ════════════════════════════════════════════════════ */
+  { id:"arte",       cat:"films",    icon:"🎭", name:"ARTE",
+    tag:"La référence culturelle franco-allemande",
+    desc:"Films d'auteur primés, séries européennes, documentaires premium streamés gratuitement jusqu'à 30 jours après diffusion. Qualité éditoriale exceptionnelle.",
+    best:"Films d'auteur · Séries européennes · Docs culturels",
+    url:"https://www.arte.tv/fr/", bm:"ARTE films séries documentaires gratuits streaming",
+    noAds:true, fr:true },
+
+  { id:"francetv",   cat:"films",    icon:"📺", name:"France.tv",
+    tag:"Tout le service public français en replay",
+    desc:"Replay de France 2, 3, 4, 5 et Okoo. Séries françaises, fictions, reportages, magazines et documentaires disponibles gratuitement.",
+    best:"Séries FR · Fictions · Replay TV publique",
+    url:"https://www.france.tv/", bm:"France.tv replay séries françaises fictions gratuit",
+    noAds:false, fr:true },
+
+  { id:"pluto",      cat:"films",    icon:"📡", name:"Pluto TV",
+    tag:"200+ chaînes thématiques + films à la demande",
+    desc:"AVOD gratuit avec publicité : chaînes thématiques en continu (action, horreur, romance, true crime…) et films à la demande. Vaste catalogue international.",
+    best:"Chaînes thématiques en continu · Films génériques",
+    url:"https://pluto.tv/fr", bm:"Pluto TV films gratuits chaînes streaming France",
+    noAds:false, fr:false },
+
+  { id:"tubi",       cat:"films",    icon:"🍿", name:"Tubi",
+    tag:"Catalogue hollywoodien gratuit avec pub",
+    desc:"Films Paramount, Lionsgate, MGM accessibles gratuitement avec publicité. Très large catalogue de films américains, séries classiques. Peut nécessiter un VPN.",
+    best:"Films US · Séries classiques américaines",
+    url:"https://tubitv.com/", bm:"Tubi films gratuits Hollywood streaming légal",
+    noAds:false, fr:false },
+
+  { id:"archive-films", cat:"films", icon:"📽️", name:"Internet Archive – Cinéma",
+    tag:"Des milliers de films domaine public",
+    desc:"Chaplin, Keaton, westerns, film noir, science-fiction vintage, classiques muets. Téléchargement et streaming gratuits, sans inscription.",
+    best:"Cinéma muet · Classiques 1920-1960 · Domaine public",
+    url:"https://archive.org/details/movies", bm:"Internet Archive films domaine public classiques gratuits",
+    noAds:true, fr:false },
+
+  { id:"crunchyroll", cat:"films",   icon:"⛩️", name:"Crunchyroll",
+    tag:"Anime en simulcast – tier gratuit disponible",
+    desc:"Tier gratuit avec publicité donnant accès à la quasi-totalité du catalogue anime, avec 1 semaine de décalage. Le plus grand catalogue anime légal au monde.",
+    best:"Anime · Manga animé · Simulcast",
+    url:"https://www.crunchyroll.com/fr/", bm:"Crunchyroll anime gratuit simulcast streaming légal",
+    noAds:false, fr:false },
+
+  { id:"plex",       cat:"films",    icon:"🟡", name:"Plex Watch Free",
+    tag:"Films et séries gratuits + serveur multimédia perso",
+    desc:"Section gratuite avec publicité : films récents et séries. Double fonction : serveur pour streamer votre propre collection sur tous vos appareils.",
+    best:"Films · Séries · Bibliothèque personnelle",
+    url:"https://watch.plex.tv/", bm:"Plex Watch Free films séries gratuits streaming",
+    noAds:false, fr:false },
+
+  { id:"ina-film",   cat:"films",    icon:"📼", name:"INA – Films & Archives TV",
+    tag:"Tout le patrimoine audiovisuel français",
+    desc:"L'INA met en libre accès des milliers d'archives : films complets, JT historiques, émissions cultes, documentaires. Pépites introuvables ailleurs.",
+    best:"Archives TV · Histoire FR · Patrimoine cinéma",
+    url:"https://www.ina.fr/", bm:"INA archives films télévision française histoire gratuit",
+    noAds:true, fr:true },
+
+  /* ══ MUSIQUE & RADIO ════════════════════════════════════════════════════ */
+  { id:"radio-garden", cat:"musique", icon:"🌍", name:"Radio.garden",
+    tag:"Toutes les radios du monde sur un globe 3D",
+    desc:"Naviguez sur un globe interactif et écoutez n'importe quelle radio du monde en direct. Des milliers de stations, aucune inscription requise.",
+    best:"Radios mondiales · Découverte · Ambiance",
+    url:"https://radio.garden/", bm:"Radio Garden radios monde globe interactif gratuit direct",
+    noAds:true, fr:false },
+
+  { id:"radio-france", cat:"musique", icon:"🎙️", name:"Radio France",
+    tag:"France Inter, France Culture, FIP, Mouv, Musique...",
+    desc:"Toutes les radios publiques françaises : FIP pour la musique éclectique de qualité, France Culture pour l'intellect, Mouv pour le hip-hop, France Musique pour le classique.",
+    best:"Culturel · Musicale · Info · Classique · Hip-hop",
+    url:"https://www.radiofrance.fr/", bm:"Radio France FIP France Inter Culture Mouv direct podcast",
+    noAds:true, fr:true },
+
+  { id:"spotify",   cat:"musique",   icon:"🟢", name:"Spotify (gratuit)",
+    tag:"130 millions de titres avec pub",
+    desc:"Version gratuite avec publicité audio. Découverte musicale via algorithmes et playlists thématiques. Le standard mondial du streaming musical.",
+    best:"Découverte · Playlists · Algorithme · Nouveautés",
+    url:"https://open.spotify.com/", bm:"Spotify gratuit musique streaming playlists découverte",
+    noAds:false, fr:false },
+
+  { id:"deezer",    cat:"musique",   icon:"🟠", name:"Deezer (gratuit)",
+    tag:"90M titres – la référence française",
+    desc:"Tier gratuit avec publicité audio. Flow personnalisé, playlists thématiques, radio d'artistes. Entreprise française, bonne intégration de la musique francophone.",
+    best:"Flow personnalisé · Musique FR · Playlists",
+    url:"https://www.deezer.com/fr/", bm:"Deezer gratuit musique streaming France Flow personnalisé",
+    noAds:false, fr:true },
+
+  { id:"soundcloud", cat:"musique",  icon:"☁️", name:"SoundCloud",
+    tag:"Musique indépendante, remixes, maquettes",
+    desc:"La plateforme des artistes indépendants. Remixes, reprises, musiques originales et lives souvent introuvables ailleurs. Idéal pour découvrir des artistes émergents.",
+    best:"Indé · Remixes · Artistes émergents · Exclusivités",
+    url:"https://soundcloud.com/", bm:"SoundCloud musique indépendante gratuite remixes artistes",
+    noAds:false, fr:false },
+
+  { id:"jamendo",   cat:"musique",   icon:"🎸", name:"Jamendo",
+    tag:"Musique Creative Commons 100% légale",
+    desc:"Plateforme de musique libre sous licence Creative Commons. Gratuit pour usage personnel. Des millions de titres d'artistes du monde entier, téléchargeables.",
+    best:"Musique libre · CC · Fond sonore · Création",
+    url:"https://www.jamendo.com/", bm:"Jamendo musique Creative Commons gratuite libre droits",
+    noAds:true, fr:false },
+
+  { id:"mixcloud",  cat:"musique",   icon:"🎚️", name:"Mixcloud",
+    tag:"DJ sets, émissions radio, mixes en continu",
+    desc:"Référence pour les DJ sets et émissions radio mixées. Mixes thématiques par genre ou humeur. Légal, avec droits d'auteur reversés aux artistes.",
+    best:"DJ sets · Radio shows · Mixes · Sets live",
+    url:"https://www.mixcloud.com/", bm:"Mixcloud DJ sets gratuits mixes radio shows légal",
+    noAds:false, fr:false },
+
+  { id:"fma",       cat:"musique",   icon:"📻", name:"Free Music Archive",
+    tag:"Archive de musique libre et téléchargeable",
+    desc:"Musique libre de droits, curée par des radios et labels indépendants. Téléchargement légal gratuit. Idéal pour créateurs de contenu YouTube/podcast.",
+    best:"Musique libre · Téléchargement · Créateurs",
+    url:"https://freemusicarchive.org/", bm:"Free Music Archive musique gratuite téléchargement légal libre",
+    noAds:true, fr:false },
+
+  /* ══ PODCASTS & LIVRES AUDIO ════════════════════════════════════════════ */
+  { id:"france-culture", cat:"podcasts", icon:"🎓", name:"France Culture – Podcasts",
+    tag:"L'excellence intellectuelle française en audio",
+    desc:"La Méthode Scientifique, Les Chemins de la philo, LSD, Matières à penser, Le Cours de l'histoire… Le meilleur de la radio culturelle mondiale, gratuitement.",
+    best:"Philo · Sciences · Histoire · Société · Littérature",
+    url:"https://www.radiofrance.fr/franceculture/podcasts", bm:"France Culture podcasts gratuits philo sciences histoire",
+    noAds:true, fr:true },
+
+  { id:"arte-radio", cat:"podcasts", icon:"🔊", name:"Arte Radio",
+    tag:"Documentaires sonores et fictions audio originales",
+    desc:"Création sonore originale de haute qualité : documentaires immersifs, fictions radiophoniques, reportages. Formats courts 15-45 min, plongée totale.",
+    best:"Docs sonores · Fictions audio · Reportages immersifs",
+    url:"https://www.arteradio.com/", bm:"Arte Radio podcasts documentaires sonores fiction audio gratuit",
+    noAds:true, fr:true },
+
+  { id:"librivox",  cat:"podcasts",  icon:"📖", name:"LibriVox",
+    tag:"Milliers de livres audio domaine public – bénévoles du monde entier",
+    desc:"Projet collaboratif : des bénévoles lisent des œuvres du domaine public. Hugo, Zola, Balzac, Flaubert, Maupassant et bien d'autres en version intégrale.",
+    best:"Classiques littéraires · Domaine public · Intégrales",
+    url:"https://librivox.org/", bm:"LibriVox livres audio gratuits domaine public bénévoles",
+    noAds:true, fr:false },
+
+  { id:"litteratureaudio", cat:"podcasts", icon:"📚", name:"Littératureaudio.com",
+    tag:"Livres audio en français – classiques gratuits",
+    desc:"Des centaines d'œuvres classiques françaises lues par des bénévoles. Maupassant, Jules Verne, Daudet, Stendhal. Téléchargement MP3 gratuit.",
+    best:"Littérature française · Classiques · Téléchargement",
+    url:"https://www.litteratureaudio.com/", bm:"Litteratureaudio livres audio français gratuits Maupassant Zola",
+    noAds:true, fr:true },
+
+  { id:"binge",     cat:"podcasts",  icon:"🎧", name:"Binge Audio",
+    tag:"Les meilleurs podcasts natifs français",
+    desc:"Culture G, Les Couilles sur la Table, Kiffe ta Race, Injustices, Contes du crime… Les podcasts francophones les plus primés, entièrement gratuits.",
+    best:"Société · Féminisme · Culture · Récits",
+    url:"https://www.binge.audio/", bm:"Binge Audio podcasts français gratuits société culture primés",
+    noAds:false, fr:true },
+
+  { id:"spotify-pod", cat:"podcasts", icon:"🎙️", name:"Spotify – Podcasts",
+    tag:"Le catalogue mondial le plus complet",
+    desc:"Catalogue de podcasts le plus vaste au monde, gratuit sans abonnement. Exclusivités, podcasts vidéo, tous genres. Interface fluide, suggestions pertinentes.",
+    best:"Tous genres · Exclusivités · International",
+    url:"https://open.spotify.com/", bm:"Spotify podcasts gratuits tous genres sans abonnement",
+    noAds:false, fr:false },
+
+  { id:"acast",     cat:"podcasts",  icon:"📡", name:"Acast",
+    tag:"Podcasts indépendants et émissions premium",
+    desc:"Plateforme suédoise hébergeant des milliers de podcasts indépendants français et internationaux. Interface web sans inscription, écoute directe.",
+    best:"Podcasts indépendants · News · Enquêtes",
+    url:"https://www.acast.com/fr", bm:"Acast podcasts indépendants français international gratuit",
+    noAds:false, fr:false },
+
+  { id:"gutenberg",  cat:"podcasts", icon:"📜", name:"Project Gutenberg",
+    tag:"70 000 livres numériques en accès libre",
+    desc:"La plus grande bibliothèque numérique gratuite au monde. Textes intégraux en accès libre, certains avec version audio. Idéal pour lire ou faire lire.",
+    best:"Ebooks · Classiques · Domaine public",
+    url:"https://www.gutenberg.org/", bm:"Project Gutenberg ebooks gratuits domaine public lecture",
+    noAds:true, fr:false },
+
+  /* ══ JEUX & EXPÉRIENCES INTERACTIVES ════════════════════════════════════ */
+  { id:"lichess",   cat:"jeux",      icon:"♟️", name:"Lichess",
+    tag:"Échecs 100% gratuit, open source, sans pub",
+    desc:"La meilleure plateforme d'échecs au monde. 100% gratuite, open source, aucune publicité. Parties en ligne, entraînement, puzzles, analyses IA, tournois.",
+    best:"Échecs · Tournois · Puzzles · Apprentissage",
+    url:"https://lichess.org/", bm:"Lichess échecs gratuit open source en ligne sans pub",
+    noAds:true, fr:false },
+
+  { id:"itch",      cat:"jeux",      icon:"🕹️", name:"itch.io – Free Games",
+    tag:"Des milliers de jeux indépendants gratuits",
+    desc:"Section 'free games' immense de la plateforme indie. Jeux de jam, expériences narratives, art games, prototypes. Des pépites introuvables ailleurs.",
+    best:"Jeux indé · Art games · Game jams · Narrative",
+    url:"https://itch.io/games/free", bm:"itch.io jeux gratuits indépendants légaux indie",
+    noAds:true, fr:false },
+
+  { id:"epic",      cat:"jeux",      icon:"🎮", name:"Epic Games – Jeux gratuits",
+    tag:"2-3 jeux offerts définitivement chaque jeudi",
+    desc:"Epic Games Store offre chaque semaine des jeux complets (parfois des AAA comme GTA V, Control, Tomb Raider). À réclamer dans les délais pour les garder à vie.",
+    best:"AAA offerts · Jeux complets · PC",
+    url:"https://store.epicgames.com/fr/free-games", bm:"Epic Games jeux gratuits semaine PC télécharger définitivement",
+    noAds:true, fr:false },
+
+  { id:"archive-dos", cat:"jeux",    icon:"👾", name:"Internet Archive – Rétrogaming",
+    tag:"MS-DOS, Arcade, console vintage dans votre navigateur",
+    desc:"Des dizaines de milliers de jeux rétro jouables sans installation : Pac-Man, DOOM, Oregon Trail, Commander Keen, Prince of Persia, Civilization I.",
+    best:"Rétrogaming · DOS · Arcade · Nostalgie",
+    url:"https://archive.org/details/softwarelibrary_msdos_games", bm:"Internet Archive jeux retro DOS arcade navigateur gratuit",
+    noAds:true, fr:false },
+
+  { id:"google-arts", cat:"jeux",    icon:"🏛️", name:"Google Arts & Culture",
+    tag:"Musées, monuments et expériences interactives mondiales",
+    desc:"Visites virtuelles de 2 000+ musées, jeux culturels (Art Selfie, Color Palette), expositions immersives, Street View de sites du patrimoine mondial.",
+    best:"Musées virtuels · Art · Culture · Exploration",
+    url:"https://artsandculture.google.com/", bm:"Google Arts Culture musées virtuels jeux culturels gratuit",
+    noAds:true, fr:false },
+
+  { id:"geoguessr", cat:"jeux",      icon:"🗺️", name:"GeoGuessr",
+    tag:"Devinez où vous êtes dans le monde",
+    desc:"Version gratuite avec parties quotidiennes. Explorez le monde via Street View et devinez votre position. Développe la connaissance géographique de façon addictive.",
+    best:"Géographie · Quiz · Street View · Monde",
+    url:"https://www.geoguessr.com/", bm:"GeoGuessr géographie monde Street View jeu gratuit",
+    noAds:false, fr:false },
+
+  { id:"sporcle",   cat:"jeux",      icon:"🧠", name:"Sporcle",
+    tag:"Des milliers de quiz : géo, histoire, culture, sciences",
+    desc:"La plus grande banque de quiz en ligne. Capitales, drapeaux, chronologies, personnages célèbres, films, musique. Parfait pour réviser ou challenger des amis.",
+    best:"Quiz · Culture générale · Géographie · Films",
+    url:"https://www.sporcle.com/", bm:"Sporcle quiz culture générale géographie histoire gratuit",
+    noAds:false, fr:false },
+
+  { id:"wikigame",  cat:"jeux",      icon:"📖", name:"The Wiki Game",
+    tag:"Naviguez de Wikipedia en Wikipedia le plus vite possible",
+    desc:"Partez d'un article Wikipedia et atteignez un article cible en cliquant uniquement sur les liens internes. Simple, addictif, et réellement instructif.",
+    best:"Culture générale · Rapidité · Wikipedia",
+    url:"https://www.thewikigame.com/", bm:"Wiki Game Wikipedia rapidité liens jeu navigateur gratuit",
+    noAds:true, fr:false },
+
+  /* ══ DOCUMENTAIRES & ÉDUCATIF ═══════════════════════════════════════════ */
+  { id:"khan",      cat:"docs",      icon:"🎓", name:"Khan Academy",
+    tag:"Cours gratuits de la maternelle à la licence",
+    desc:"Vidéos de cours et exercices interactifs en maths, sciences, info, histoire, économie. Version française complète. 100% gratuit, sans pub, à but non lucratif.",
+    best:"Maths · Sciences · Programmation · Histoire",
+    url:"https://fr.khanacademy.org/", bm:"Khan Academy cours gratuits maths sciences français sans pub",
+    noAds:true, fr:true },
+
+  { id:"ted",       cat:"docs",      icon:"🔴", name:"TED / TED-Ed",
+    tag:"Les meilleures idées du monde en 18 minutes",
+    desc:"Conférences TED originales et leçons animées TED-Ed sur tous sujets : sciences, design, psychologie, innovation. Sous-titres français disponibles.",
+    best:"Sciences · Innovation · Idées · Inspiration",
+    url:"https://www.ted.com/", bm:"TED talks conférences TED-Ed leçons éducatif gratuit",
+    noAds:true, fr:false },
+
+  { id:"coursera",  cat:"docs",      icon:"🏫", name:"Coursera (audit gratuit)",
+    tag:"Cours de Stanford, MIT, HEC en audit libre",
+    desc:"Des milliers de cours universitaires de Stanford, MIT, HEC, Google en mode 'audit' entièrement gratuit (sans certificat). IA, data science, business, langues.",
+    best:"Formation pro · IA · Data Science · Business",
+    url:"https://www.coursera.org/", bm:"Coursera cours gratuits audit universités Stanford MIT en ligne",
+    noAds:true, fr:false },
+
+  { id:"edx",       cat:"docs",      icon:"🏛️", name:"edX (audit gratuit)",
+    tag:"MIT, Harvard, Berkeley en accès libre",
+    desc:"Mode audit gratuit sur la plupart des cours académiques de premier plan. Informatique, ingénierie, philosophie, architecture. Niveau très élevé.",
+    best:"Académique · CS · Ingénierie · Philo",
+    url:"https://www.edx.org/", bm:"edX cours gratuits MIT Harvard Berkeley audit académique",
+    noAds:true, fr:false },
+
+  { id:"lumni",     cat:"docs",      icon:"🏫", name:"Lumni",
+    tag:"Contenus éducatifs officiel France Télévisions",
+    desc:"Vidéos pédagogiques officielles de France TV pour tous niveaux scolaires : primaire, collège, lycée. Explications de cours, documentaires, révisions bac.",
+    best:"Scolaire · Primaire · Bac · Révisions",
+    url:"https://www.lumni.fr/", bm:"Lumni éducatif France TV cours vidéos scolaires gratuits",
+    noAds:true, fr:true },
+
+  { id:"ina-docs",  cat:"docs",      icon:"📼", name:"INA – Documentaires",
+    tag:"Les archives documentaires de la télévision française",
+    desc:"Des milliers de documentaires et reportages historiques en libre accès : événements politiques, culturels, sociaux filmés depuis les années 50. Pépites d'archives.",
+    best:"Archives TV · Histoire FR · Patrimoine audiovisuel",
+    url:"https://www.ina.fr/", bm:"INA documentaires archives télévision française histoire gratuit",
+    noAds:true, fr:true },
+
+  { id:"universcience", cat:"docs",  icon:"🔬", name:"Universcience",
+    tag:"Cité des Sciences & Palais de la Découverte",
+    desc:"Ressources pédagogiques en ligne de la Cité des Sciences. Vidéos thématiques, expositions virtuelles, dossiers de médiation scientifique.",
+    best:"Sciences · Technologie · Environnement",
+    url:"https://www.universcience.fr/", bm:"Universcience Cité des Sciences documentaires éducatif gratuit",
+    noAds:true, fr:true },
+
+  { id:"openculture", cat:"docs",   icon:"🌐", name:"Open Culture",
+    tag:"L'annuaire des meilleures ressources gratuites du web",
+    desc:"700 cours, 1 200 films, 900 livres audio, 200 documentaires répertoriés et linkés. Curation éditoriale des meilleures ressources culturelles gratuites en ligne.",
+    best:"Annuaire · Cours · Films · Livres audio",
+    url:"https://www.openculture.com/", bm:"Open Culture cours films livres audio documentaires gratuits répertoire",
+    noAds:true, fr:false },
+];
+
+/* ── Favoris ─────────────────────────────────────────────── */
+var FK = "ehub_favs";
+function loadF() { try { return JSON.parse(localStorage.getItem(FK)||"[]"); } catch(e){ return []; } }
+function saveF(f){ localStorage.setItem(FK, JSON.stringify(f)); }
+var favs = loadF();
+
+/* ── État ────────────────────────────────────────────────── */
+var st = { cat:"all", q:"", noAds:false, fr:false };
+
+/* ── Filtrage ─────────────────────────────────────────────── */
+function filtered() {
+  return S.filter(function(s) {
+    if (st.cat === "favoris" && !favs.includes(s.id)) return false;
+    if (st.cat !== "all" && st.cat !== "favoris" && s.cat !== st.cat) return false;
+    if (st.noAds && !s.noAds) return false;
+    if (st.fr   && !s.fr)    return false;
+    if (st.q) {
+      var q = st.q.toLowerCase();
+      return [s.name, s.tag, s.desc, s.best, s.bm].some(function(t){ return t.toLowerCase().includes(q); });
+    }
+    return true;
+  });
+}
+
+/* ── Rendu ────────────────────────────────────────────────── */
+function render() {
+  var items = filtered();
+  var grid  = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  if (!items.length) {
+    grid.innerHTML = '<div id="empty" style="display:block"><div class="ei">🔍</div><p>Aucune source ne correspond à vos filtres.</p></div>';
+    updateStats(); return;
+  }
+
+  var cats = (st.cat === "all" || st.cat === "favoris")
+    ? ["films","musique","podcasts","jeux","docs"] : [st.cat];
+
+  cats.forEach(function(cat) {
+    var ci = items.filter(function(s){ return s.cat === cat; });
+    if (!ci.length) return;
+
+    var h = document.createElement("div");
+    h.className = "shdr";
+    h.innerHTML = '<h2 style="color:' + COLORS[cat] + '">' + CLABELS[cat] + '</h2>'
+      + '<span class="cnt">' + ci.length + ' source' + (ci.length > 1 ? 's' : '') + '</span>';
+    grid.appendChild(h);
+
+    ci.forEach(function(s) {
+      var isFav = favs.includes(s.id);
+      var col   = COLORS[s.cat];
+      var card  = document.createElement("div");
+      card.className = "card";
+      card.innerHTML =
+        '<div class="stripe" style="background:' + col + '"></div>'
+        + '<div class="ctop">'
+        +   '<div class="cicon">' + s.icon + '</div>'
+        +   '<div class="ctitles"><div class="cname">' + s.name + '</div><div class="ctag">' + s.tag + '</div></div>'
+        +   '<button class="favbtn' + (isFav?' on':'') + '" data-id="' + s.id + '" title="Favori">' + (isFav?'⭐':'☆') + '</button>'
+        + '</div>'
+        + '<div class="badges">'
+        +   '<span class="badge" style="background:' + col + '20;color:' + col + ';border:1px solid ' + col + '40">' + CLABELS[s.cat].split(' ').slice(1).join(' ') + '</span>'
+        +   '<span class="badge b-free">GRATUIT</span>'
+        +   (s.noAds ? '<span class="badge b-nads">SANS PUB</span>' : '<span class="badge b-ads">AVEC PUB</span>')
+        +   (s.fr ? '<span class="badge b-fr">🇫🇷 FR</span>' : '')
+        + '</div>'
+        + '<div class="cdesc">' + s.desc + '</div>'
+        + '<div class="cbest">✦ Idéal pour : <strong>' + s.best + '</strong></div>'
+        + '<div class="cbmk">🔖 <span>Mot-clé favori :</span> ' + s.bm + '</div>'
+        + '<a class="clink" href="' + s.url + '" target="_blank" rel="noopener noreferrer">→ Ouvrir ' + s.name + '</a>';
+
+      card.querySelector(".favbtn").addEventListener("click", function(e) {
+        e.preventDefault();
+        var id = this.getAttribute("data-id");
+        var i  = favs.indexOf(id);
+        if (i >= 0) favs.splice(i, 1); else favs.push(id);
+        saveF(favs); render();
+      });
+      grid.appendChild(card);
+    });
+  });
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById("sTotal").textContent = S.length;
+  document.getElementById("sNoAds").textContent = S.filter(function(s){ return s.noAds; }).length;
+  document.getElementById("sFr").textContent    = S.filter(function(s){ return s.fr;    }).length;
+  document.getElementById("sFavs").textContent  = favs.length;
+}
+
+/* ── Événements ───────────────────────────────────────────── */
+document.getElementById("srch").addEventListener("input", function(){ st.q = this.value; render(); });
+document.querySelectorAll(".cbt").forEach(function(b) {
+  b.addEventListener("click", function() {
+    st.cat = this.getAttribute("data-c");
+    document.querySelectorAll(".cbt").forEach(function(x){ x.classList.remove("on"); });
+    this.classList.add("on"); render();
+  });
+});
+document.getElementById("fNoAds").addEventListener("change", function(){ st.noAds = this.checked; render(); });
+document.getElementById("fFr").addEventListener("change",    function(){ st.fr    = this.checked; render(); });
+
+render();
+</script>
+</body>
+</html>
