@@ -1,364 +1,889 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Budget 2026 — Tableau de bord</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:     #09080e; --panel:  #100f18; --card:   #17151f;
-      --border: #2a2535; --text:   #e8e0d5; --muted:  #7a6f8a;
-      --green:  #22c55e; --red:    #ef4444; --blue:   #3b82f6; --gold: #f59e0b;
-    }
-    html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 13px; min-height: 100%; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Financier — Sébastien</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+:root {
+  --bg:#080c18; --s1:#0f1623; --s2:#161f30; --bd:#1c2a40;
+  --ac:#00d4ff; --pos:#00e87a; --neg:#ff3b52; --warn:#ffca28;
+  --pu:#a78bfa; --or:#ff6b35; --pk:#ff6b97; --bl:#63b3ed;
+  --t1:#dde5f0; --t2:#8899b0; --t3:#3d5068;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t1);font-family:'IBM Plex Sans',sans-serif;font-size:13px;line-height:1.5;min-height:100vh}
 
-    /* ── Header ── */
-    header { background: linear-gradient(135deg, #0f0c1a 0%, #0c1520 100%); padding: 20px 28px 16px; border-bottom: 1px solid var(--border); }
-    header h1 { font-size: 22px; font-weight: 700; color: white; }
-    header h1 span { color: var(--gold); }
-    header p { color: var(--muted); font-size: 11px; margin-top: 4px; }
-    #kpis { display: flex; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
-    .kpi { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 10px; padding: 10px 18px; min-width: 130px; }
-    .kv { font-size: 19px; font-weight: 700; font-family: monospace; color: var(--text); }
-    .kl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
-    .kv.pos { color: var(--green); } .kv.neg { color: var(--red); }
-    .kv.gold { color: var(--gold); } .kv.blue { color: var(--blue); }
+/* UPLOAD */
+#upload-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,#0d1e35 0%,#080c18 70%)}
+.up-logo{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ac);margin-bottom:48px;opacity:.8}
+.up-title{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:600;margin-bottom:8px}
+.up-sub{font-size:14px;color:var(--t2);margin-bottom:48px}
+.drop-zone{width:480px;border:1.5px dashed var(--bd);border-radius:12px;padding:48px 32px;text-align:center;cursor:pointer;transition:all .2s;background:var(--s1);position:relative}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--ac);background:rgba(0,212,255,.04)}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:40px;margin-bottom:16px}
+.drop-label{font-family:'IBM Plex Mono',monospace;font-size:14px;margin-bottom:6px}
+.drop-hint{font-size:11px;color:var(--t3)}
+.up-hint{margin-top:24px;font-size:11px;color:var(--t3);font-family:'IBM Plex Mono',monospace}
+#up-prog{display:none;margin-top:20px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ac)}
 
-    /* ── Toolbar ── */
-    #toolbar { background: var(--panel); border-bottom: 1px solid var(--border); padding: 8px 20px; display: flex; align-items: center; gap: 8px; position: sticky; top: 0; z-index: 200; }
-    .tab { padding: 5px 14px; border-radius: 5px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; white-space: nowrap; }
-    .tab:hover { color: var(--text); }
-    .tab.on { background: var(--gold); border-color: var(--gold); color: #09080e; }
-    #btn-reset { margin-left: auto; padding: 5px 12px; border-radius: 5px; border: 1px solid #3a2a09; background: rgba(245,158,11,.08); color: var(--gold); font-size: 11px; font-weight: 600; cursor: pointer; }
-    #btn-reset:hover { background: rgba(245,158,11,.2); }
+/* APP */
+#app{display:none}
+.hdr{border-bottom:1px solid var(--bd);padding:0 32px;display:flex;justify-content:space-between;align-items:center;height:52px;background:rgba(8,12,24,.95);backdrop-filter:blur(8px);position:sticky;top:0;z-index:100}
+.hdr-l{display:flex;align-items:center;gap:20px}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--ac);letter-spacing:.06em}
+.hdr-meta{font-size:11px;color:var(--t3);font-family:'IBM Plex Mono',monospace}
+.hdr-r{display:flex;align-items:center;gap:6px}
+.nb{background:none;border:1px solid transparent;color:var(--t3);padding:5px 14px;border-radius:4px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;transition:all .15s}
+.nb:hover{color:var(--t2);border-color:var(--bd)}
+.nb.active{color:var(--ac);border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.05)}
+.rb{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);color:var(--ac);padding:5px 12px;border-radius:4px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-left:8px;transition:all .15s}
+.rb:hover{background:rgba(0,212,255,.15)}
 
-    /* ── Content ── */
-    #content { padding: 20px; }
+/* LAYOUT */
+.main{padding:24px 32px;max-width:1500px;margin:0 auto}
+.sec{display:none}.sec.active{display:block}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px}
 
-    /* ── Table ── */
-    .tw { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
-    table { border-collapse: collapse; width: 100%; min-width: 1060px; }
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:18px;position:relative}
+.cc{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--t3);margin-bottom:8px}
+.cv{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;line-height:1}
+.cs{font-size:10px;color:var(--t3);margin-top:7px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;white-space:nowrap}
+.bp{background:rgba(0,232,122,.12);color:var(--pos)}
+.bn{background:rgba(255,59,82,.12);color:var(--neg)}
+.bw{background:rgba(255,202,40,.12);color:var(--warn)}
+.bi{background:rgba(0,212,255,.12);color:var(--ac)}
+.bpu{background:rgba(167,139,250,.12);color:var(--pu)}
 
-    th { background: var(--panel); padding: 7px 8px; text-align: right; font-size: 11px; font-weight: 700; color: var(--muted); border-bottom: 2px solid var(--border); white-space: nowrap; }
-    th:first-child { text-align: left; min-width: 215px; max-width: 215px; width: 215px; position: sticky; left: 0; z-index: 20; background: var(--panel); }
-    th.th-ann { border-left: 1px solid var(--border); }
+.cc2{background:var(--s1);border:1px solid var(--bd);border-radius:8px;padding:18px}
+.ct{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center}
+.csub{font-size:10px;color:var(--t3);margin-bottom:14px}
 
-    .tr-sec td { background: var(--panel); padding: 5px 8px; font-weight: 700; font-size: 10px; letter-spacing: .8px; text-transform: uppercase; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); color: var(--muted); }
-    .tr-sec td:first-child { position: sticky; left: 0; z-index: 5; }
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--bd)}
+.st{font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ac)}
+.sb{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:3px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.15);color:var(--ac)}
 
-    .tr-d td { padding: 5px 8px; border-bottom: 1px solid rgba(42,37,53,.4); text-align: right; white-space: nowrap; font-family: monospace; font-size: 12px; color: var(--text); }
-    .tr-d td:first-child { text-align: left; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--card); position: sticky; left: 0; z-index: 5; color: var(--text); font-size: 12px; }
-    .tr-d:hover td { background: rgba(255,255,255,.015); }
-    .tr-d:hover td:first-child { background: rgba(255,255,255,.03); }
+.ytabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.yt{background:none;border:1px solid var(--bd);color:var(--t3);padding:4px 14px;border-radius:4px;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:11px;transition:all .15s}
+.yt:hover{border-color:var(--ac);color:var(--ac)}
+.yt.active{background:rgba(0,212,255,.08);border-color:var(--ac);color:var(--ac)}
 
-    .tr-tot td { padding: 6px 8px; font-weight: 700; font-family: monospace; text-align: right; border-top: 1px solid var(--border); background: rgba(255,255,255,.03); font-size: 12px; white-space: nowrap; }
-    .tr-tot td:first-child { text-align: left; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; position: sticky; left: 0; z-index: 5; background: rgba(255,255,255,.05); }
-    .tr-tot.solde td { font-size: 13px; border-top: 2px solid var(--border); }
+/* TABLE */
+.dt{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:11px}
+.dt th{text-align:left;padding:9px 12px;background:var(--s2);color:var(--t3);font-size:9px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--bd)}
+.dt td{padding:9px 12px;border-bottom:1px solid rgba(28,42,64,.5)}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:rgba(255,255,255,.015)}
 
-    /* editable cell */
-    .ev { cursor: pointer; border-radius: 3px; padding: 1px 3px; display: inline-block; min-width: 38px; text-align: right; }
-    .ev:hover { background: rgba(245,158,11,.15); }
-    .cell-inp { width: 80px; background: rgba(59,130,246,.15); border: 1px solid var(--blue); border-radius: 3px; color: white; font-size: 12px; font-family: monospace; padding: 2px 4px; text-align: right; outline: none; }
+/* POCHE BARS */
+.pi{margin-bottom:10px}
+.ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.pn{font-size:11px;color:var(--t2)}
+.pr{display:flex;gap:10px;align-items:center}
+.pp{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--t3)}
+.pv{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600}
+.bt{height:3px;background:var(--bd);border-radius:2px;overflow:hidden}
+.bf{height:100%;border-radius:2px}
 
-    /* colours */
-    .cg  { color: var(--green); } .cr  { color: var(--red); }
-    .cgd { color: var(--gold);  } .cb  { color: var(--blue); } .cm { color: var(--muted); }
+/* STAT ROWS */
+.sr{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(28,42,64,.4)}
+.sr:last-child{border-bottom:none}
+.sl{font-size:11px;color:var(--t2)}
+.sv{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600}
 
-    /* ── Charts ── */
-    .cg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .cbox { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-    .cbox h3 { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
-    .cbox canvas { max-height: 240px; }
-    .cbox.wide { grid-column: span 2; }
+/* ALERTS */
+.al{padding:10px 12px;border-radius:6px;font-size:11px;display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;line-height:1.5}
+.al:last-child{margin-bottom:0}
+.ai{flex-shrink:0;font-size:13px}
+.aw{background:rgba(255,202,40,.07);border:1px solid rgba(255,202,40,.18);color:var(--warn)}
+.ain{background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.18);color:var(--ac)}
+.ap{background:rgba(0,232,122,.07);border:1px solid rgba(0,232,122,.18);color:var(--pos)}
+.an{background:rgba(255,59,82,.07);border:1px solid rgba(255,59,82,.18);color:var(--neg)}
 
-    /* ── Patrimoine ── */
-    .pat-wrap { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+/* MONTH GRID */
+.mg{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.mc{background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:10px}
+.mc.pm{border-left:2px solid var(--pos)}
+.mc.nm{border-left:2px solid var(--neg)}
+.mn{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;color:var(--t3);margin-bottom:4px}
+.ms{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;margin-bottom:2px}
+.md{font-size:9px;color:var(--t3)}
 
-    .hint { color: var(--muted); font-size: 11px; margin-top: 10px; font-style: italic; }
-
-    @media (max-width: 900px) {
-      .cg2 { grid-template-columns: 1fr; } .cbox.wide { grid-column: span 1; }
-      .pat-wrap { grid-template-columns: 1fr; }
-    }
-  </style>
+.div{height:1px;background:var(--bd);margin:16px 0}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
+</style>
 </head>
 <body>
 
-<header>
-  <h1>💰 Budget <span>2026</span></h1>
-  <p>Données stockées dans le navigateur (localStorage) · Cliquez sur une valeur pour la modifier · Sauvegarde automatique</p>
-  <div id="kpis">
-    <div class="kpi"><div class="kv blue" id="kv-pat">–</div><div class="kl">Patrimoine (dernier mois)</div></div>
-    <div class="kpi"><div class="kv pos"  id="kv-rev">–</div><div class="kl">Revenus moy / mois</div></div>
-    <div class="kpi"><div class="kv neg"  id="kv-dep">–</div><div class="kl">Dépenses moy / mois</div></div>
-    <div class="kpi"><div class="kv"      id="kv-sol">–</div><div class="kl">Solde moyen / mois</div></div>
-    <div class="kpi"><div class="kv gold" id="kv-tau">–</div><div class="kl">Taux épargne moyen</div></div>
+<!-- UPLOAD -->
+<div id="upload-screen">
+  <div class="up-logo">// Financial Dashboard · Personal Finance</div>
+  <div class="up-title">Budget Suivi</div>
+  <div class="up-sub">Importez votre fichier Excel pour générer le dashboard</div>
+  <div class="drop-zone" id="dz">
+    <input type="file" id="fi" accept=".xlsx,.xls">
+    <div class="drop-icon">📊</div>
+    <div class="drop-label">Glissez votre Budget_Suivi.xlsx ici</div>
+    <div class="drop-hint">ou cliquez pour choisir le fichier</div>
   </div>
-</header>
-
-<div id="toolbar">
-  <button class="tab on" data-tab="budget">📊 Budget</button>
-  <button class="tab" data-tab="graphiques">📈 Graphiques</button>
-  <button class="tab" data-tab="patrimoine">🏦 Patrimoine</button>
-  <button id="btn-reset">↺ Réinitialiser</button>
+  <div class="up-hint">Feuille "Budget 2026" · Données jan. 2022 → dernier mois saisi</div>
+  <div id="up-prog">⟳ Lecture en cours…</div>
 </div>
 
-<div id="content"></div>
+<!-- APP -->
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-l">
+      <span class="logo">// BUDGET DASHBOARD</span>
+      <span class="hdr-meta" id="hdr-meta">—</span>
+    </div>
+    <div class="hdr-r">
+      <button class="nb active" onclick="nav('ov',this)">Vue d'ensemble</button>
+      <button class="nb" onclick="nav('retro',this)">Rétrospective</button>
+      <button class="nb" onclick="nav('pat',this)">Patrimoine</button>
+      <button class="nb" onclick="nav('bud',this)">Budget mensuel</button>
+      <button class="nb" onclick="nav('proj',this)">Projections</button>
+      <button class="rb" onclick="reset()">↩ Changer de fichier</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- OVERVIEW -->
+    <div id="sec-ov" class="sec active">
+      <div class="sh"><span class="st">Vue d'ensemble</span><span class="sb" id="ov-badge">—</span></div>
+      <div class="g4" id="ov-kpis"></div>
+      <div class="g21">
+        <div class="cc2">
+          <div class="ct">Évolution patrimoine total <span id="ov-range" style="color:var(--t3);font-size:9px"></span></div>
+          <div class="csub">Données réelles · budget prévisionnel ton Excel en pointillé</div>
+          <div style="height:210px"><canvas id="c-pat"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="ct" style="margin-bottom:14px">Allocation actuelle</div>
+          <div id="poche-bars"></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="cc2">
+          <div class="ct">Revenus vs Dépenses mensuels</div>
+          <div class="csub">Données réelles uniquement · solde = ligne</div>
+          <div style="height:195px"><canvas id="c-rd"></canvas></div>
+        </div>
+        <div class="cc2">
+          <div class="ct">Taux d'épargne annuel</div>
+          <div class="csub">Épargne nette / Revenus · cible ≥ 30%</div>
+          <div style="height:195px"><canvas id="c-taux"></canvas></div>
+        </div>
+      </div>
+      <div class="g2">
+        <div class="card" id="ov-alerts"></div>
+        <div class="card" id="ov-ratios"></div>
+      </div>
+    </div>
+
+    <!-- RETRO -->
+    <div id="sec-retro" class="sec">
+      <div class="sh"><span class="st">Rétrospective annuelle</span><span class="sb" id="retro-badge">—</span></div>
+      <div class="cc2" style="margin-bottom:16px">
+        <div class="ct">Revenus / Dépenses / Patrimoine — comparaison annuelle</div>
+        <div class="csub">Barres = flux annuels · ligne verte = patrimoine fin d'année (axe droit)</div>
+        <div style="height:255px"><canvas id="c-annual"></canvas></div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="ct" style="margin-bottom:14px">Tableau de bord annuel</div>
+        <table class="dt"><thead><tr>
+          <th>Année</th><th>Revenus</th><th>Dépenses</th><th>Épargne nette</th>
+          <th>Taux épargne</th><th>Patrimoine fin</th><th>Δ Patrimoine</th><th>Mois saisis</th><th>Note</th>
+        </tr></thead><tbody id="retro-tbody"></tbody></table>
+      </div>
+      <div class="g2">
+        <div class="cc2">
+          <div class="ct">Dépenses estimées par poste</div>
+          <div class="csub">Reconstruction à partir du suivi mensuel</div>
+          <div style="height:210px"><canvas id="c-depcat"></canvas></div>
+        </div>
+        <div class="card" id="retro-insights"></div>
+      </div>
+    </div>
+
+    <!-- PATRIMOINE -->
+    <div id="sec-pat" class="sec">
+      <div class="sh"><span class="st">Analyse patrimoine</span><span class="sb">Décomposition par poche</span></div>
+      <div class="g4" id="pat-kpis"></div>
+      <div class="g2">
+        <div class="cc2">
+          <div class="ct">Évolution par poche d'épargne (données réelles)</div>
+          <div class="csub">Valeurs réelles mensuelles · hors projections</div>
+          <div style="height:255px"><canvas id="c-poches"></canvas></div>
+        </div>
+        <div class="cc2">
+          <div class="ct">Répartition au dernier mois saisi</div>
+          <div class="csub">% du patrimoine total</div>
+          <div style="height:255px"><canvas id="c-donut"></canvas></div>
+        </div>
+      </div>
+      <div class="g3" id="pat-detail"></div>
+    </div>
+
+    <!-- BUDGET MENSUEL -->
+    <div id="sec-bud" class="sec">
+      <div class="sh"><span class="st">Budget mensuel</span><span class="sb">Détail mois par mois</span></div>
+      <div class="ytabs" id="bud-tabs"></div>
+      <div class="g4" id="bud-kpis"></div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="ct" style="margin-bottom:12px">Soldes mensuels <span id="bud-yr-lbl" style="color:var(--ac)"></span></div>
+        <div class="mg" id="month-grid"></div>
+      </div>
+      <div class="cc2">
+        <div class="ct">Revenus vs Dépenses <span id="bud-chart-lbl" style="color:var(--ac)"></span></div>
+        <div style="height:215px"><canvas id="c-bud"></canvas></div>
+      </div>
+    </div>
+
+    <!-- PROJECTIONS -->
+    <div id="sec-proj" class="sec">
+      <div class="sh"><span class="st">Projections & budget prévisionnel</span><span class="sb" id="proj-badge">—</span></div>
+      <div class="g3" id="proj-kpis"></div>
+      <div class="cc2" style="margin-bottom:16px">
+        <div class="ct">Trajectoire patrimoine — budget ton Excel + 3 scénarios analytiques</div>
+        <div class="csub">Trait plein = données réelles · tirets = budget prévisionnel Excel · pointillés = scénarios analytiques</div>
+        <div style="height:280px"><canvas id="c-proj"></canvas></div>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ct" style="margin-bottom:12px">Budget prévisionnel Excel (mai–déc 2026)</div>
+          <table class="dt"><thead><tr><th>Mois</th><th>Revenus prév.</th><th>Dépenses prév.</th><th>Solde prév.</th><th>Patrimoine prév.</th></tr></thead>
+          <tbody id="proj-excel-tbody"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="ct" style="margin-bottom:12px">Scénarios analytiques (à partir du dernier mois réel)</div>
+          <table class="dt"><thead><tr><th>Année</th><th>Conservateur</th><th>Base</th><th>Optimiste</th></tr></thead>
+          <tbody id="proj-scen-tbody"></tbody></table>
+          <div class="div"></div>
+          <div id="proj-hyp"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════════
-   DONNÉES 2026 — issues de Budget Suivi 2026.xlsx
-   Éditez directement dans l'interface, sauvegarde auto (localStorage)
-═══════════════════════════════════════════════════════════════════ */
-var MONTHS = ["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
-var LS_KEY  = "budget_2026_v1";
+// ══ DATA GLOBALS ══
+let REAL = [];   // real monthly data
+let PROJ = [];   // projected monthly data from Excel
+let ANNUAL = {}; // {year: {revenus,depenses,epargne,taux,patrimoine,mois,obs}}
+let CH = {};
 
-var DEFAULT = {
-  revenus: [
-    { id:"salaire",    label:"💼 Salaire net",                  values:[3800,3800,3700,3970,3900,3900,3900,3900,3900,3900,3900,3900] },
-    { id:"autres_rev", label:"💡 Primes / Vacations / Autres",  values:[0,0,4200,4622,9250,0,0,0,0,0,0,0] },
-  ],
-  depenses: [
-    { id:"loyer",        label:"🏠 Loyer",                         cat:"Fixes",     values:[800,800,800,800,800,800,800,800,800,800,800,800] },
-    { id:"elec",         label:"⚡ Électricité",                    cat:"Fixes",     values:[60,60,60,22,22,22,22,22,22,22,22,22] },
-    { id:"internet",     label:"📡 Internet",                       cat:"Fixes",     values:[15,15,15,15,15,15,15,15,15,15,15,15] },
-    { id:"abonnements",  label:"📱 Abonnements (Spotify, Claude)",  cat:"Fixes",     values:[33,33,33,28,28,28,28,28,28,28,28,28] },
-    { id:"assurance",    label:"🛡️ Assurance voiture + logement",   cat:"Fixes",     values:[850,0,0,0,0,0,0,0,0,0,0,0] },
-    { id:"tel",          label:"📞 Téléphone",                      cat:"Fixes",     values:[6,6,6,6,6,6,6,6,6,6,6,6] },
-    { id:"navigo",       label:"🚇 Navigo (remb. Pluxee)",          cat:"Fixes",     values:[91,91,91,91,91,91,91,91,91,91,91,91] },
-    { id:"sante",        label:"🏥 Santé / Mutuelle",               cat:"Fixes",     values:[83,83,83,83,83,83,83,83,83,83,83,83] },
-    { id:"bouffe",       label:"🛒 Alimentation",                   cat:"Variables", values:[350,350,350,350,350,350,350,350,350,350,350,350] },
-    { id:"loisirs",      label:"🎭 Loisirs (resto, ciné, bars)",    cat:"Variables", values:[150,150,150,150,150,150,150,150,150,150,150,150] },
-    { id:"essence",      label:"⛽ Essence & parking",              cat:"Variables", values:[25,25,25,25,25,25,25,25,25,25,25,25] },
-    { id:"hygiene",      label:"🧴 Hygiène",                        cat:"Variables", values:[20,20,20,20,20,20,20,20,20,20,20,20] },
-    { id:"coiffeur",     label:"✂️ Coiffeur",                       cat:"Variables", values:[10,10,10,10,10,10,10,10,10,10,10,10] },
-    { id:"autres_dep",   label:"🛍️ Autres achats (vêtements…)",     cat:"Variables", values:[150,150,150,150,150,150,150,150,150,150,150,150] },
-    { id:"piano",        label:"🎹 Piano",                          cat:"Activités", values:[160,160,160,0,160,160,160,160,160,160,160,160] },
-    { id:"sports",       label:"🎾 Tennis / Tir à l'arc",           cat:"Activités", values:[80,80,80,0,80,80,80,80,80,80,80,80] },
-    { id:"salle_sport",  label:"🏋️ Salle de sport",                 cat:"Activités", values:[0,0,0,0,33,33,33,33,33,33,33,33] },
-    { id:"vacances",     label:"✈️ Vacances",                       cat:"Excep.",    values:[0,800,1500,300,600,0,2500,0,0,0,0,0] },
-    { id:"exceptionnel", label:"⚠️ Dépenses exceptionnelles",       cat:"Excep.",    values:[4100,0,0,0,0,3000,0,0,0,0,0,0] },
-  ],
-  patrimoine: [
-    { id:"compte",    label:"🏦 Compte courant",  values:[4866,6030,3600,9622,20149,19025,18402,20279,22155,24032,25909,27785] },
-    { id:"livretA",   label:"💚 Livret A",         values:[0,0,0,0,0,0,0,0,0,0,0,0] },
-    { id:"ldds",      label:"💚 LDDS",             values:[12732,12732,12732,12732,12732,12732,12732,12732,12732,12732,12732,12732] },
-    { id:"lv_plus",   label:"💚 Livret+",          values:[36924,36924,36924,36924,36924,36924,36924,36924,36924,36924,36924,36924] },
-    { id:"av",        label:"📈 Assurance Vie",    values:[10909,11010,10783,10950,10950,10950,10950,10950,10950,10950,10950,10950] },
-    { id:"pee_esri",  label:"📈 PEE Esri",         values:[15038,15234,14500,15241,15241,15241,15241,15241,15241,15241,15241,15241] },
-    { id:"pee_hdi",   label:"📈 PEE HDI",          values:[38476,39190,36854,38477,38477,38477,38477,38477,38477,38477,38477,38477] },
-    { id:"pea",       label:"📈 PEA",              values:[4526,4539,10855,11604,11604,11604,11604,11604,11604,11604,11604,11604] },
-    { id:"crypto",    label:"🪙 Crypto",           values:[500,500,500,500,500,500,500,500,500,500,500,500] },
-    { id:"per",       label:"🔒 PER",              values:[7812,7812,7856,7684,7684,7684,7684,7684,7684,7684,7684,7684] },
-    { id:"cpf",       label:"🎓 CPF",              values:[2695,2695,2695,2695,2695,2695,2695,2695,2695,2695,2695,2695] },
-  ]
-};
+// ══ CONSTANTS ══
+const MF = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+const PC = {livretA:'#00d4ff',ldds:'#00b4d8',lv_plus:'#48cae4',pee_hdi:'#a78bfa',pee_esri:'#ff6b35',av:'#ff6b97',per:'#63b3ed',pea:'#ffca28',compte:'#64748b'};
+const PL = {livretA:'Livret A',ldds:'LDDS',lv_plus:'Livret+',pee_hdi:'PEE HDI',pee_esri:'PEE Esri',av:'Assurance Vie',per:'PER',pea:'PEA',compte:'Compte courant'};
+const OBS = {2019:"Début emploi ESRI · Mi-temps",2020:"Plein temps · COVID",2021:"Stabilisation · Épargne salariale",2022:'Meilleur taux · Intéressement ESRI',2023:'Transition HDI · Hausse dépenses',2024:'Intéressement HDI (+11k) · PEA ouvert',2025:'Déménagement Paris · Loyer +34%',2026:'Jan–avr saisis · reste prévisionnel'};
 
-/* ── Storage ──── */
-function clone(o) { return JSON.parse(JSON.stringify(o)); }
-function load()   { try { var r=localStorage.getItem(LS_KEY); if(r) return JSON.parse(r); } catch(e){} return clone(DEFAULT); }
-function save()   { try { localStorage.setItem(LS_KEY, JSON.stringify(DATA)); } catch(e){} }
-var DATA = load();
+// ══ FORMATTERS ══
+const f = v => Math.round(v||0).toLocaleString('fr-FR')+'€';
+const fk = v => ((v||0)/1000).toFixed(0)+'k';
+const fp = v => (v||0).toFixed(1)+'%';
 
-document.getElementById("btn-reset").onclick = function() {
-  if (!confirm("Réinitialiser toutes les données aux valeurs d'origine ?")) return;
-  localStorage.removeItem(LS_KEY); DATA = clone(DEFAULT); render();
-};
+// ══ FILE HANDLING ══
+const dz = document.getElementById('dz');
+const fi = document.getElementById('fi');
+dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('drag-over')});
+dz.addEventListener('dragleave', ()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])load(e.dataTransfer.files[0])});
+fi.addEventListener('change', e=>{if(e.target.files[0])load(e.target.files[0])});
 
-/* ── Computed ───── */
-function sumRows(rows) {
-  var t=Array(12).fill(0);
-  rows.forEach(function(r){ r.values.forEach(function(v,i){ t[i]+=(Number(v)||0); }); });
-  return t;
-}
-function compute() {
-  var tRev=sumRows(DATA.revenus), tDep=sumRows(DATA.depenses);
-  var sol=tRev.map(function(v,i){return v-tDep[i];});
-  var tPat=sumRows(DATA.patrimoine);
-  var tau=tRev.map(function(v,i){return v>0?(sol[i]/v*100):0;});
-  return {tRev:tRev,tDep:tDep,sol:sol,tPat:tPat,tau:tau};
+function load(file) {
+  document.getElementById('up-prog').style.display='block';
+  const r = new FileReader();
+  r.onload = e => {
+    try { parse(XLSX.read(e.target.result,{type:'array',cellDates:true}), file.name); }
+    catch(err) { alert('Erreur: '+err.message); document.getElementById('up-prog').style.display='none'; }
+  };
+  r.readAsArrayBuffer(file);
 }
 
-/* ── Format ─────── */
-function f(v,d){
-  var n=Math.round((Number(v)||0)*Math.pow(10,d||0))/Math.pow(10,d||0);
-  return n.toLocaleString("fr-FR",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});
-}
-function cc(v){return v>0?"cg":v<0?"cr":"cm";}
+// ══ EARLY SHEETS PARSER (2019/2020/2021) ══
+function parseEarlySheets(wb) {
+  const result = [];
 
-/* ── KPIs ────────── */
-function updateKPIs(c){
-  var lp=0; for(var i=11;i>=0;i--){if(c.tPat[i]>0){lp=c.tPat[i];break;}}
-  var sum=function(a){return a.reduce(function(x,y){return x+y;},0);};
-  var mRev=sum(c.tRev)/12, mDep=sum(c.tDep)/12, mSol=sum(c.sol)/12, mTau=sum(c.tau)/12;
-  document.getElementById("kv-pat").textContent=f(lp)+" €";
-  document.getElementById("kv-rev").textContent=f(mRev)+" €";
-  document.getElementById("kv-dep").textContent=f(mDep)+" €";
-  var es=document.getElementById("kv-sol"); es.textContent=f(mSol)+" €"; es.className="kv "+(mSol>=0?"pos":"neg");
-  var et=document.getElementById("kv-tau"); et.textContent=f(mTau,1)+" %"; et.className="kv "+(mTau>=20?"pos":mTau>=0?"gold":"neg");
-}
-
-/* ── Inline edit ─── */
-window.editCell = function(td, section, id, mi) {
-  if (td.querySelector("input")) return;
-  var cur=parseFloat(td.textContent.replace(/[\s ]/g,"").replace(",",".")) || 0;
-  td.innerHTML="";
-  var inp=document.createElement("input");
-  inp.className="cell-inp"; inp.type="number"; inp.value=cur; inp.step="any";
-  td.appendChild(inp); inp.focus(); inp.select();
-
-  function commit() {
-    var val=parseFloat(inp.value); if(isNaN(val)) val=0;
-    var arr=DATA[section];
-    for(var i=0;i<arr.length;i++){if(arr[i].id===id){arr[i].values[mi]=val;break;}}
-    save(); render();
+  // Convert Excel serial number or date string to {y,m} — works with raw:true
+  function parseDate(v) {
+    if(!v && v !== 0) return null;
+    // Excel serial number (e.g. 43101 = 2018-01-01)
+    if(typeof v === 'number' && v > 40000 && v < 55000) {
+      const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+      return {y: d.getUTCFullYear(), m: d.getUTCMonth()+1};
+    }
+    // Already a JS Date object
+    if(v instanceof Date) return {y: v.getFullYear(), m: v.getMonth()+1};
+    // String fallback
+    const d = new Date(v);
+    if(!isNaN(d)) return {y: d.getFullYear(), m: d.getMonth()+1};
+    return null;
   }
-  inp.onkeydown=function(e){if(e.key==="Enter"||e.key==="Tab"){e.preventDefault();commit();}else if(e.key==="Escape"){render();}};
-  inp.onblur=commit;
-};
 
-/* ── Budget table ─── */
-function tableBudget(c) {
-  var cats=[]; DATA.depenses.forEach(function(r){if(!cats.includes(r.cat))cats.push(r.cat);});
-  var h='<div class="tw"><table><tr><th>Catégorie</th>';
-  MONTHS.forEach(function(m){h+='<th>'+m+'</th>';});
-  h+='<th class="th-ann">Annuel</th></tr>';
-
-  /* — revenus — */
-  h+='<tr class="tr-sec"><td colspan="14" style="color:#22c55e">▸ REVENUS</td></tr>';
-  DATA.revenus.forEach(function(r){
-    var tot=r.values.reduce(function(a,b){return a+(Number(b)||0);},0);
-    h+='<tr class="tr-d"><td>'+r.label+'</td>';
-    r.values.forEach(function(v,mi){
-      h+='<td onclick="editCell(this,\'revenus\',\''+r.id+'\','+mi+')" title="Cliquer pour modifier"><span class="ev'+(v?'':' cm')+'">'+(v?f(v):'–')+'</span></td>';
-    });
-    h+='<td class="cg" style="font-weight:600">'+f(tot)+'</td></tr>';
-  });
-  h+='<tr class="tr-tot"><td>📊 Total revenus</td>';
-  var annR=0; c.tRev.forEach(function(v){annR+=v; h+='<td class="cg">'+(v?f(v):'–')+'</td>';});
-  h+='<td class="cg">'+f(annR)+'</td></tr>';
-
-  /* — dépenses — */
-  cats.forEach(function(cat){
-    var rows=DATA.depenses.filter(function(r){return r.cat===cat;});
-    h+='<tr class="tr-sec"><td colspan="14" style="color:#ef4444">▸ DÉPENSES — '+cat+'</td></tr>';
-    rows.forEach(function(r){
-      var tot=r.values.reduce(function(a,b){return a+(Number(b)||0);},0);
-      h+='<tr class="tr-d"><td>'+r.label+'</td>';
-      r.values.forEach(function(v,mi){
-        h+='<td onclick="editCell(this,\'depenses\',\''+r.id+'\','+mi+')" title="Cliquer pour modifier"><span class="ev'+(v?'':' cm')+'">'+(v?f(v):'–')+'</span></td>';
-      });
-      h+='<td class="cr" style="font-weight:600">'+(tot?f(tot):'–')+'</td></tr>';
-    });
-  });
-  h+='<tr class="tr-tot"><td>📊 Total dépenses</td>';
-  var annD=0; c.tDep.forEach(function(v){annD+=v; h+='<td class="cr">'+f(v)+'</td>';});
-  h+='<td class="cr">'+f(annD)+'</td></tr>';
-
-  /* — solde & taux — */
-  h+='<tr class="tr-tot solde"><td>💰 Solde mensuel</td>';
-  var annS=0; c.sol.forEach(function(v){annS+=v; h+='<td class="'+cc(v)+'" style="font-weight:700">'+f(v)+'</td>';});
-  h+='<td class="'+cc(annS)+'" style="font-weight:700">'+f(annS)+'</td></tr>';
-  h+='<tr class="tr-tot"><td>📊 Taux d\'épargne</td>';
-  c.tau.forEach(function(v){h+='<td class="'+(v>=20?"cg":v>=0?"cgd":"cr")+'">'+f(v,1)+' %</td>';});
-  var mT=c.tau.reduce(function(a,b){return a+b;},0)/12;
-  h+='<td class="'+(mT>=20?"cg":mT>=0?"cgd":"cr")+'">'+f(mT,1)+' %</td></tr>';
-
-  h+='</table></div><p class="hint">💡 Cliquez sur n\'importe quelle valeur pour la modifier. Entrée pour valider, Échap pour annuler. Les totaux se recalculent automatiquement.</p>';
-  return h;
-}
-
-/* ── Patrimoine table ─── */
-function tablePatrimoine(c){
-  var h='<div class="pat-wrap"><div class="tw"><table><tr><th>Poche</th>';
-  MONTHS.forEach(function(m){h+='<th>'+m+'</th>';});
-  h+='<th class="th-ann">Variation</th></tr>';
-  h+='<tr class="tr-sec"><td colspan="14" style="color:#3b82f6">▸ PATRIMOINE — Valeurs réelles fin de mois</td></tr>';
-  DATA.patrimoine.forEach(function(r){
-    var first=r.values.find(function(v){return v>0;})||0;
-    var last=r.values[11]||0, delta=last-first;
-    h+='<tr class="tr-d"><td>'+r.label+'</td>';
-    r.values.forEach(function(v,mi){
-      h+='<td onclick="editCell(this,\'patrimoine\',\''+r.id+'\','+mi+')" title="Cliquer pour modifier"><span class="ev'+(v?'':' cm')+'">'+(v?f(v):'–')+'</span></td>';
-    });
-    h+='<td class="'+cc(delta)+'">'+(delta>0?"+":"")+f(delta)+'</td></tr>';
-  });
-  h+='<tr class="tr-tot solde"><td>🏦 Total patrimoine</td>';
-  c.tPat.forEach(function(v){h+='<td class="cb" style="font-weight:700">'+f(v)+'</td>';});
-  var d=c.tPat[11]-c.tPat[0]; h+='<td class="'+cc(d)+'">'+(d>0?"+":"")+f(d)+'</td></tr>';
-  h+='</table></div>';
-  h+='<div class="cbox" style="position:sticky;top:58px"><h3>Répartition (dernier mois connu)</h3><canvas id="c-donut"></canvas></div>';
-  h+='</div><p class="hint" style="margin-top:10px">💡 Cliquez sur une valeur pour la modifier.</p>';
-  return h;
-}
-
-/* ── Charts ─────── */
-var CH={};
-function mk(id,cfg){if(CH[id]){CH[id].destroy();}var el=document.getElementById(id);if(el)CH[id]=new Chart(el,cfg);}
-var BASE_OPTS={responsive:true,plugins:{legend:{labels:{color:"#e8e0d5",font:{size:11},padding:12}}},scales:{x:{ticks:{color:"#7a6f8a",font:{size:10}},grid:{color:"rgba(42,37,53,.5)"}},y:{ticks:{color:"#7a6f8a",font:{size:10}},grid:{color:"rgba(42,37,53,.5)"}}}};
-function bo(){return JSON.parse(JSON.stringify(BASE_OPTS));}
-
-function buildCharts(c){
-  mk("c-rd",{type:"bar",data:{labels:MONTHS,datasets:[
-    {label:"Revenus", data:c.tRev,backgroundColor:"rgba(34,197,94,.5)",borderColor:"#22c55e",borderWidth:1},
-    {label:"Dépenses",data:c.tDep,backgroundColor:"rgba(239,68,68,.5)",borderColor:"#ef4444",borderWidth:1}
-  ]},options:bo()});
-
-  mk("c-sol",{type:"bar",data:{labels:MONTHS,datasets:[{label:"Solde (€)",data:c.sol,
-    backgroundColor:c.sol.map(function(v){return v>=0?"rgba(34,197,94,.5)":"rgba(239,68,68,.5)";}),
-    borderColor:c.sol.map(function(v){return v>=0?"#22c55e":"#ef4444";}),borderWidth:1
-  }]},options:bo()});
-
-  mk("c-tau",{type:"line",data:{labels:MONTHS,datasets:[{label:"Taux d'épargne (%)",
-    data:c.tau.map(function(v){return Math.round(v*10)/10;}),
-    borderColor:"#f59e0b",backgroundColor:"rgba(245,158,11,.1)",tension:.3,pointRadius:4,fill:true
-  }]},options:bo()});
-
-  mk("c-pat",{type:"line",data:{labels:MONTHS,datasets:[{label:"Patrimoine total (€)",
-    data:c.tPat,borderColor:"#3b82f6",backgroundColor:"rgba(59,130,246,.08)",
-    tension:.3,pointRadius:5,fill:true
-  }]},options:bo()});
-
-  var li=0; for(var i=11;i>=0;i--){if(c.tPat[i]>0){li=i;break;}}
-  var PAL=["#3b82f6","#22c55e","#16a34a","#15803d","#f59e0b","#f97316","#ef4444","#8b5cf6","#ec4899","#06b6d4","#84cc16"];
-  mk("c-donut",{type:"doughnut",data:{
-    labels:DATA.patrimoine.map(function(r){return r.label.replace(/^.\s*/,"");}),
-    datasets:[{data:DATA.patrimoine.map(function(r){return r.values[li]||0;}),backgroundColor:PAL,borderWidth:1,borderColor:"#17151f"}]
-  },options:{responsive:true,plugins:{legend:{position:"bottom",labels:{color:"#e8e0d5",font:{size:10},padding:6,boxWidth:12}}}}});
-}
-
-/* ── Render ─────── */
-var curTab="budget";
-function render(){
-  var c=compute(); updateKPIs(c);
-  var el=document.getElementById("content");
-  if(curTab==="budget"){
-    el.innerHTML=tableBudget(c);
-  } else if(curTab==="graphiques"){
-    el.innerHTML='<div class="cg2">'
-      +'<div class="cbox wide"><h3>Revenus vs Dépenses</h3><canvas id="c-rd" height="200"></canvas></div>'
-      +'<div class="cbox"><h3>Solde mensuel (€)</h3><canvas id="c-sol" height="200"></canvas></div>'
-      +'<div class="cbox"><h3>Taux d\'épargne (%)</h3><canvas id="c-tau" height="200"></canvas></div>'
-      +'<div class="cbox wide"><h3>Évolution du patrimoine total (€)</h3><canvas id="c-pat" height="170"></canvas></div>'
-      +'</div>';
-    setTimeout(function(){buildCharts(c);},50);
-  } else if(curTab==="patrimoine"){
-    el.innerHTML=tablePatrimoine(c);
-    setTimeout(function(){buildCharts(c);},50);
+  function gv(raw,r,c){
+    const v=(raw[r]||[])[c];
+    if(v===null||v===undefined) return null;
+    if(typeof v === 'string' && v.includes('#')) return null;
+    const n=parseFloat(v);
+    return isNaN(n)?null:n;
   }
+
+  function mkM(date,y,m,rev,dep,cc,pat){
+    return {date,year:y,month:m,revenus:rev||0,depenses:dep||0,compte:cc||0,
+      livretA:0,ldds:0,lv_plus:0,av:0,pee_esri:0,pee_hdi:0,pea:0,per:0,
+      patrimoine:pat!==undefined?pat:(cc||0)};
+  }
+
+  function parseSheet(ws, targetYear, dateRow, revRow, depRow, ccRow, endPat) {
+    // Use raw:true to get serial numbers for dates
+    const raw = XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
+    const months=[];
+    if(!raw[dateRow]) return months;
+    raw[dateRow].forEach((dv,c)=>{
+      const pd = parseDate(dv);
+      if(!pd || pd.y !== targetYear) return;
+      const rev=gv(raw,revRow,c), dep=gv(raw,depRow,c);
+      const cc=ccRow!==null?gv(raw,ccRow,c):null;
+      if(rev===null && cc===null) return;
+      const date=`${pd.y}-${String(pd.m).padStart(2,'0')}`;
+      months.push(mkM(date,pd.y,pd.m,rev,dep,cc,cc||0));
+    });
+    if(months.length && endPat!==null) months[months.length-1].patrimoine=endPat;
+    return months;
+  }
+
+  // 2019 — row2=dates, row22=rev, row23=dep, row25=cc
+  const s19 = wb.Sheets['Budget2019'];
+  if(s19) result.push(...parseSheet(s19, 2019, 2, 22, 23, 25, null));
+
+  // 2020 — row2=dates, row34=rev, row35=dep, no monthly CC
+  const s20 = wb.Sheets['Budget2020'];
+  if(s20) result.push(...parseSheet(s20, 2020, 2, 34, 35, null, 27443));
+
+  // 2021 — row2=dates, row98=rev, row99=dep, row104=cc, end patrimoine=48000
+  const s21 = wb.Sheets['Budget2021'];
+  if(s21) result.push(...parseSheet(s21, 2021, 2, 98, 99, 104, 48000));
+
+  return result.sort((a,b)=>a.date.localeCompare(b.date));
 }
 
-document.querySelectorAll(".tab").forEach(function(b){
-  b.addEventListener("click",function(){
-    curTab=this.getAttribute("data-tab");
-    document.querySelectorAll(".tab").forEach(function(x){x.classList.toggle("on",x===b);});
-    render();
-  });
-});
+// ══ EXCEL PARSER ══
+function parse(wb, fname) {
+  // Parse legacy sheets (2019-2021) first
+  const earlyData = parseEarlySheets(wb);
 
-render();
+  // Find main sheet
+  const sn = wb.SheetNames.find(n=>n.includes('2026')||n.toLowerCase().includes('budget 2'))||wb.SheetNames[0];
+  const ws = wb.Sheets[sn];
+  // raw:true pour avoir les serial numbers Excel sur les dates
+  const raw = XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
+
+  // Helper: Excel serial → {y,m} ou null
+  function parseDate(v){
+    if(!v && v!==0) return null;
+    if(typeof v==='number' && v>40000 && v<55000){
+      const d=new Date(Math.round((v-25569)*86400*1000));
+      return {y:d.getUTCFullYear(),m:d.getUTCMonth()+1};
+    }
+    if(v instanceof Date) return {y:v.getFullYear(),m:v.getMonth()+1};
+    const d=new Date(v); if(!isNaN(d)) return {y:d.getFullYear(),m:d.getMonth()+1};
+    return null;
+  }
+
+  // Find date row
+  let dRow=-1, dStart=-1;
+  for(let r=0;r<10;r++){
+    if(!raw[r]) continue;
+    const dates = raw[r].map((v,i)=>({v,i})).filter(({v})=>{
+      const pd=parseDate(v);
+      return pd && pd.y>=2019 && pd.y<=2035;
+    });
+    if(dates.length>5){dRow=r;dStart=dates[0].i;break;}
+  }
+  if(dRow<0){alert('Ligne de dates introuvable');return;}
+
+  // Build column list (deduplicate same month)
+  const cols=[];
+  for(let c=dStart;c<raw[dRow].length;c++){
+    const pd=parseDate(raw[dRow][c]);
+    if(!pd) continue;
+    const {y,m}=pd;
+    if(y<2019||y>2035) continue;
+    if(cols.length&&cols[cols.length-1].y===y&&cols[cols.length-1].m===m) continue;
+    cols.push({c,y,m,date:`${y}-${String(m).padStart(2,'0')}`});
+  }
+
+  // Find labeled rows
+  const LBL={revenus:['Total revenus'],depenses:['Total dépenses'],compte:['Compte courant réalité','Compte Courant'],
+    livretA:['Livret A'],ldds:['LDDS'],lv_plus:['Livret +'],av:['Total assurance vie réel'],
+    pee_esri:['Valeur réelle PEE Esri'],pee_hdi:['Valeur réelle PEE HDI'],pea:['Valeur réelle PEA'],per:['PER']};
+  const RM={};
+  for(let r=0;r<raw.length;r++){
+    const cell=(raw[r][0]||'').toString().trim();
+    for(const[k,pats] of Object.entries(LBL)){
+      if(RM[k]!==undefined) continue;
+      if(pats.some(p=>cell.includes(p))) RM[k]=r;
+    }
+  }
+
+  function gv(row,col){
+    if(row===undefined) return null;
+    const v=raw[row]?.[col];
+    if(v===null||v===undefined) return null;
+    if(typeof v==='string' && (v.includes('#')||v.trim()==='')) return null;
+    const n=parseFloat(v);
+    return isNaN(n)?null:n;
+  }
+
+  // Determine real data cutoff: last month where compte changed from previous
+  // Strategy: mark as projected if pee_hdi, pee_esri, lv_plus, av are ALL identical to previous month
+  let allMonths=[];
+  for(const col of cols){
+    const vals={};
+    for(const k of Object.keys(LBL)) vals[k]=gv(RM[k],col.c);
+    const pat=['compte','livretA','ldds','lv_plus','av','pee_esri','pee_hdi','pea','per']
+      .reduce((s,k)=>s+(vals[k]||0),0);
+    if(!vals.revenus&&!pat) continue;
+    allMonths.push({...col,vals,pat:Math.round(pat*100)/100});
+  }
+
+  // Detect projections: 4+ of the "investment" fields identical to prev
+  REAL=[]; PROJ=[];
+  for(let i=0;i<allMonths.length;i++){
+    const cur=allMonths[i], prev=i>0?allMonths[i-1]:null;
+    let isProj=false;
+    if(prev&&cur.y>=2026){
+      const inv=['pee_hdi','pee_esri','lv_plus','av','pea','per'];
+      const sameCount=inv.filter(k=>cur.vals[k]!==null&&prev.vals[k]!==null&&cur.vals[k]===prev.vals[k]).length;
+      if(sameCount>=4) isProj=true;
+    }
+    const entry={
+      date:cur.date,year:cur.y,month:cur.m,
+      revenus:cur.vals.revenus||0, depenses:cur.vals.depenses||0,
+      compte:cur.vals.compte||0, livretA:cur.vals.livretA||0, ldds:cur.vals.ldds||0,
+      lv_plus:cur.vals.lv_plus||0, av:cur.vals.av||0, pee_esri:cur.vals.pee_esri||0,
+      pee_hdi:cur.vals.pee_hdi||0, pea:cur.vals.pea||0, per:cur.vals.per||0,
+      patrimoine:cur.pat
+    };
+    if(isProj) PROJ.push(entry); else REAL.push(entry);
+  }
+
+  // Merge early years (2019-2021) at the front — deduplicate by date
+  const mainDates=new Set(REAL.map(d=>d.date));
+  REAL = [...earlyData.filter(d=>!mainDates.has(d.date)), ...REAL];
+
+  // Annual summaries from REAL only
+  ANNUAL={};
+  const years=[...new Set(REAL.map(d=>d.year))].sort();
+  for(const y of years){
+    const dy=REAL.filter(d=>d.year===y);
+    const rev=dy.reduce((s,d)=>s+d.revenus,0);
+    const dep=dy.reduce((s,d)=>s+d.depenses,0);
+    const pat=dy[dy.length-1].patrimoine;
+    const taux=rev>0?(rev-dep)/rev*100:0;
+    ANNUAL[y]={revenus:Math.round(rev),depenses:Math.round(dep),epargne:Math.round(rev-dep),
+      taux:parseFloat(taux.toFixed(1)),patrimoine:Math.round(pat),mois:dy.length,obs:OBS[y]||''};
+  }
+
+  // Show app
+  const nProj=PROJ.length;
+  document.getElementById('hdr-meta').textContent=
+    `${fname} · ${REAL.length} mois réels (${REAL[0].date}→${REAL[REAL.length-1].date})${nProj?' · '+nProj+' mois prévisionnels Excel':''}`;
+  document.getElementById('upload-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  buildAll();
+}
+
+// ══ CHART UTILS ══
+Chart.defaults.color='#8899b0';
+Chart.defaults.borderColor='#1c2a40';
+Chart.defaults.font.family="'IBM Plex Mono',monospace";
+Chart.defaults.font.size=10;
+
+function mk(id,type,data,opts){
+  if(CH[id]){CH[id].destroy();delete CH[id];}
+  CH[id]=new Chart(document.getElementById(id).getContext('2d'),{type,data,options:opts});
+  return CH[id];
+}
+const gx={grid:{display:false}};
+const gy={grid:{color:'rgba(28,42,64,.6)'},ticks:{callback:v=>fk(v)}};
+const gyp={grid:{color:'rgba(28,42,64,.6)'},ticks:{callback:v=>v+'%'},max:65};
+const leg={labels:{boxWidth:10,font:{size:9},padding:10}};
+const tip=(extra='')=>({callbacks:{label:ctx=>` ${ctx.dataset.label}: ${f(ctx.raw)}${extra}`}});
+
+// ══ NAV ══
+function nav(name,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+function reset(){
+  document.getElementById('upload-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('fi').value='';
+  document.getElementById('up-prog').style.display='none';
+  Object.values(CH).forEach(c=>c.destroy());
+  CH={}; REAL=[]; PROJ=[]; ANNUAL={};
+}
+
+// ══ BUILD ALL ══
+function buildAll(){buildOV();buildRetro();buildPat();buildBudget();buildProj();}
+
+// ══ OVERVIEW ══
+function buildOV(){
+  const last=REAL[REAL.length-1];
+  const first=REAL[0];
+  const yrs=Object.keys(ANNUAL).map(Number).sort();
+  const ly=yrs[yrs.length-1], py=yrs[yrs.length-2];
+  const dy=ANNUAL[ly]||{}, dyp=ANNUAL[py]||{};
+
+  document.getElementById('ov-badge').textContent=`${ly} · dernier: ${last.date}`;
+  document.getElementById('ov-range').textContent=`${first.date}→${last.date}`;
+
+  const patDelta=dyp.patrimoine?((dy.patrimoine-dyp.patrimoine)/dyp.patrimoine*100).toFixed(0):null;
+  const revDelta=dyp.revenus?((dy.revenus-dyp.revenus)/dyp.revenus*100).toFixed(0):null;
+  const growth=first.patrimoine>0?((last.patrimoine-first.patrimoine)/first.patrimoine*100).toFixed(0):'—';
+
+  document.getElementById('ov-kpis').innerHTML=`
+    <div class="card"><div class="cc">Patrimoine net total</div><div class="cv" style="color:var(--ac)">${f(last.patrimoine)}</div>
+      <div class="cs">${patDelta?`<span class="badge b${patDelta>0?'p':'n'}">${patDelta>0?'+':''}${patDelta}% vs ${py}</span>`:''}<span>+${growth}% depuis ${first.date}</span></div></div>
+    <div class="card"><div class="cc">Revenus ${ly}${dy.mois<12?' ('+dy.mois+' mois)':''}</div><div class="cv">${f(dy.revenus)}</div>
+      <div class="cs">${revDelta?`<span class="badge b${revDelta>0?'p':'n'}">${revDelta>0?'+':''}${revDelta}% vs ${py}</span>`:''}<span>${f(dy.revenus/dy.mois)}/mois moy.</span></div></div>
+    <div class="card"><div class="cc">Épargne nette ${ly}</div><div class="cv" style="color:var(--pos)">${f(dy.epargne)}</div>
+      <div class="cs"><span class="badge b${dy.taux>=30?'p':dy.taux>=20?'w':'n'}">${fp(dy.taux)}</span><span>taux d'épargne</span></div></div>
+    <div class="card"><div class="cc">Croissance patrimoine</div><div class="cv" style="color:var(--pos)">+${growth}%</div>
+      <div class="cs"><span>${first.date} → ${last.date}</span></div></div>`;
+
+  // Patrimoine chart — real + projected from Excel
+  const allLabels=[...REAL.map(d=>d.date),...PROJ.map(d=>d.date)];
+  const realPat=REAL.map(d=>d.patrimoine);
+  const projPat=new Array(REAL.length-1).fill(null).concat([REAL[REAL.length-1].patrimoine,...PROJ.map(d=>d.patrimoine)]);
+  mk('c-pat','line',{
+    labels:allLabels,
+    datasets:[
+      {label:'Patrimoine réel',data:realPat,borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,.06)',fill:true,tension:.3,borderWidth:2,pointRadius:1.5,pointHoverRadius:5},
+      ...(PROJ.length?[{label:'Budget prévisionnel Excel',data:projPat,borderColor:'rgba(0,212,255,.4)',borderDash:[5,4],fill:false,tension:.3,borderWidth:1.5,pointRadius:0}]:[])
+    ]
+  },{responsive:true,maintainAspectRatio:false,plugins:{legend:leg,tooltip:tip()},scales:{x:{...gx,ticks:{maxTicksLimit:20}},y:gy}});
+
+  // Poche bars
+  const PK=['pee_hdi','livretA','pee_esri','lv_plus','ldds','av','per','pea','compte'];
+  const items=PK.map(k=>({k,name:PL[k],val:last[k]||0,col:PC[k]})).filter(p=>p.val>0).sort((a,b)=>b.val-a.val);
+  const tot=last.patrimoine||1;
+  document.getElementById('poche-bars').innerHTML=items.map(p=>{
+    const pct=(p.val/tot*100).toFixed(1);
+    return`<div class="pi"><div class="ph"><span class="pn">${p.name}</span><div class="pr"><span class="pp">${pct}%</span><span class="pv">${f(p.val)}</span></div></div><div class="bt"><div class="bf" style="width:${pct}%;background:${p.col}"></div></div></div>`;
+  }).join('');
+
+  // Rev vs Dep
+  mk('c-rd','bar',{
+    labels:REAL.map(d=>d.date),
+    datasets:[
+      {label:'Revenus',data:REAL.map(d=>d.revenus),backgroundColor:'rgba(0,212,255,.5)',borderWidth:0},
+      {label:'Dépenses',data:REAL.map(d=>d.depenses),backgroundColor:'rgba(255,59,82,.5)',borderWidth:0},
+      {label:'Solde',data:REAL.map(d=>d.revenus-d.depenses),type:'line',borderColor:'#00e87a',backgroundColor:'rgba(0,232,122,.08)',fill:true,tension:.3,borderWidth:1.5,pointRadius:0}
+    ]
+  },{responsive:true,maintainAspectRatio:false,plugins:{legend:leg,tooltip:tip()},scales:{x:{...gx,ticks:{maxTicksLimit:16}},y:gy}});
+
+  // Taux
+  const aYrs=Object.keys(ANNUAL).map(Number).sort();
+  const taux=aYrs.map(y=>ANNUAL[y].taux);
+  mk('c-taux','bar',{
+    labels:aYrs,
+    datasets:[{label:"Taux d'épargne",data:taux,backgroundColor:taux.map(t=>t>=40?'rgba(0,232,122,.7)':t>=25?'rgba(255,202,40,.7)':'rgba(255,59,82,.7)'),borderRadius:4,borderWidth:0}]
+  },{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fp(ctx.raw)}`}}},scales:{x:gx,y:gyp}});
+
+  // Alerts
+  const alerts=[];
+  if(dy.taux<25) alerts.push(['an','⚠','Taux d\'épargne faible',`${fp(dy.taux)} en ${ly} — dépenses en hausse structurelle.`]);
+  else if(dy.taux>=40) alerts.push(['ap','↑','Excellent taux d\'épargne',`${fp(dy.taux)} en ${ly} — bien au-dessus de la cible 30%.`]);
+  if(last.compte<4000) alerts.push(['an','!','Liquidités CC insuffisantes',`${f(last.compte)} — viser 6–8k€ (2–3 mois de dépenses).`]);
+  if(last.pea>0) alerts.push(['ain','◈','PEA actif',`${f(last.pea)} valorisés — avantage fiscal croissant, continuer les versements.`]);
+  if(PROJ.length) alerts.push(['ain','📅','Budget prévisionnel disponible',`${PROJ.length} mois prévisionnels dans ton Excel (${PROJ[0].date}→${PROJ[PROJ.length-1].date}).`]);
+  document.getElementById('ov-alerts').innerHTML=`<div class="ct" style="margin-bottom:12px">Observations ${ly}</div>`+
+    alerts.map(([cls,ic,tit,bod])=>`<div class="al ${cls}"><div class="ai">${ic}</div><div><strong>${tit}</strong> — ${bod}</div></div>`).join('');
+
+  // Ratios
+  const liv=(last.livretA||0)+(last.ldds||0)+(last.lv_plus||0);
+  const pee=(last.pee_esri||0)+(last.pee_hdi||0);
+  const mkt=(last.pea||0)+(last.per||0)+(last.av||0);
+  const totalEp=Object.values(ANNUAL).reduce((s,d)=>s+d.epargne,0);
+  document.getElementById('ov-ratios').innerHTML=`
+    <div class="ct" style="margin-bottom:12px">Ratios clés</div>
+    <div class="sr"><span class="sl">Livrets réglementés</span><span class="sv" style="color:var(--ac)">${f(liv)}</span></div>
+    <div class="sr"><span class="sl">Épargne salariale (PEE)</span><span class="sv" style="color:var(--pu)">${f(pee)}</span></div>
+    <div class="sr"><span class="sl">Marchés (PEA + PER + AV)</span><span class="sv" style="color:var(--warn)">${f(mkt)}</span></div>
+    <div class="sr"><span class="sl">Liquidités (CC)</span><span class="sv" style="color:${last.compte<4000?'var(--neg)':'var(--t1)'}">${f(last.compte)}</span></div>
+    <div class="div"></div>
+    <div class="sr"><span class="sl">Épargne long terme / Patrimoine</span><span class="sv" style="color:var(--pos)">${((last.patrimoine-last.compte)/last.patrimoine*100).toFixed(1)}%</span></div>
+    <div class="sr"><span class="sl">Mois de dépenses en CC</span><span class="sv" style="color:${last.compte/Math.max(dy.depenses/12,1)<2?'var(--neg)':'var(--t1)'}">${(last.compte/Math.max(dy.depenses/12,1)).toFixed(1)} mois</span></div>
+    <div class="sr"><span class="sl">Épargne cumulée depuis 2022</span><span class="sv" style="color:var(--pos)">${f(totalEp)}</span></div>`;
+}
+
+// ══ RETRO ══
+function buildRetro(){
+  const yrs=Object.keys(ANNUAL).map(Number).sort();
+  document.getElementById('retro-badge').textContent=`${yrs[0]}–${yrs[yrs.length-1]}`;
+
+  mk('c-annual','bar',{
+    labels:yrs,
+    datasets:[
+      {label:'Revenus',data:yrs.map(y=>ANNUAL[y].revenus),backgroundColor:'rgba(0,212,255,.55)',borderWidth:0,borderRadius:3},
+      {label:'Dépenses',data:yrs.map(y=>ANNUAL[y].depenses),backgroundColor:'rgba(255,59,82,.55)',borderWidth:0,borderRadius:3},
+      {label:'Patrimoine',data:yrs.map(y=>ANNUAL[y].patrimoine),type:'line',borderColor:'#00e87a',tension:.3,borderWidth:2,pointRadius:4,yAxisID:'y2',fill:false}
+    ]
+  },{responsive:true,maintainAspectRatio:false,plugins:{legend:leg,tooltip:tip()},
+    scales:{x:gx,y:{...gy},y2:{grid:{display:false},position:'right',ticks:{callback:v=>fk(v)}}}});
+
+  const tbody=document.getElementById('retro-tbody');
+  tbody.innerHTML='';
+  let prev=0;
+  yrs.forEach(y=>{
+    const d=ANNUAL[y];
+    const delta=prev>0?d.patrimoine-prev:null;
+    const tc=d.taux>=40?'p':d.taux>=25?'w':'n';
+    tbody.innerHTML+=`<tr>
+      <td style="color:var(--ac);font-weight:600">${y}</td>
+      <td>${f(d.revenus)}</td><td>${f(d.depenses)}</td>
+      <td style="color:var(--pos)">${f(d.epargne)}</td>
+      <td><span class="badge b${tc}">${fp(d.taux)}</span></td>
+      <td style="color:var(--ac)">${f(d.patrimoine)}</td>
+      <td>${delta!==null?`<span class="badge b${delta>=0?'p':'n'}">${delta>=0?'+':''}${f(delta)}</span>`:'—'}</td>
+      <td style="color:var(--t3)">${d.mois<12?d.mois+' mois':'12 mois'}</td>
+      <td style="color:var(--t3);font-size:10px">${d.obs||''}</td>
+    </tr>`;
+    prev=d.patrimoine;
+  });
+
+  // Dep cat estimated
+  const recent=yrs.slice(-Math.min(4,yrs.length));
+  mk('c-depcat','bar',{
+    labels:['Loyer','Alimentation','Loisirs','Transport','Exceptionnel','Santé/Hgn'],
+    datasets:recent.map((y,i)=>{
+      const loyer=y>=2025?11340:y>=2024?8988:8460;
+      const bouffe=y>=2025?4200:y>=2024?3600:y>=2023?3288:2586;
+      return{label:String(y),data:[loyer,bouffe,1800,y>=2025?1068:1020,ANNUAL[y].depenses-loyer-bouffe-1800-1020-490,490],
+        backgroundColor:['rgba(0,212,255,.6)','rgba(167,139,250,.6)','rgba(255,107,53,.6)','rgba(255,202,40,.6)'][i],borderWidth:0,borderRadius:2};
+    })
+  },{responsive:true,maintainAspectRatio:false,plugins:{legend:leg},scales:{x:gx,y:gy}});
+
+  const ly=yrs[yrs.length-1],fy=yrs[0];
+  const salDelta=ANNUAL[fy]?((ANNUAL[ly].revenus-ANNUAL[fy].revenus)/ANNUAL[fy].revenus*100).toFixed(0):'—';
+  document.getElementById('retro-insights').innerHTML=`
+    <div class="ct" style="margin-bottom:12px">Tendances clés</div>
+    <div class="al ain"><div class="ai">📈</div><div><strong>Progression revenus</strong> — +${salDelta}% depuis ${fy}. Reflet des évolutions salariales et intéressements.</div></div>
+    <div class="al aw"><div class="ai">🏠</div><div><strong>Poids du loyer</strong> — Poste dominant. Hausse significative fin 2024 (déménagement Paris, +34%).</div></div>
+    <div class="al ap"><div class="ai">💼</div><div><strong>Épargne salariale décisive</strong> — Les intéressements PEE constituent les plus grands sauts de patrimoine.</div></div>
+    <div class="al ain"><div class="ai">📊</div><div><strong>Diversification croissante</strong> — Portfolio évolué de 2 poches (2022) à 7+ en 2026 (PEA, PER ajoutés).</div></div>`;
+}
+
+// ══ PATRIMOINE ══
+function buildPat(){
+  const last=REAL[REAL.length-1];
+  const tot=last.patrimoine;
+  const liv=(last.livretA||0)+(last.ldds||0)+(last.lv_plus||0);
+  const pee=(last.pee_esri||0)+(last.pee_hdi||0);
+  const mkt=(last.pea||0)+(last.per||0)+(last.av||0);
+
+  document.getElementById('pat-kpis').innerHTML=`
+    <div class="card"><div class="cc">Livrets réglementés</div><div class="cv" style="font-size:22px;color:var(--ac)">${f(liv)}</div><div class="cs"><span class="badge bi">${(liv/tot*100).toFixed(1)}%</span></div></div>
+    <div class="card"><div class="cc">Épargne salariale (PEE)</div><div class="cv" style="font-size:22px;color:var(--pu)">${f(pee)}</div><div class="cs"><span class="badge bpu">${(pee/tot*100).toFixed(1)}%</span></div></div>
+    <div class="card"><div class="cc">Marchés (PEA+PER+AV)</div><div class="cv" style="font-size:22px;color:var(--warn)">${f(mkt)}</div><div class="cs"><span class="badge bw">${(mkt/tot*100).toFixed(1)}%</span></div></div>
+    <div class="card"><div class="cc">Liquidités (CC)</div><div class="cv" style="font-size:22px;color:${last.compte<4000?'var(--neg)':'var(--t1)'}">${f(last.compte)}</div><div class="cs"><span class="badge b${last.compte<4000?'n':'i'}">${(last.compte/tot*100).toFixed(1)}%</span></div></div>`;
+
+  const PK=['livretA','ldds','lv_plus','pee_hdi','pee_esri','av','per','pea'];
+  mk('c-poches','line',{
+    labels:REAL.map(d=>d.date),
+    datasets:PK.map(k=>({label:PL[k],data:REAL.map(d=>d[k]||0),borderColor:PC[k],fill:false,tension:.3,borderWidth:1.5,pointRadius:0,pointHoverRadius:4}))
+  },{responsive:true,maintainAspectRatio:false,plugins:{legend:leg,tooltip:tip()},scales:{x:{...gx,ticks:{maxTicksLimit:16}},y:gy}});
+
+  const dk=[...PK,'compte'].filter(k=>(last[k]||0)>0);
+  mk('c-donut','doughnut',{
+    labels:dk.map(k=>PL[k]),
+    datasets:[{data:dk.map(k=>last[k]||0),backgroundColor:dk.map(k=>PC[k]),borderColor:'#080c18',borderWidth:2}]
+  },{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10},padding:10}},
+    tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${f(ctx.raw)} (${(ctx.raw/tot*100).toFixed(1)}%)`}}}});
+
+  document.getElementById('pat-detail').innerHTML=`
+    <div class="card">
+      <div class="ct" style="margin-bottom:12px">🏦 Livrets</div>
+      <div class="sr"><span class="sl">Livret A</span><span class="sv" style="color:var(--ac)">${f(last.livretA)}</span></div>
+      <div class="sr"><span class="sl">LDDS</span><span class="sv" style="color:var(--ac)">${f(last.ldds)}</span></div>
+      <div class="sr"><span class="sl">Livret+</span><span class="sv" style="color:var(--ac)">${f(last.lv_plus)}</span></div>
+      <div class="sr"><span class="sl">Rendement estimé (3%/an)</span><span class="sv" style="color:var(--pos)">~${f(liv*.03)}/an</span></div>
+    </div>
+    <div class="card">
+      <div class="ct" style="margin-bottom:12px">💼 Épargne salariale</div>
+      <div class="sr"><span class="sl">PEE Esri</span><span class="sv" style="color:var(--or)">${f(last.pee_esri)}</span></div>
+      <div class="sr"><span class="sl">PEE HDI (Aon)</span><span class="sv" style="color:var(--pu)">${f(last.pee_hdi)}</span></div>
+      <div class="sr"><span class="sl">Total PEE</span><span class="sv" style="color:var(--pu)">${f(pee)}</span></div>
+      <div class="sr"><span class="sl">Part du patrimoine</span><span class="sv">${(pee/tot*100).toFixed(1)}%</span></div>
+    </div>
+    <div class="card">
+      <div class="ct" style="margin-bottom:12px">📈 Investissements marchés</div>
+      <div class="sr"><span class="sl">PEA</span><span class="sv" style="color:var(--warn)">${f(last.pea)}</span></div>
+      <div class="sr"><span class="sl">PER</span><span class="sv" style="color:var(--bl)">${f(last.per)}</span></div>
+      <div class="sr"><span class="sl">Assurance Vie</span><span class="sv" style="color:var(--pk)">${f(last.av)}</span></div>
+      <div class="sr"><span class="sl">Total marchés</span><span class="sv" style="color:var(--warn)">${f(mkt)}</span></div>
+    </div>`;
+}
+
+// ══ BUDGET MENSUEL ══
+let budCh=null, curBudYr=null;
+function buildBudget(){
+  const yrs=[...new Set(REAL.map(d=>d.year))].sort();
+  curBudYr=yrs[yrs.length-1];
+  document.getElementById('bud-tabs').innerHTML=yrs.map(y=>
+    `<button class="yt ${y===curBudYr?'active':''}" onclick="setBudYr(${y},this)">${y}</button>`).join('');
+  renderBudYr(curBudYr);
+}
+function setBudYr(y,btn){
+  document.querySelectorAll('.yt').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderBudYr(y);
+}
+function renderBudYr(yr){
+  const data=REAL.filter(d=>d.year===yr);
+  if(!data.length) return;
+  const ann=ANNUAL[yr]||{};
+  document.getElementById('bud-yr-lbl').textContent=yr;
+  document.getElementById('bud-chart-lbl').textContent=yr;
+
+  document.getElementById('bud-kpis').innerHTML=`
+    <div class="card"><div class="cc">Revenus ${yr}${ann.mois<12?' ('+ann.mois+' mois)':''}</div><div class="cv" style="font-size:22px">${f(ann.revenus)}</div><div class="cs">${f(ann.revenus/ann.mois)}/mois</div></div>
+    <div class="card"><div class="cc">Dépenses ${yr}</div><div class="cv" style="font-size:22px;color:var(--neg)">${f(ann.depenses)}</div><div class="cs">${f(ann.depenses/ann.mois)}/mois</div></div>
+    <div class="card"><div class="cc">Épargne nette</div><div class="cv" style="font-size:22px;color:var(--pos)">${f(ann.epargne)}</div><div class="cs">${f(ann.epargne/ann.mois)}/mois</div></div>
+    <div class="card"><div class="cc">Taux d'épargne</div><div class="cv" style="font-size:22px;color:${ann.taux>=30?'var(--pos)':ann.taux>=20?'var(--warn)':'var(--neg)'}">${fp(ann.taux)}</div><div class="cs">${ann.taux>=30?'✓ Excellent':ann.taux>=20?'△ Correct':'↓ À améliorer'}</div></div>`;
+
+  document.getElementById('month-grid').innerHTML=data.map(d=>{
+    const s=d.revenus-d.depenses;
+    return`<div class="mc ${s>=0?'pm':'nm'}">
+      <div class="mn">${MF[d.month-1]}</div>
+      <div class="ms" style="color:${s>=0?'var(--pos)':'var(--neg)'}">${s>=0?'+':''}${f(s)}</div>
+      <div class="md">Rev: ${f(d.revenus)}</div>
+      <div class="md">Dep: ${f(d.depenses)}</div>
+    </div>`;
+  }).join('');
+
+  if(budCh){budCh.destroy();}
+  const ctx=document.getElementById('c-bud').getContext('2d');
+  budCh=new Chart(ctx,{type:'bar',data:{
+    labels:data.map(d=>MF[d.month-1]),
+    datasets:[
+      {label:'Revenus',data:data.map(d=>d.revenus),backgroundColor:'rgba(0,212,255,.6)',borderWidth:0,borderRadius:3},
+      {label:'Dépenses',data:data.map(d=>d.depenses),backgroundColor:'rgba(255,59,82,.6)',borderWidth:0,borderRadius:3},
+      {label:'Solde',data:data.map(d=>d.revenus-d.depenses),type:'line',borderColor:'#00e87a',borderWidth:2,pointRadius:3,tension:.3,fill:false}
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:leg,tooltip:tip()},scales:{x:gx,y:gy}}});
+  CH['c-bud']=budCh;
+}
+
+// ══ PROJECTIONS ══
+function buildProj(){
+  const last=REAL[REAL.length-1];
+  const basePat=last.patrimoine;
+  const lastYr=last.year;
+  const scYrs=[lastYr,lastYr+1,lastYr+2,lastYr+3,lastYr+4];
+
+  function scen(epargne,taux,extra){
+    let p=basePat;
+    return scYrs.map(y=>{
+      if(y===lastYr) return Math.round(p);
+      p=p*(1+taux/100)+epargne*12+extra;
+      return Math.round(p);
+    });
+  }
+  const cons=scen(800,2,0), base=scen(1600,3,5000), opt=scen(2500,4.5,12000);
+
+  document.getElementById('proj-badge').textContent=`Réel jusqu'au ${last.date} · Prévisionnel Excel: ${PROJ.length} mois`;
+
+  document.getElementById('proj-kpis').innerHTML=`
+    <div class="card"><div class="cc">Objectif 150k€ (base)</div><div class="cv" style="color:var(--warn)">${base.find(v=>v>=150000)?scYrs[base.findIndex(v=>v>=150000)]+' env.':'> '+scYrs[scYrs.length-1]}</div><div class="cs">Épargne 1 600€/mois + 5k€/an</div></div>
+    <div class="card"><div class="cc">Objectif 200k€ (base)</div><div class="cv" style="color:var(--pu)">${base.find(v=>v>=200000)?scYrs[base.findIndex(v=>v>=200000)]+' env.':'> '+scYrs[scYrs.length-1]}</div><div class="cs">Avec rendement moyen 3%</div></div>
+    <div class="card"><div class="cc">Patrimoine fin ${scYrs[1]} (base)</div><div class="cv" style="color:var(--pos)">${f(base[1])}</div><div class="cs">Scénario le plus probable</div></div>`;
+
+  // Projection chart: real + Excel proj + 3 analytical scenarios
+  const realLabels=REAL.map(d=>d.date);
+  const projLabels=PROJ.map(d=>d.date);
+  const scenLabels=scYrs.slice(1).map(y=>`${y}-12`);
+  const allLabels=[...realLabels,...projLabels,...scenLabels];
+
+  const realPat=REAL.map(d=>d.patrimoine);
+  const excelProjPat=new Array(REAL.length-1).fill(null).concat([REAL[REAL.length-1].patrimoine,...PROJ.map(d=>d.patrimoine),...new Array(scenLabels.length).fill(null)]);
+  const nOff=REAL.length+PROJ.length;
+
+  function scenDS(label,data,color,dash){
+    const arr=new Array(REAL.length-1).fill(null).concat([basePat,...new Array(PROJ.length).fill(null),...data.slice(1)]);
+    return{label,data:arr,borderColor:color,borderDash:dash||[],fill:false,tension:.3,borderWidth:2,pointRadius:2};
+  }
+
+  mk('c-proj','line',{
+    labels:allLabels,
+    datasets:[
+      {label:'Réel',data:[...realPat,...new Array(projLabels.length+scenLabels.length).fill(null)],borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,.06)',fill:true,tension:.3,borderWidth:2,pointRadius:1.5},
+      ...(PROJ.length?[{label:'Budget Excel',data:excelProjPat,borderColor:'rgba(0,212,255,.5)',borderDash:[5,4],fill:false,tension:.3,borderWidth:1.5,pointRadius:0}]:[]),
+      scenDS('Conservateur',cons,'#ffca28',[3,4]),
+      scenDS('Base',base,'#00e87a'),
+      scenDS('Optimiste',opt,'#a78bfa',[3,4]),
+    ]
+  },{responsive:true,maintainAspectRatio:false,plugins:{legend:leg,tooltip:tip()},scales:{x:{...gx,ticks:{maxTicksLimit:20}},y:gy}});
+
+  // Excel proj table (2026 remaining months)
+  const proj2026=PROJ.filter(d=>d.year===2026);
+  document.getElementById('proj-excel-tbody').innerHTML=
+    proj2026.length?proj2026.map(d=>{const s=d.revenus-d.depenses;return`<tr>
+      <td style="color:var(--ac)">${d.date}</td>
+      <td>${f(d.revenus)}</td><td>${f(d.depenses)}</td>
+      <td style="color:${s>=0?'var(--pos)':'var(--neg)'}">${s>=0?'+':''}${f(s)}</td>
+      <td>${f(d.patrimoine)}</td>
+    </tr>`;}).join(''):`<tr><td colspan="5" style="color:var(--t3);text-align:center">Aucun mois prévisionnel détecté</td></tr>`;
+
+  // Scenario table
+  document.getElementById('proj-scen-tbody').innerHTML=scYrs.map((y,i)=>`<tr>
+    <td style="color:var(--pu);font-weight:600">${y}${y===lastYr?' ✦':''}</td>
+    <td style="color:var(--warn)">${f(cons[i])}</td>
+    <td style="color:var(--ac)">${f(base[i])}</td>
+    <td style="color:var(--pos)">${f(opt[i])}</td>
+  </tr>`).join('');
+
+  document.getElementById('proj-hyp').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div><div class="cc" style="color:var(--warn);margin-bottom:6px">Conservateur</div>
+        <div class="sr"><span class="sl">Épargne/mois</span><span class="sv" style="color:var(--warn)">800€</span></div>
+        <div class="sr"><span class="sl">Intéressement</span><span class="sv" style="color:var(--warn)">0€</span></div>
+        <div class="sr"><span class="sl">Rendement</span><span class="sv" style="color:var(--warn)">2%</span></div>
+      </div>
+      <div><div class="cc" style="color:var(--ac);margin-bottom:6px">Base</div>
+        <div class="sr"><span class="sl">Épargne/mois</span><span class="sv" style="color:var(--ac)">1 600€</span></div>
+        <div class="sr"><span class="sl">Intéressement</span><span class="sv" style="color:var(--ac)">5 000€/an</span></div>
+        <div class="sr"><span class="sl">Rendement</span><span class="sv" style="color:var(--ac)">3%</span></div>
+      </div>
+      <div><div class="cc" style="color:var(--pos);margin-bottom:6px">Optimiste</div>
+        <div class="sr"><span class="sl">Épargne/mois</span><span class="sv" style="color:var(--pos)">2 500€</span></div>
+        <div class="sr"><span class="sl">Intéressement</span><span class="sv" style="color:var(--pos)">12 000€/an</span></div>
+        <div class="sr"><span class="sl">Rendement</span><span class="sv" style="color:var(--pos)">4.5%</span></div>
+      </div>
+    </div>`;
+}
 </script>
 </body>
 </html>
