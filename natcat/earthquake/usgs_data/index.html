@@ -297,28 +297,30 @@ require([
     }).catch(function() {});
   }
 
-  /* ── LayerView hook ── */
+  /* ── LayerView hook (filtre slider) ── */
   var layerView = null;
-  var statsReady = false;
 
   function hookLayerView(layer) {
     view.whenLayerView(layer).then(function(lv) {
       layerView = lv;
-      statsReady = false;
-
-      function onDone() {
-        if (!lv.updating && !statsReady) {
-          statsReady = true;
-          document.getElementById("loading").classList.add("hidden");
-          updateStats(layer);
-        }
-      }
-
-      onDone();                      // cas où updating est déjà false
-      lv.watch("updating", onDone); // cas où ça change après
     });
   }
   hookLayerView(currentLayer);
+
+  /* ── Hide loading quand la vue finit de se mettre à jour ── */
+  var viewHandle = null;
+  function watchViewUpdating(layer) {
+    if (viewHandle) { viewHandle.remove(); viewHandle = null; }
+    viewHandle = view.watch("updating", function(val) {
+      if (!val) {
+        viewHandle.remove();
+        viewHandle = null;
+        document.getElementById("loading").classList.add("hidden");
+        updateStats(layer);
+      }
+    });
+  }
+  view.when(function() { watchViewUpdating(currentLayer); });
 
   /* ── Magnitude slider ── */
   document.getElementById("magSlider").addEventListener("input", function() {
@@ -338,17 +340,13 @@ require([
     document.getElementById("kv-max").textContent   = "–";
     document.getElementById("kv-sig").textContent   = "–";
     layerView = null;
-    statsReady = false;
-
-    loadingTimeout = setTimeout(function() {
-      document.getElementById("loading").classList.add("hidden");
-    }, 12000);
 
     var newLayer = makeLayer(this.value);
     map.layers.removeAll();
     map.add(newLayer);
     currentLayer = newLayer;
     hookLayerView(newLayer);
+    watchViewUpdating(newLayer);
   });
 
   /* ── Widgets ArcGIS (zoom, home, légende, recherche) ── */
