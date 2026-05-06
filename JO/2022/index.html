@@ -1,530 +1,394 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>JO Pékin 2022</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css" />
-  <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css" />
-  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
-    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
-  <script src="https://js.arcgis.com/4.22/"></script>
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>🇫🇷 Médailles françaises aux JO depuis 2000</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/dark/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
   <style>
-    html,
-    body,
-    #viewDiv {
-      padding: 0;
-      margin: 0;
-      height: 100%;
-      width: 100%;
-      background: rgba(50, 50, 50);
+    html, body, #viewDiv { padding:0; margin:0; height:100%; width:100%; }
+
+    /* ── Left panel ── */
+    #panel {
+      position: absolute; top:0; left:0; bottom:0; width:330px; z-index:10;
+      background: rgba(8,6,18,.95);
+      border-right: 1px solid rgba(255,255,255,.07);
+      backdrop-filter: blur(12px);
+      display: flex; flex-direction: column;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #e8e0d5;
+      overflow: hidden;
     }
 
-    #myContainer {
-      width: 310px;
-      margin-left: 6%;
-      z-index: 10;
-      text-align: center;
-      box-shadow: none !important;
+    /* header */
+    #ph {
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      flex-shrink: 0;
     }
+    #ph h1 { font-size:15px; font-weight:800; color:white; margin:0 0 3px; }
+    #ph .sub { font-size:11px; color:#7a6f8a; }
 
-    .colorPicker {
-      font-size: 0.875em;
-      text-align: center;
-      display: inline-table;
-      width: 100%;
-      max-width: 40em;
-      background: #fff;
-      padding: 2px;
-      border-radius: 0.35em;
-      box-shadow: 0 0.5em 1.5em rgba(0, 0, 0, 0.15);
+    /* KPIs */
+    .kpis {
+      display:grid; grid-template-columns:1fr 1fr; gap:6px;
+      padding:12px 18px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      flex-shrink:0;
     }
+    .kpi {
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:8px; padding:9px 12px;
+    }
+    .kpi .kv { font-size:22px; font-weight:800; font-family:monospace; line-height:1; }
+    .kpi .kl { font-size:9px; color:#7a6f8a; text-transform:uppercase; letter-spacing:.5px; margin-top:3px; }
+    .kpi.gold   .kv { color:#FFD700; }
+    .kpi.silver .kv { color:#C0C8D4; }
+    .kpi.bronze .kv { color:#CD7F32; }
+    .kpi.total  .kv { color:#7EB3FF; }
 
-    .colorPicker label {
-      -webkit-tap-highlight-color: rgba(255, 255, 255, 0.5);
-      -webkit-transition: all 0.2s ease-in-out;
-      transition: all 0.2s ease-in-out;
-      display: table-cell;
-      cursor: pointer;
-      vertical-align: middle;
-      padding: 0;
-      text-transform: capitalize;
-      letter-spacing: -0.5em;
-      color: transparent;
-      opacity: 0.35;
-      width: 1%;
-      background-image: -webkit-gradient(linear,
-          left top,
-          left bottom,
-          from(rgba(255, 255, 255, 0.1)),
-          to(rgba(0, 0, 0, 0.1)));
-      background-image: linear-gradient(rgba(255, 255, 255, 0.1),
-          rgba(0, 0, 0, 0.1));
-      font-size: 1rem;
-      font-weight: bold;
+    /* Filters */
+    #filters {
+      padding:10px 18px 12px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      flex-shrink:0;
+      display:flex; flex-direction:column; gap:9px;
     }
+    .fl { font-size:9px; color:#7a6f8a; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .btngrp { display:flex; gap:4px; }
+    .btngrp button {
+      flex:1; padding:6px 4px; border-radius:5px;
+      border:1px solid rgba(255,255,255,.11);
+      background:rgba(255,255,255,.04);
+      color:#a89aaa; font-size:11px; cursor:pointer; font-family:inherit;
+      transition:all .15s;
+    }
+    .btngrp button:hover { background:rgba(255,255,255,.1); color:white; }
+    .btngrp button.active {
+      background:rgba(255,255,255,.12); color:white;
+      border-color:rgba(255,255,255,.28);
+    }
+    .btngrp button.active.gold   { background:rgba(255,215,0,.18);   border-color:rgba(255,215,0,.55);   color:#FFD700; }
+    .btngrp button.active.silver { background:rgba(192,200,212,.14); border-color:rgba(192,200,212,.45); color:#C0C8D4; }
+    .btngrp button.active.bronze { background:rgba(205,127,50,.18);  border-color:rgba(205,127,50,.55);  color:#CD7F32; }
+    .btngrp button.active.total  { background:rgba(126,179,255,.18); border-color:rgba(126,179,255,.55); color:#7EB3FF; }
 
-    .colorPicker label.or {
-      background-color: #fbbd08;
-      -webkit-tap-highlight-color: #fbbd08;
-    }
+    /* Edition list */
+    #elist { flex:1; overflow-y:auto; padding:4px 0 12px; }
+    #elist::-webkit-scrollbar { width:3px; }
+    #elist::-webkit-scrollbar-track { background:transparent; }
+    #elist::-webkit-scrollbar-thumb { background:rgba(255,255,255,.12); border-radius:2px; }
 
-    .colorPicker label.argent {
-      background-color: #838383;
-      -webkit-tap-highlight-color: #838383;
+    .erow {
+      display:flex; align-items:center; gap:10px;
+      padding:9px 18px; cursor:pointer;
+      border-bottom:1px solid rgba(255,255,255,.04);
+      transition:background .12s;
     }
+    .erow:hover { background:rgba(255,255,255,.05); }
+    .erow.active { background:rgba(255,255,255,.09); }
+    .erow.hidden { display:none; }
+    .eico { font-size:14px; flex-shrink:0; width:22px; text-align:center; }
+    .einfo { flex:1; min-width:0; }
+    .einfo .ey { font-size:13px; font-weight:700; color:white; }
+    .einfo .ec { font-size:10px; color:#7a6f8a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .emedals { display:flex; gap:5px; font-size:11px; font-family:monospace; flex-shrink:0; }
+    .emedals .g { color:#FFD700; }
+    .emedals .s { color:#C0C8D4; }
+    .emedals .b { color:#CD7F32; }
+    .emedals .t { color:#7EB3FF; font-weight:700; min-width:28px; text-align:right; }
 
-    .colorPicker label.bronze {
-      background-color: #975b33;
-      -webkit-tap-highlight-color: #975b33;
+    /* Source */
+    #source {
+      position:absolute; bottom:28px; right:15px; z-index:10;
+      background:rgba(8,6,18,.85);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:6px; padding:6px 12px;
+      font-size:10px; color:#7a6f8a; font-family:sans-serif;
     }
-
-    .colorPicker label.total {
-      background-color: #27292a;
-      -webkit-tap-highlight-color: #27292a;
-    }
-
-    .colorPicker label:first-of-type {
-      border-radius: 0.25em 0 0 0.25em;
-    }
-
-    .colorPicker label:last-of-type {
-      border-radius: 0 0.25em 0.25em 0;
-    }
-
-    .colorPicker label:hover {
-      opacity: 1;
-      color: #fff;
-      letter-spacing: normal;
-    }
-
-    .colorPicker input {
-      display: none;
-    }
-
-    .colorPicker input:checked+label {
-      opacity: 1;
-      color: #fff;
-      letter-spacing: normal;
-    }
-
-    .esri-popup__main-container {
-      width: auto !important;
-    }
-
-    #title {
-      text-align: center !important;
-      /*   text-shadow: 0 0 3px rgb(0 0 0 / 40%) !important; */
-      box-shadow: none !important;
-      font-weight: 900;
-    }
-
-    .esri-feature__last-edited-info {
-      display: none !important;
-    }
+    #source a { color:#d4a017; text-decoration:none; }
   </style>
 </head>
 <body>
-  <div id="viewDiv"></div>
-  <div id="title">
-    <div style="font-size: 26px; margin-bottom: 3%;">Jeux Olympiques de Pékin 2022</div>
-    <div style="font-size: 18px;">Carte des médailles | Esri France</div>
+<div id="viewDiv"></div>
+
+<!-- Panel -->
+<div id="panel">
+  <div id="ph">
+    <h1>🇫🇷 Médailles françaises aux JO</h1>
+    <div class="sub">Toutes les éditions depuis Sydney 2000 — 13 éditions</div>
   </div>
-  <div id="myContainer">
-    <div class="colorPicker">
-      <input class="or" type="radio" name="hat-color" value="O" id="hat-color-or" checked />
-      <label class="or" for="hat-color-or">Or</label>
-      <input class="argent" type="radio" name="hat-color" value="A" id="hat-color-argent" />
-      <label class="argent" for="hat-color-argent">Argent</label>
-      <input class="bronze" type="radio" name="hat-color" value="B" id="hat-color-bronze" />
-      <label class="bronze" for="hat-color-bronze">Bronze</label>
-      <input class="total" type="radio" name="hat-color" value="T" id="hat-color-total" />
-      <label class="total" for="hat-color-total">Total</label>
+
+  <div class="kpis">
+    <div class="kpi gold">
+      <div class="kv" id="kv-gold">–</div>
+      <div class="kl">🥇 Or</div>
+    </div>
+    <div class="kpi silver">
+      <div class="kv" id="kv-silver">–</div>
+      <div class="kl">🥈 Argent</div>
+    </div>
+    <div class="kpi bronze">
+      <div class="kv" id="kv-bronze">–</div>
+      <div class="kl">🥉 Bronze</div>
+    </div>
+    <div class="kpi total">
+      <div class="kv" id="kv-total">–</div>
+      <div class="kl">🏅 Total</div>
     </div>
   </div>
 
+  <div id="filters">
+    <div>
+      <div class="fl">Type de Jeux</div>
+      <div class="btngrp" id="typeGrp">
+        <button class="active" data-val="all">Tous</button>
+        <button data-val="été">🌞 Été</button>
+        <button data-val="hiver">❄️ Hiver</button>
+      </div>
+    </div>
+    <div>
+      <div class="fl">Taille des bulles</div>
+      <div class="btngrp" id="medalGrp">
+        <button class="active gold" data-val="gold">🥇 Or</button>
+        <button data-val="silver">🥈 Argent</button>
+        <button data-val="bronze">🥉 Bronze</button>
+        <button data-val="total">🏅 Total</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="elist"></div>
+</div>
+
+<div id="source">
+  Sources : <a href="https://olympics.com/fr/équipes/france" target="_blank">olympics.com</a>
+  · <a href="https://www.olympedia.org/" target="_blank">Olympedia</a>
+</div>
+
 <script>
-  require([
-    "esri/Map",
-    "esri/layers/FeatureLayer",
-    "esri/views/MapView",
-    "esri/widgets/Home",
-    "esri/config"
-  ], function (Map, FeatureLayer, MapView, Home, esriConfig) {
-    $(document).ready(function () {
-      // Remplacer par votre clé API ArcGIS : https://developers.arcgis.com/
-      esriConfig.apiKey = "YOUR_API_KEY";
-      //
-      const orSym = {
-        type: "simple-marker",
-        color: "#fbbd08",
-        outline: {
-          color: "#fbbd08",
-          width: 1
-        }
-      };
-      //
-      const argentSym = {
-        type: "simple-marker",
-        color: "#838383",
-        outline: {
-          color: "#838383",
-          width: 1
-        }
-      };
-      //
-      const bronzeSym = {
-        type: "simple-marker",
-        color: "#975b33",
-        outline: {
-          color: "#975b33",
-          width: 1
-        }
-      };
-      //
-      const totalSym = {
-        type: "simple-marker",
-        color: "#27292a",
-        outline: {
-          color: "#27292a",
-          width: 1
-        }
-      };
-      //
-      const defaultRenderer = {
-        type: "simple",
+require([
+  "esri/Map",
+  "esri/views/MapView",
+  "esri/layers/GraphicsLayer",
+  "esri/Graphic",
+  "esri/widgets/Home",
+  "esri/widgets/Zoom"
+], function(Map, MapView, GraphicsLayer, Graphic, Home, Zoom) {
+
+  /* ══ Données — médailles françaises (source officielle CIO / Olympedia) ══ */
+  const ED = [
+    // ── Jeux d'été ──
+    { id:"s2000", year:2000, city:"Sydney",         country:"Australie",    type:"été",   e:"🌞",
+      c:[151.209,-33.869], gold:13, silver:14, bronze:11 },
+    { id:"s2004", year:2004, city:"Athènes",        country:"Grèce",        type:"été",   e:"🌞",
+      c:[23.728,37.984],   gold:11, silver:9,  bronze:13 },
+    { id:"s2008", year:2008, city:"Pékin",          country:"Chine",        type:"été",   e:"🌞",
+      c:[116.407,39.904],  gold:7,  silver:16, bronze:18 },
+    { id:"s2012", year:2012, city:"Londres",        country:"Royaume-Uni",  type:"été",   e:"🌞",
+      c:[-0.128,51.507],   gold:11, silver:11, bronze:12 },
+    { id:"s2016", year:2016, city:"Rio de Janeiro", country:"Brésil",       type:"été",   e:"🌞",
+      c:[-43.173,-22.907], gold:10, silver:18, bronze:14 },
+    { id:"s2020", year:2020, city:"Tokyo",          country:"Japon",        type:"été",   e:"🌞",
+      c:[139.692,35.690],  gold:10, silver:12, bronze:11 },
+    { id:"s2024", year:2024, city:"Paris",          country:"France",       type:"été",   e:"🌞",
+      c:[2.352,48.857],    gold:16, silver:26, bronze:22 },
+    // ── Jeux d'hiver ──
+    { id:"w2002", year:2002, city:"Salt Lake City", country:"États-Unis",   type:"hiver", e:"❄️",
+      c:[-111.891,40.761], gold:4,  silver:5,  bronze:2  },
+    { id:"w2006", year:2006, city:"Turin",          country:"Italie",       type:"hiver", e:"❄️",
+      c:[7.687,45.070],    gold:3,  silver:2,  bronze:4  },
+    { id:"w2010", year:2010, city:"Vancouver",      country:"Canada",       type:"hiver", e:"❄️",
+      c:[-123.121,49.283], gold:2,  silver:3,  bronze:6  },
+    { id:"w2014", year:2014, city:"Sotchi",         country:"Russie",       type:"hiver", e:"❄️",
+      c:[39.720,43.599],   gold:4,  silver:4,  bronze:7  },
+    { id:"w2018", year:2018, city:"Pyeongchang",    country:"Corée du Sud", type:"hiver", e:"❄️",
+      c:[128.602,37.370],  gold:5,  silver:4,  bronze:6  },
+    { id:"w2022", year:2022, city:"Pékin",          country:"Chine",        type:"hiver", e:"❄️",
+      c:[116.85,39.60],    gold:5,  silver:7,  bronze:2  },
+  ];
+
+  /* ══ State ══ */
+  var activeType  = "all";
+  var activeMedal = "gold";
+  var activeId    = null;
+
+  /* ══ Map ══ */
+  const map  = new Map({ basemap: "dark-gray-vector" });
+  const view = new MapView({
+    map: map, container: "viewDiv",
+    center: [30, 25], zoom: 2,
+    padding: { left: 330 },
+    constraints: { rotationEnabled: false },
+    popup: { dockEnabled: true, dockOptions: { position: "bottom-right", breakpoint: false } }
+  });
+
+  const circleLayer = new GraphicsLayer();
+  const labelLayer  = new GraphicsLayer({ listMode: "hide" });
+  map.addMany([circleLayer, labelLayer]);
+
+  /* ══ Colors ══ */
+  const COL = {
+    gold:   [255, 215,   0],
+    silver: [192, 200, 212],
+    bronze: [205, 127,  50],
+    total:  [126, 179, 255]
+  };
+
+  function getVal(ed) {
+    return activeMedal === "total" ? ed.gold + ed.silver + ed.bronze : ed[activeMedal];
+  }
+
+  /* ══ Draw bubbles ══ */
+  function draw() {
+    circleLayer.removeAll();
+    labelLayer.removeAll();
+
+    var eds = ED.filter(function(e) {
+      return activeType === "all" || e.type === activeType;
+    });
+
+    var maxVal = Math.max.apply(null, eds.map(getVal));
+    var c = COL[activeMedal];
+
+    eds.forEach(function(ed) {
+      var val  = getVal(ed);
+      var size = val === 0 ? 0 : Math.max(16, 16 + (val / maxVal) * 38);
+      var tot  = ed.gold + ed.silver + ed.bronze;
+
+      circleLayer.add(new Graphic({
+        geometry: { type: "point", longitude: ed.c[0], latitude: ed.c[1] },
         symbol: {
           type: "simple-marker",
-          color: [0, 0, 0, 0],
-          outline: {
-            color: [0, 0, 0, 0],
-            width: 1
-          }
-        }
-      };
-      //
-      let rendererOr = {
-        type: "simple",
-        symbol: orSym,
-        visualVariables: [
-          {
-            type: "size",
-            field: "medals_csv_GOLD",
-            // minDataValue: 0,
-            // minDataValue: 0,  // 10% of population in poverty
-            // maxDataValue: 100,  // 35% of population in poverty
-            // minSize: "0px",  // extruded by 10,0000 meters
-            // maxSize: "80px"  // extruded by 500,000 meters
-            stops: [
-              {
-                value: 0,
-                size: 0
-              },
-              {
-                value: 1,
-                size: 14
-              },
-              {
-                value: 5,
-                size: 14
-              },
-              {
-                value: 10,
-                size: 20
-              },
-              {
-                value: 30,
-                size: 32
-              }
-            ]
-          }
-        ]
-      };
-      //
-      let rendererArgent = {
-        type: "simple",
-        symbol: argentSym,
-        visualVariables: [
-          {
-            type: "size",
-            field: "medals_csv_SILVER",
-            // minDataValue: 0,
-            // minDataValue: 0,  // 10% of population in poverty
-            // maxDataValue: 100,  // 35% of population in poverty
-            // minSize: "0px",  // extruded by 10,0000 meters
-            // maxSize: "80px"  // extruded by 500,000 meters
-            stops: [
-              {
-                value: 0,
-                size: 0
-              },
-              {
-                value: 1,
-                size: 14
-              },
-              {
-                value: 5,
-                size: 14
-              },
-              {
-                value: 10,
-                size: 20
-              },
-              {
-                value: 30,
-                size: 32
-              }
-            ]
-          }
-        ]
-      };
-      //
-      let rendererBronze = {
-        type: "simple",
-        symbol: bronzeSym,
-        visualVariables: [
-          {
-            type: "size",
-            field: "medals_csv_BRONZE",
-            // minDataValue: 0,
-            // minDataValue: 0,  // 10% of population in poverty
-            // maxDataValue: 100,  // 35% of population in poverty
-            // minSize: "0px",  // extruded by 10,0000 meters
-            // maxSize: "80px"  // extruded by 500,000 meters
-            stops: [
-              {
-                value: 0,
-                size: 0
-              },
-              {
-                value: 1,
-                size: 14
-              },
-              {
-                value: 5,
-                size: 14
-              },
-              {
-                value: 10,
-                size: 20
-              },
-              {
-                value: 30,
-                size: 32
-              }
-            ]
-          }
-        ]
-      };
-      //
-      let rendererTotal = {
-        type: "simple",
-        symbol: totalSym,
-        visualVariables: [
-          {
-            type: "size",
-            field: "medals_csv_TOTAL",
-            // minDataValue: 0,
-            // minDataValue: 0,  // 10% of population in poverty
-            // maxDataValue: 100,  // 35% of population in poverty
-            // minSize: "0px",  // extruded by 10,0000 meters
-            // maxSize: "80px"  // extruded by 500,000 meters
-            stops: [
-              {
-                value: 0,
-                size: 0
-              },
-              {
-                value: 1,
-                size: 14
-              },
-              {
-                value: 5,
-                size: 14
-              },
-              {
-                value: 10,
-                size: 20
-              },
-              {
-                value: 30,
-                size: 32
-              }
-            ]
-          }
-        ]
-      };
-      //
-      const labelClassOr = {
-        symbol: {
-          type: "text",
-          color: "white",
-          haloColor: "black",
-          haloSize: 1,
-          font: {
-            family: "Ubuntu Mono",
-            size: 14,
-            weight: "bold"
-          }
+          color: [c[0], c[1], c[2], 0.82],
+          outline: { color: [c[0], c[1], c[2], 1], width: 1.5 },
+          size: size + "px"
         },
-        labelPlacement: "center-center",
-        deconflictionStrategy: "none",
-        labelExpressionInfo: {
-          expression: "$feature.medals_csv_GOLD"
-        },
-        where: "medals_csv_GOLD > 0"
-      };
-      //
-      const labelClassBronze = {
-        symbol: {
-          type: "text",
-          color: "white",
-          haloColor: "black",
-          haloSize: 1,
-          font: {
-            family: "Ubuntu Mono",
-            size: 14,
-            weight: "bold"
-          }
-        },
-        labelPlacement: "center-center",
-        deconflictionStrategy: "none",
-        labelExpressionInfo: {
-          expression: "$feature.medals_csv_BRONZE"
-        },
-        where: "medals_csv_BRONZE > 0"
-      };
-      //
-      const labelClassArgent = {
-        symbol: {
-          type: "text",
-          color: "white",
-          haloColor: "black",
-          haloSize: 1,
-          font: {
-            family: "Ubuntu Mono",
-            size: 14,
-            weight: "bold"
-          }
-        },
-        labelPlacement: "center-center",
-        deconflictionStrategy: "none",
-        labelExpressionInfo: {
-          expression: "$feature.medals_csv_SILVER"
-        },
-        where: "medals_csv_SILVER > 0"
-      };
-      //
-      const labelClassTotal = {
-        symbol: {
-          type: "text",
-          color: "white",
-          haloColor: "black",
-          haloSize: 1,
-          font: {
-            family: "Ubuntu Mono",
-            size: 14,
-            weight: "bold"
-          }
-        },
-        labelPlacement: "center-center",
-        deconflictionStrategy: "none",
-        labelExpressionInfo: {
-          expression: "$feature.medals_csv_TOTAL"
-        },
-        where: "medals_csv_TOTAL > 0"
-      };
-      //
-      const layer = new FeatureLayer({
-        url:
-          "https://services1.arcgis.com/5PzxEwuu4GtMhqQ6/arcgis/rest/services/DATA_JO_2022_01/FeatureServer",
-        //https://services.arcgis.com/OMbfIFNCWRclU5sp/arcgis/rest/services/DATA_JO_2022_01/FeatureServer
-        // portalItem: {
-        //   id: "79f1a3d3e7c6443792a0a41dd77ec70b"
-        // },
+        attributes: { _id: ed.id },
         popupTemplate: {
-          title: "{Country}",
-          content:
-            '<span class="ui yellow circular label" style="margin-right: 20px;">{medals_csv_GOLD}</span><span class="ui grey circular label" style="margin-right: 20px; margin-bottom: 20px;">{medals_csv_SILVER}</span><span class="ui brown circular label" style="margin-right: 20px;">{medals_csv_BRONZE}</span><span class="ui black circular label" style="margin-right: 20px;">{medals_csv_TOTAL}</span>'
-        },
-        outFields: ["*"],
-        renderer: defaultRenderer
-      });
-      //
-      const map = new Map({
-        basemap: "arcgis-light-gray", //arcgis-light-gray
-        layers: [layer]
-      });
-      //
-      const view = new MapView({
-        container: "viewDiv",
-        map: map,
-        zoom: 2,
-        constraints: {
-          maxZoom: 5,
-          minZoom: 2
-        },
-        center: [6.609381437299921, 24.910349595402007]
-      });
-      //
-      view.popup.dockOptions = {
-        position: "bottom-left"
-      };
-      //
-      view.ui.move(["zoom", "compass", "navigation-toggle"], "top-right");
-      view.ui.add(
-        new Home({
-          view: view
-        }),
-        "top-right"
-      );
-      view.ui.add([
-        {
-          component: document.getElementById("title"),
-          position: "top-left"
-        },
-        {
-          component: document.getElementById("myContainer"),
-          position: "top-left"
+          title: ed.e + " " + ed.city + " " + ed.year +
+                 (ed.type === "hiver" ? " &nbsp;<small style='color:#7a6f8a'>Hiver</small>" : " &nbsp;<small style='color:#7a6f8a'>Été</small>"),
+          content: "<div style='font-family:monospace;font-size:13px;line-height:2.2'>" +
+            "🥇 Or     : <b style='color:#FFD700'>" + ed.gold   + "</b><br>" +
+            "🥈 Argent : <b style='color:#C0C8D4'>" + ed.silver + "</b><br>" +
+            "🥉 Bronze : <b style='color:#CD7F32'>" + ed.bronze + "</b><br>" +
+            "<hr style='border-color:rgba(255,255,255,.1);margin:6px 0'>" +
+            "🏅 Total  : <b style='color:#7EB3FF'>" + tot + "</b>" +
+            "</div>"
         }
-      ]);
-      //
-      const radioColorPicker = $(".colorPicker > input");
-      radioColorPicker.click(function () {
-        let cat = $(this).val();
-        // console.log("cat", cat);
-        if (cat === "O") {
-          layer.renderer = rendererOr;
-          layer.labelingInfo = [labelClassOr];
-        }
-        if (cat === "A") {
-          layer.renderer = rendererArgent;
-          layer.labelingInfo = [labelClassArgent];
-        }
-        if (cat === "B") {
-          layer.renderer = rendererBronze;
-          layer.labelingInfo = [labelClassBronze];
-        }
-        if (cat === "T") {
-          layer.renderer = rendererTotal;
-          layer.labelingInfo = [labelClassTotal];
-        }
-      });
+      }));
 
-      view.when(function () {
-        layer.renderer = rendererOr;
-        layer.labelingInfo = [labelClassOr];
-        // watchUtils.whenTrue(view, "stationary", () => {
-        //   // Get the new center of the view only when view is stationary.
-        //   if (view.center) {
-        //     console.log(view.center);
-        //   }
-        // });
+      if (val > 0) {
+        labelLayer.add(new Graphic({
+          geometry: { type: "point", longitude: ed.c[0], latitude: ed.c[1] },
+          symbol: {
+            type: "text", text: String(val),
+            color: "white",
+            haloColor: "rgba(0,0,0,0.8)", haloSize: 1.5,
+            font: { size: Math.max(9, Math.min(14, size * 0.32)), weight: "bold" }
+          }
+        }));
+      }
+    });
+
+    updateKPIs(eds);
+    renderList(eds);
+  }
+
+  /* ══ KPIs ══ */
+  function updateKPIs(eds) {
+    var g = 0, s = 0, b = 0;
+    eds.forEach(function(e) { g += e.gold; s += e.silver; b += e.bronze; });
+    document.getElementById("kv-gold").textContent   = g;
+    document.getElementById("kv-silver").textContent = s;
+    document.getElementById("kv-bronze").textContent = b;
+    document.getElementById("kv-total").textContent  = g + s + b;
+  }
+
+  /* ══ Edition list ══ */
+  function renderList(eds) {
+    var sorted = eds.slice().sort(function(a, b) { return b.year - a.year; });
+    var html = sorted.map(function(ed) {
+      var tot = ed.gold + ed.silver + ed.bronze;
+      var active = ed.id === activeId ? " active" : "";
+      return '<div class="erow' + active + '" data-id="' + ed.id + '">' +
+        '<div class="eico">' + ed.e + '</div>' +
+        '<div class="einfo">' +
+          '<div class="ey">' + ed.city + ' ' + ed.year + '</div>' +
+          '<div class="ec">' + ed.country + '</div>' +
+        '</div>' +
+        '<div class="emedals">' +
+          '<span class="g">' + ed.gold   + '🥇</span>' +
+          '<span class="s">' + ed.silver + '🥈</span>' +
+          '<span class="b">' + ed.bronze + '🥉</span>' +
+          '<span class="t">= ' + tot + '</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    var list = document.getElementById("elist");
+    list.innerHTML = html;
+
+    list.querySelectorAll(".erow").forEach(function(row) {
+      row.addEventListener("click", function() {
+        var id = this.dataset.id;
+        var ed = ED.find(function(e) { return e.id === id; });
+        if (!ed) return;
+        activeId = id;
+        list.querySelectorAll(".erow").forEach(function(r) { r.classList.remove("active"); });
+        this.classList.add("active");
+        view.goTo({ center: ed.c, zoom: 5 }, { duration: 700, easing: "ease-in-out" });
       });
+    });
+  }
+
+  /* ══ Click on map bubble ══ */
+  view.on("click", function(evt) {
+    view.hitTest(evt).then(function(res) {
+      var hit = res.results.find(function(r) { return r.graphic && r.graphic.layer === circleLayer; });
+      if (!hit) return;
+      activeId = hit.graphic.attributes._id;
+      var rows = document.querySelectorAll(".erow");
+      rows.forEach(function(r) { r.classList.toggle("active", r.dataset.id === activeId); });
+      var active = document.querySelector(".erow.active");
+      if (active) active.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   });
 
+  /* ══ Filter: type ══ */
+  document.querySelectorAll("#typeGrp button").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll("#typeGrp button").forEach(function(b) { b.classList.remove("active"); });
+      this.classList.add("active");
+      activeType = this.dataset.val;
+      activeId = null;
+      draw();
+    });
+  });
+
+  /* ══ Filter: medal ══ */
+  document.querySelectorAll("#medalGrp button").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll("#medalGrp button").forEach(function(b) {
+        b.classList.remove("active", "gold", "silver", "bronze", "total");
+      });
+      this.classList.add("active", this.dataset.val);
+      activeMedal = this.dataset.val;
+      draw();
+    });
+  });
+
+  /* ══ Widgets ══ */
+  view.when(function() {
+    view.ui.remove("zoom");
+    view.ui.add(new Zoom({ view: view }), { position: "bottom-right", index: 0 });
+    view.ui.add(new Home({ view: view }), { position: "bottom-right", index: 1 });
+    draw();
+  });
+
+});
 </script>
 </body>
 </html>
